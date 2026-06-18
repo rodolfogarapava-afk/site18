@@ -13,6 +13,9 @@ const bairroNome = (cidade, slug) =>
 
 const perfilBySlug = slug => PERFIS.find(p => p.slug === slug);
 
+/* Ícone oficial do WhatsApp (mesmo glifo do botão flutuante) */
+const WA_ICON = '<svg class="ico-wa" viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M16.04 3C9.4 3 4 8.4 4 15.04c0 2.12.56 4.18 1.62 6L4 29l8.16-1.58a12.02 12.02 0 0 0 3.88.64h.01c6.64 0 12.04-5.4 12.04-12.04C28.09 8.4 22.68 3 16.04 3zm0 21.93h-.01c-1.2 0-2.38-.32-3.41-.94l-.24-.14-4.84.94.97-4.72-.16-.25a9.9 9.9 0 0 1-1.52-5.29c0-5.5 4.48-9.98 9.99-9.98 2.67 0 5.17 1.04 7.06 2.93a9.9 9.9 0 0 1 2.92 7.06c0 5.5-4.48 9.98-9.99 9.98zm5.48-7.47c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.27-.47-2.42-1.49-.9-.8-1.5-1.79-1.67-2.09-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.22 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35z"/></svg>';
+
 /* WhatsApp da acompanhante (com mensagem contextual) */
 function waPerfil(p, contexto) {
   const msg = contexto
@@ -80,7 +83,7 @@ function cardHtml(p) {
         ${p.possuiLocal ? `<span>📍 <b>Local</b></span>` : ""}
       </div>
       <a class="btn btn--wa btn--block" href="${waPerfil(p)}" target="_blank" rel="noopener">
-        WhatsApp
+        ${WA_ICON} WhatsApp
       </a>
     </div>
   </article>`;
@@ -262,7 +265,7 @@ function viewPerfil(slug) {
         </div>
 
         <div class="profile__actions">
-          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">💬 Falar no WhatsApp</a>
+          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">${WA_ICON} Falar no WhatsApp</a>
           <a class="btn btn--ghost btn--lg" href="${waPerfil(p, "agendar um horário")}" target="_blank" rel="noopener">Agendar</a>
         </div>
       </div>

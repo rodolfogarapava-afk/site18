@@ -52,8 +52,10 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
 .btn--ghost:hover{border-color:var(--gold)}
 .btn--lg{padding:.95rem 1.8rem;font-size:1rem}
 .btn--block{width:100%}
-.btn--wa{background:#25D366;color:#062b15}
-.btn--wa:hover{box-shadow:0 8px 24px #25d36644}
+.btn--wa{background:linear-gradient(135deg,#25D366,#16b85a);color:#04301a;font-weight:700;box-shadow:0 6px 18px #25d36633}
+.btn--wa:hover{box-shadow:0 10px 28px #25d36655}
+.btn--wa .ico-wa{flex:0 0 auto}
+.ico-wa{vertical-align:middle}
 
 /* ---------- Age Gate (Tela de entrada — vinho & dourado) ---------- */
 .age-gate{
