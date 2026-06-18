@@ -428,6 +428,7 @@ function router() {
   const parts = hash.split("/").filter(Boolean);
   window.scrollTo(0, 0);
   $("#nav")?.classList.remove("open");
+  fecharMenus();
 
   if (parts.length === 0)                 return viewHome();
   if (parts[0] === "anuncie")             return viewAnuncie();
@@ -448,18 +449,52 @@ window.addEventListener("hashchange", router);
 /* ============================================================
    INICIALIZAÇÃO (age gate, header, menus)
    ============================================================ */
-function montarMenus() {
-  $$("[data-city-menu]").forEach(menu => {
-    const key = menu.dataset.cityMenu;
-    const c = CIDADES[key];
-    menu.innerHTML =
-      `<a href="#/cidade/${key}">Todas em ${c.nome}</a>
-       <a href="#/cidade/${key}/novidades">✨ Novidades</a>
-       <a href="#/cidade/${key}/exclusivas">💎 Exclusivas</a>
-       <a href="#/cidade/${key}/videos">▶ Vídeos</a>
-       <div class="nav__menu-head">Bairros</div>` +
-      c.bairros.map(b => `<a href="#/cidade/${key}/bairro/${b.slug}">${b.nome}</a>`).join("");
+function fecharMenus() {
+  $$(".nav__group.open").forEach(g => {
+    g.classList.remove("open");
+    g.querySelector(".nav__btn")?.setAttribute("aria-expanded", "false");
   });
+}
+
+function montarMenus() {
+  const host = $("#nav-cities");
+  if (!host) return;
+
+  const keys = Object.keys(CIDADES || {});
+  host.innerHTML = keys.map(key => {
+    const c = CIDADES[key];
+    if (!c) return "";
+    const bairros = (c.bairros || [])
+      .map(b => `<a href="#/cidade/${key}/bairro/${b.slug}">${b.nome}</a>`).join("");
+    return `<div class="nav__group">
+        <button class="nav__btn" type="button" aria-haspopup="true" aria-expanded="false">
+          ${c.nome} <span class="nav__caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="nav__menu">
+          <a href="#/cidade/${key}">Todas em ${c.nome}</a>
+          <a href="#/cidade/${key}/novidades">✨ Novidades</a>
+          <a href="#/cidade/${key}/exclusivas">💎 Exclusivas</a>
+          <a href="#/cidade/${key}/videos">▶ Vídeos</a>
+          ${bairros ? `<div class="nav__menu-head">Bairros</div>${bairros}` : ""}
+        </div>
+      </div>`;
+  }).join("");
+
+  // Abrir/fechar no clique (funciona no mobile e no desktop)
+  $$("#nav-cities .nav__btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const grupo = btn.closest(".nav__group");
+      const abrir = !grupo.classList.contains("open");
+      fecharMenus();
+      grupo.classList.toggle("open", abrir);
+      btn.setAttribute("aria-expanded", abrir ? "true" : "false");
+    });
+  });
+
+  // Ao clicar num link do menu, fecha tudo
+  $$("#nav-cities .nav__menu a").forEach(a =>
+    a.addEventListener("click", fecharMenus));
 }
 
 function initAgeGate() {
@@ -486,7 +521,15 @@ function initHeader() {
   const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 30);
   window.addEventListener("scroll", onScroll); onScroll();
 
-  $("#burger").addEventListener("click", () => $("#nav").classList.toggle("open"));
+  $("#burger").addEventListener("click", e => {
+    e.stopPropagation();
+    $("#nav").classList.toggle("open");
+  });
+
+  // Clicar fora fecha os menus de cidade abertos
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".nav__group")) fecharMenus();
+  });
   $("#header-wa").addEventListener("click", () => window.open(waAdmin(), "_blank", "noopener"));
 
   // Botão flutuante: na home -> admin; em perfil -> acompanhante

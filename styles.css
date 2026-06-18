@@ -116,19 +116,26 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
 .logo--sm{font-size:1.05rem}
 
 .nav{display:flex;align-items:center;gap:.4rem;margin-left:auto}
+.nav__cities{display:contents}
 .nav__group{position:relative}
 .nav__btn,.nav__link{
+  display:inline-flex;align-items:center;gap:.3rem;
   background:none;border:none;color:var(--white);font-family:var(--sans);
   font-size:.9rem;cursor:pointer;padding:.6rem .8rem;border-radius:8px;
   transition:color .2s;
 }
 .nav__btn:hover,.nav__link:hover{color:var(--gold-2)}
+.nav__caret{font-size:.7rem;transition:transform .2s ease;opacity:.8}
+.nav__group:hover .nav__caret,.nav__group.open .nav__caret{transform:rotate(180deg)}
 .nav__menu{
   position:absolute;top:100%;left:0;min-width:210px;background:var(--black-2);
-  border:1px solid var(--line);border-radius:10px;padding:.4rem;
+  border:1px solid var(--line);border-radius:10px;padding:.4rem;margin-top:.35rem;
   display:none;flex-direction:column;box-shadow:var(--shadow);
+  opacity:0;transform:translateY(-6px);transition:opacity .16s ease,transform .16s ease;
 }
-.nav__group:hover .nav__menu{display:flex}
+/* ponte invisível: evita o menu fechar ao mover o mouse do botão até ele */
+.nav__menu::before{content:"";position:absolute;top:-.5rem;left:0;right:0;height:.5rem}
+.nav__group:hover .nav__menu,.nav__group.open .nav__menu{display:flex;opacity:1;transform:translateY(0)}
 .nav__menu a{padding:.55rem .8rem;border-radius:7px;font-size:.88rem;color:var(--muted);transition:.15s}
 .nav__menu a:hover{background:var(--black-3);color:var(--gold-2)}
 .nav__menu .nav__menu-head{color:var(--gold);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.5rem .8rem .2rem}
@@ -288,7 +295,10 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
     flex-direction:column;align-items:stretch;padding:1rem;gap:.2rem;display:none}
   .nav.open{display:flex}
   .nav__group{width:100%}
-  .nav__menu{position:static;display:flex;box-shadow:none;border:none;background:#0d0d0d;margin:.2rem 0 .6rem}
+  .nav__btn{width:100%;justify-content:space-between}
+  .nav__menu{position:static;box-shadow:none;border:none;background:#0d0d0d;margin:.2rem 0 .5rem;transform:none}
+  .nav__group.open .nav__menu{transform:none}
+  .nav__menu::before{display:none}
   .header__cta{display:none}
   .header__burger{display:block}
   .profile__top{grid-template-columns:1fr}
