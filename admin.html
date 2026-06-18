@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Painel Admin • VIP LUXÚRIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- ===== LOGIN ===== -->
+  <div id="login" class="login">
+    <form class="login__box" id="login-form">
+      <div class="login__brand">VIP LUXÚRIA</div>
+      <div class="login__sub">Painel Administrativo</div>
+      <input type="password" id="login-pass" placeholder="Senha de acesso" autocomplete="current-password" />
+      <div class="login__err" id="login-err"></div>
+      <button class="btn btn--gold btn--block" type="submit">Entrar</button>
+      <p class="login__hint">Senha padrão: <b>admin</b> — troque na aba "Configurações".</p>
+    </form>
+  </div>
+
+  <!-- ===== APP ADMIN ===== -->
+  <div id="admin" hidden>
+    <div class="topbar">
+      <div class="topbar__brand">VIP <b>LUXÚRIA</b></div>
+      <span class="badge" id="count-badge">0 perfis</span>
+      <div class="topbar__spacer"></div>
+      <a class="btn btn--ghost btn--sm" href="index.html" target="_blank">Ver site ↗</a>
+      <button class="btn btn--ghost btn--sm" id="logout">Sair</button>
+    </div>
+
+    <div class="wrap">
+      <div class="tabs">
+        <button class="tab active" data-tab="perfis">Perfis</button>
+        <button class="tab" data-tab="cidades">Cidades &amp; Bairros</button>
+        <button class="tab" data-tab="config">Configurações</button>
+        <button class="tab" data-tab="backup">Publicar / Backup</button>
+      </div>
+
+      <!-- LISTA DE PERFIS -->
+      <section id="tab-perfis" class="tabpane">
+        <div class="toolbar">
+          <div class="search">🔍 <input id="busca" placeholder="Buscar por nome..." /></div>
+          <select id="filtro-cidade" class="btn btn--ghost"><option value="">Todas as cidades</option></select>
+          <button class="btn btn--gold" id="novo-perfil">+ Novo perfil</button>
+        </div>
+        <div id="lista-perfis" class="adm-grid"></div>
+      </section>
+
+      <!-- FORM DE PERFIL -->
+      <section id="tab-form" class="tabpane" hidden>
+        <div class="panel">
+          <h2 id="form-titulo">Novo perfil</h2>
+          <p class="desc">Preencha os dados da acompanhante. O WhatsApp é o número PRÓPRIO dela — é para lá que os clientes serão direcionados.</p>
+
+          <div class="grid2">
+            <div class="field">
+              <label>Nome artístico *</label>
+              <input id="f-nome" placeholder="Ex.: Luna Sophie" />
+            </div>
+            <div class="field">
+              <label>WhatsApp (com DDD) *</label>
+              <input id="f-whats" placeholder="Ex.: 5521999990001" />
+              <small>Só números: 55 + DDD + número.</small>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label>Cidade *</label>
+              <select id="f-cidade"></select>
+            </div>
+            <div class="field">
+              <label>Bairro *</label>
+              <select id="f-bairro"></select>
+            </div>
+          </div>
+
+          <div class="grid3">
+            <div class="field"><label>Idade</label><input id="f-idade" type="number" min="18" placeholder="24" /></div>
+            <div class="field"><label>Altura</label><input id="f-altura" placeholder="1,72m" /></div>
+            <div class="field"><label>Manequim</label><input id="f-manequim" placeholder="38" /></div>
+          </div>
+          <div class="grid3">
+            <div class="field"><label>Medidas</label><input id="f-medidas" placeholder="90-60-90" /></div>
+            <div class="field"><label>Valor (referência)</label><input id="f-valor" placeholder="Sob consulta" /></div>
+            <div class="field"><label>Cor do placeholder (0–360)</label><input id="f-hue" type="number" min="0" max="360" placeholder="300" /></div>
+          </div>
+
+          <div class="field">
+            <label>Descrição / apresentação</label>
+            <textarea id="f-descricao" placeholder="Texto elegante de apresentação..."></textarea>
+          </div>
+
+          <div class="grid3">
+            <div class="field"><label>Serviços (separe por vírgula)</label><input id="f-servicos" placeholder="Jantar, Eventos, Viagens" /></div>
+            <div class="field"><label>Atendimento (vírgula)</label><input id="f-atendimento" placeholder="Com local, Hotéis, Motéis" /></div>
+            <div class="field"><label>Idiomas (vírgula)</label><input id="f-idiomas" placeholder="Português, Inglês" /></div>
+          </div>
+          <div class="field"><label>Horário</label><input id="f-horario" placeholder="10h às 23h — Segunda a Sábado" /></div>
+
+          <h3>Destaques</h3>
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="f-nova" /> Nova</label>
+            <label class="check"><input type="checkbox" id="f-exclusiva" /> Exclusiva</label>
+            <label class="check"><input type="checkbox" id="f-temVideo" /> Tem vídeo</label>
+            <label class="check"><input type="checkbox" id="f-possuiLocal" /> Possui local</label>
+            <label class="check"><input type="checkbox" id="f-destaque" /> Destaque na home</label>
+          </div>
+
+          <h3>Fotos</h3>
+          <p class="desc">A primeira foto é a capa. Arraste para enviar ou clique. As imagens são otimizadas automaticamente.</p>
+          <div class="drop" id="drop">
+            📷 Clique ou arraste imagens aqui<br><small>JPG / PNG — várias de uma vez</small>
+            <input type="file" id="file-input" accept="image/*" multiple hidden />
+          </div>
+          <div class="thumbs" id="thumbs"></div>
+        </div>
+
+        <div class="formbar">
+          <button class="btn btn--ghost" id="form-cancelar">Cancelar</button>
+          <button class="btn btn--danger" id="form-excluir" hidden>Excluir</button>
+          <button class="btn btn--gold" id="form-salvar">Salvar perfil</button>
+        </div>
+      </section>
+
+      <!-- CIDADES -->
+      <section id="tab-cidades" class="tabpane" hidden>
+        <div class="panel">
+          <h2>Cidades &amp; Bairros</h2>
+          <p class="desc">Adicione cidades e seus bairros. O "slug" é gerado automaticamente (usado nos links).</p>
+          <div id="cidades-lista"></div>
+          <button class="btn btn--ghost" id="add-cidade">+ Adicionar cidade</button>
+        </div>
+        <div class="formbar">
+          <button class="btn btn--gold" id="salvar-cidades">Salvar cidades</button>
+        </div>
+      </section>
+
+      <!-- CONFIG -->
+      <section id="tab-config" class="tabpane" hidden>
+        <div class="panel">
+          <h2>Configurações</h2>
+          <div class="field">
+            <label>WhatsApp da central (admin)</label>
+            <input id="cfg-admin-wa" placeholder="5565999999999" />
+            <small>Recebe os contatos da home e os cadastros de "Anuncie aqui".</small>
+          </div>
+          <h3>Segurança</h3>
+          <div class="grid2">
+            <div class="field">
+              <label>Nova senha do painel</label>
+              <input id="cfg-pass" type="text" placeholder="Deixe em branco para não alterar" />
+              <small>Atenção: é uma proteção simples (no navegador), não use senha importante.</small>
+            </div>
+          </div>
+          <button class="btn btn--gold" id="salvar-config">Salvar configurações</button>
+        </div>
+      </section>
+
+      <!-- BACKUP / PUBLICAR -->
+      <section id="tab-backup" class="tabpane" hidden>
+        <div class="panel">
+          <h2>Publicar na internet</h2>
+          <p class="desc">Suas alterações ficam salvas <b>neste navegador</b>. Para que apareçam para todos no site publicado,
+            baixe o <b>data.js</b> atualizado e substitua o arquivo no seu site.</p>
+          <button class="btn btn--gold" id="exportar-js">⬇ Baixar data.js (para publicar)</button>
+
+          <div class="storage" id="storage-info"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Backup &amp; Restauração</h2>
+          <p class="desc">Guarde uma cópia de segurança ou restaure de um arquivo.</p>
+          <div class="toolbar">
+            <button class="btn btn--ghost" id="exportar-json">⬇ Exportar backup (.json)</button>
+            <button class="btn btn--ghost" id="importar-btn">⬆ Importar backup (.json)</button>
+            <input type="file" id="importar-file" accept="application/json,.json" hidden />
+            <button class="btn btn--danger" id="reset-tudo">↺ Restaurar padrão de fábrica</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="data.js"></script>
+  <script src="store.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
