@@ -3,3 +3,9 @@ Thumbs.db
 *.log
 node_modules/
 vip-backup.json
+
+# Segredos / variáveis de ambiente (NÃO versionar)
+.env
+.env.local
+.env.*.local
+.vercel
