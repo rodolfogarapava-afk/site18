@@ -17,10 +17,11 @@
     <form class="login__box" id="login-form">
       <div class="login__brand">VIP LUXÚRIA</div>
       <div class="login__sub">Painel Administrativo</div>
+      <input type="email" id="login-email" placeholder="E-mail" autocomplete="username" />
       <input type="password" id="login-pass" placeholder="Senha de acesso" autocomplete="current-password" />
       <div class="login__err" id="login-err"></div>
       <button class="btn btn--gold btn--block" type="submit">Entrar</button>
-      <p class="login__hint">Senha padrão: <b>admin</b> — troque na aba "Configurações".</p>
+      <p class="login__hint">Acesso restrito ao administrador (Supabase Auth).</p>
     </form>
   </div>
 
@@ -154,9 +155,9 @@
           <h3>Segurança</h3>
           <div class="grid2">
             <div class="field">
-              <label>Nova senha do painel</label>
-              <input id="cfg-pass" type="text" placeholder="Deixe em branco para não alterar" />
-              <small>Atenção: é uma proteção simples (no navegador), não use senha importante.</small>
+              <label>Nova senha de acesso</label>
+              <input id="cfg-pass" type="password" placeholder="Deixe em branco para não alterar" autocomplete="new-password" />
+              <small>Altera a senha do seu login (Supabase Auth). Mínimo de 6 caracteres.</small>
             </div>
           </div>
           <button class="btn btn--gold" id="salvar-config">Salvar configurações</button>
@@ -166,17 +167,16 @@
       <!-- BACKUP / PUBLICAR -->
       <section id="tab-backup" class="tabpane" hidden>
         <div class="panel">
-          <h2>Publicar na internet</h2>
-          <p class="desc">Suas alterações ficam salvas <b>neste navegador</b>. Para que apareçam para todos no site publicado,
-            baixe o <b>data.js</b> atualizado e substitua o arquivo no seu site.</p>
-          <button class="btn btn--gold" id="exportar-js">⬇ Baixar data.js (para publicar)</button>
-
+          <h2>Publicação automática</h2>
+          <p class="desc">Tudo o que você salva já vai <b>direto para o banco de dados (Supabase)</b> e
+            aparece para todos no site na hora — <b>não precisa</b> mais baixar ou substituir arquivos.</p>
           <div class="storage" id="storage-info"></div>
         </div>
 
         <div class="panel">
           <h2>Backup &amp; Restauração</h2>
-          <p class="desc">Guarde uma cópia de segurança ou restaure de um arquivo.</p>
+          <p class="desc">Guarde uma cópia de segurança (.json) ou restaure de um arquivo. A importação e o
+            "restaurar padrão" <b>substituem os dados do site</b>.</p>
           <div class="toolbar">
             <button class="btn btn--ghost" id="exportar-json">⬇ Exportar backup (.json)</button>
             <button class="btn btn--ghost" id="importar-btn">⬆ Importar backup (.json)</button>
@@ -190,6 +190,8 @@
 
   <div id="toast" class="toast"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="data.js"></script>
   <script src="store.js"></script>
   <script src="admin.js"></script>

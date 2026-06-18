@@ -1,26 +1,19 @@
 /* ============================================================
-   VIP LUXÚRIA — Painel Admin
-   CRUD de perfis, cidades, upload de imagens, backup e publicação.
+   VIP LUXÚRIA — Painel Admin (Supabase)
+   Login (Supabase Auth) + CRUD de perfis/cidades/config no banco
+   + upload de fotos no Storage + backup.
    Dados via window.VIPStore (store.js).
    ============================================================ */
 
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
-/* Estado de trabalho (cópia editável) */
-let DATA = VIPStore.current();   // { adminWhatsapp, cidades, perfis }
-let fotos = [];                  // fotos do perfil em edição
+/* Estado de trabalho (cópia editável carregada do banco) */
+let DATA = { adminWhatsapp: "", cidades: {}, perfis: [] };
+let fotos = [];                  // fotos (URLs) do perfil em edição
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
 
 /* ---------- Utilidades ---------- */
-const PASS_KEY = "vip_admin_pass";
-const AUTH_KEY = "vip_admin_auth";
-
-function getPass() {
-  try { return localStorage.getItem(PASS_KEY) || "admin"; } catch (e) { return "admin"; }
-}
-function setPass(p) { try { localStorage.setItem(PASS_KEY, p); } catch (e) {} }
-
 function slugify(s) {
   return (s || "").toString().toLowerCase().trim()
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -40,11 +33,16 @@ function toast(msg, isErr) {
   t.textContent = msg;
   t.className = "toast show" + (isErr ? " err" : "");
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => t.className = "toast", 2600);
+  toast._t = setTimeout(() => t.className = "toast", 3200);
 }
 
-function persist() { VIPStore.save(DATA); updateBadge(); }
 function updateBadge() { $("#count-badge").textContent = DATA.perfis.length + " perfis"; }
+
+/* Recarrega DATA do banco (após gravações). */
+async function reload() {
+  DATA = await VIPStore.loadAll();
+  updateBadge();
+}
 
 /* Placeholder igual ao do site (para a lista do admin) */
 function fotoCapa(p, i = 0) {
@@ -62,31 +60,38 @@ function fotoCapa(p, i = 0) {
 }
 
 /* ============================================================
-   LOGIN
+   LOGIN  (Supabase Auth: e-mail + senha)
    ============================================================ */
-function initLogin() {
-  let authed = false;
-  try { authed = sessionStorage.getItem(AUTH_KEY) === "1"; } catch (e) {}
-  if (authed) return showAdmin();
+async function initLogin() {
+  try {
+    const session = await VIPStore.auth.getSession();
+    if (session) return showAdmin();
+  } catch (e) {}
 
-  $("#login-form").addEventListener("submit", e => {
+  $("#login-form").addEventListener("submit", async e => {
     e.preventDefault();
-    const val = $("#login-pass").value;
-    if (val === getPass()) {
-      try { sessionStorage.setItem(AUTH_KEY, "1"); } catch (e) {}
-      showAdmin();
-    } else {
-      $("#login-err").textContent = "Senha incorreta.";
+    const email = $("#login-email").value;
+    const pass  = $("#login-pass").value;
+    $("#login-err").textContent = "";
+    const btn = $("#login-form button[type=submit]");
+    btn.disabled = true;
+    try {
+      await VIPStore.auth.signIn(email, pass);
+      await showAdmin();
+    } catch (err) {
+      $("#login-err").textContent = "E-mail ou senha incorretos.";
+    } finally {
+      btn.disabled = false;
     }
   });
 }
-function showAdmin() {
+async function showAdmin() {
   $("#login").hidden = true;
   $("#admin").hidden = false;
-  boot();
+  await boot();
 }
-$("#logout").addEventListener("click", () => {
-  try { sessionStorage.removeItem(AUTH_KEY); } catch (e) {}
+$("#logout").addEventListener("click", async () => {
+  try { await VIPStore.auth.signOut(); } catch (e) {}
   location.reload();
 });
 
@@ -134,7 +139,7 @@ function renderLista() {
       </div>
       <div class="adm-card__body">
         <div class="adm-card__name">${p.nome}</div>
-        <div class="adm-card__meta">${c ? c.nome + " • " + c.uf : p.cidade} · ${p.idade || "?"} anos</div>
+        <div class="adm-card__meta">${c ? c.nome + " • " + c.uf : (p.cidade || "—")} · ${p.idade || "?"} anos</div>
         <div class="adm-card__meta">📱 ${p.whatsapp || "—"}</div>
         <div class="adm-card__actions">
           <button class="btn btn--ghost btn--sm" data-edit="${idx}">Editar</button>
@@ -151,14 +156,18 @@ $("#busca").addEventListener("input", renderLista);
 $("#filtro-cidade").addEventListener("change", renderLista);
 $("#novo-perfil").addEventListener("click", () => abrirForm(-1));
 
-function excluirPerfil(idx) {
+async function excluirPerfil(idx) {
   const p = DATA.perfis[idx];
   if (!p) return;
   if (!confirm(`Excluir o perfil de "${p.nome}"? Esta ação não pode ser desfeita.`)) return;
-  DATA.perfis.splice(idx, 1);
-  persist();
-  renderLista();
-  toast("Perfil excluído.");
+  try {
+    await VIPStore.deletePerfil(p);
+    await reload();
+    renderLista();
+    toast("Perfil excluído.");
+  } catch (e) {
+    toast("Erro ao excluir: " + (e.message || e), true);
+  }
 }
 
 /* ============================================================
@@ -215,19 +224,20 @@ function abrirForm(idx) {
 $("#f-cidade").addEventListener("change", () => preencherSelectBairros($("#f-cidade").value));
 
 $("#form-cancelar").addEventListener("click", () => showTab("perfis"));
-$("#form-excluir").addEventListener("click", () => {
-  if (editIndex >= 0) { excluirPerfil(editIndex); showTab("perfis"); }
+$("#form-excluir").addEventListener("click", async () => {
+  if (editIndex >= 0) { await excluirPerfil(editIndex); showTab("perfis"); }
 });
 
-$("#form-salvar").addEventListener("click", () => {
+$("#form-salvar").addEventListener("click", async () => {
   const nome = $("#f-nome").value.trim();
   if (!nome) return toast("Informe o nome.", true);
   const whats = $("#f-whats").value.replace(/\D/g, "");
   if (!whats) return toast("Informe o WhatsApp (só números).", true);
 
-  const base = slugify(nome + "-" + ($("#f-bairro").value || ""));
+  const editando = editIndex >= 0;
   const perfil = {
-    slug: editIndex >= 0 ? DATA.perfis[editIndex].slug : uniqueSlug(slugify(nome), editIndex),
+    id:   editando ? DATA.perfis[editIndex].id : undefined,
+    slug: editando ? DATA.perfis[editIndex].slug : uniqueSlug(slugify(nome), editIndex),
     nome,
     cidade: $("#f-cidade").value,
     bairro: $("#f-bairro").value,
@@ -251,21 +261,24 @@ $("#form-salvar").addEventListener("click", () => {
     fotos: [...fotos],
   };
 
+  const btn = $("#form-salvar");
+  btn.disabled = true;
   try {
-    if (editIndex >= 0) DATA.perfis[editIndex] = perfil;
-    else DATA.perfis.unshift(perfil);
-    persist();
+    await VIPStore.savePerfil(perfil);
+    await reload();
+    toast("Perfil salvo com sucesso!");
+    showTab("perfis");
   } catch (e) {
-    return toast("Erro ao salvar (armazenamento cheio?). Reduza o nº de fotos.", true);
+    toast("Erro ao salvar: " + (e.message || e), true);
+  } finally {
+    btn.disabled = false;
   }
-  toast("Perfil salvo com sucesso!");
-  showTab("perfis");
 });
 
 /* ============================================================
-   UPLOAD DE IMAGENS (com otimização via canvas)
+   UPLOAD DE IMAGENS (otimiza via canvas e envia ao Storage)
    ============================================================ */
-function fileToDataURL(file, maxW = 900, quality = 0.82) {
+function fileToBlob(file, maxW = 1000, quality = 0.82) {
   return new Promise((resolve, reject) => {
     const fr = new FileReader();
     fr.onload = () => {
@@ -277,8 +290,7 @@ function fileToDataURL(file, maxW = 900, quality = 0.82) {
         const canvas = document.createElement("canvas");
         canvas.width = w; canvas.height = h;
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        try { resolve(canvas.toDataURL("image/jpeg", quality)); }
-        catch (e) { resolve(fr.result); }
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error("Falha ao processar a imagem.")), "image/jpeg", quality);
       };
       img.onerror = reject;
       img.src = fr.result;
@@ -291,13 +303,21 @@ function fileToDataURL(file, maxW = 900, quality = 0.82) {
 async function addFiles(fileList) {
   const files = [...fileList].filter(f => f.type.startsWith("image/"));
   if (!files.length) return;
-  toast("Otimizando imagens...");
+  toast("Enviando imagens...");
+  let ok = 0;
   for (const f of files) {
-    try { fotos.push(await fileToDataURL(f)); }
-    catch (e) { toast("Falha ao ler uma imagem.", true); }
+    try {
+      const blob = await fileToBlob(f);
+      const url = await VIPStore.uploadFoto(blob, "jpg");
+      fotos.push(url);
+      ok++;
+      renderThumbs();
+    } catch (e) {
+      console.error(e);
+      toast("Falha ao enviar uma imagem.", true);
+    }
   }
-  renderThumbs();
-  toast(files.length + " imagem(ns) adicionada(s).");
+  if (ok) toast(ok + " imagem(ns) enviada(s).");
 }
 
 function renderThumbs() {
@@ -356,10 +376,10 @@ function renderCidades() {
   }).join("");
 
   $$("[data-delcity]", box).forEach(b => b.addEventListener("click", () => {
-    if (confirm("Remover a cidade e seus bairros?")) { delete DATA.cidades[b.dataset.delcity]; renderCidades(); }
+    if (confirm("Remover a cidade e seus bairros? (Salve as cidades para aplicar.)")) { delete DATA.cidades[b.dataset.delcity]; renderCidades(); }
   }));
   $$("[data-addbairro]", box).forEach(b => b.addEventListener("click", () => {
-    DATA.cidades[b.dataset.addbairro].bairros.push({ slug: "novo-bairro-" + Date.now().toString().slice(-4), nome: "Novo bairro" });
+    DATA.cidades[b.dataset.addbairro].bairros.push({ slug: "novo-bairro-" + String(DATA.cidades[b.dataset.addbairro].bairros.length + 1), nome: "Novo bairro" });
     syncCidadesFromInputs(); renderCidades();
   }));
   $$("[data-delbairro]", box).forEach(b => b.addEventListener("click", () => {
@@ -397,11 +417,20 @@ $("#add-cidade").addEventListener("click", () => {
   renderCidades();
 });
 
-$("#salvar-cidades").addEventListener("click", () => {
+$("#salvar-cidades").addEventListener("click", async () => {
   syncCidadesFromInputs();
-  persist();
-  toast("Cidades salvas!");
-  renderCidades();
+  const btn = $("#salvar-cidades");
+  btn.disabled = true;
+  try {
+    await VIPStore.saveCidades(DATA.cidades);
+    await reload();
+    toast("Cidades salvas!");
+    renderCidades();
+  } catch (e) {
+    toast("Erro ao salvar cidades: " + (e.message || e), true);
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 /* ============================================================
@@ -411,12 +440,25 @@ function fillConfig() {
   $("#cfg-admin-wa").value = DATA.adminWhatsapp || "";
   $("#cfg-pass").value = "";
 }
-$("#salvar-config").addEventListener("click", () => {
-  DATA.adminWhatsapp = $("#cfg-admin-wa").value.replace(/\D/g, "") || DATA.adminWhatsapp;
+$("#salvar-config").addEventListener("click", async () => {
+  const wa = $("#cfg-admin-wa").value.replace(/\D/g, "") || DATA.adminWhatsapp;
   const np = $("#cfg-pass").value.trim();
-  if (np) setPass(np);
-  persist();
-  toast("Configurações salvas!");
+  const btn = $("#salvar-config");
+  btn.disabled = true;
+  try {
+    await VIPStore.saveConfig(wa);
+    DATA.adminWhatsapp = wa;
+    if (np) {
+      if (np.length < 6) throw new Error("a nova senha precisa de ao menos 6 caracteres.");
+      await VIPStore.auth.updatePassword(np);
+    }
+    $("#cfg-pass").value = "";
+    toast("Configurações salvas!");
+  } catch (e) {
+    toast("Erro ao salvar: " + (e.message || e), true);
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 /* ============================================================
@@ -430,22 +472,14 @@ function download(filename, content, mime) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
-$("#exportar-js").addEventListener("click", () => {
-  const js =
-`/* ============================================================
-   VIP LUXÚRIA — data.js gerado pelo Painel Admin
-   Substitua o data.js do site por este arquivo para publicar.
-   ============================================================ */
-const SEED = ${JSON.stringify(DATA, null, 2)};
-if (typeof window !== "undefined") window.SEED = SEED;
-`;
-  download("data.js", js, "text/javascript");
-  toast("data.js baixado! Substitua o arquivo no site para publicar.");
-});
-
-$("#exportar-json").addEventListener("click", () => {
-  download("vip-backup.json", JSON.stringify(DATA, null, 2), "application/json");
-  toast("Backup exportado.");
+$("#exportar-json").addEventListener("click", async () => {
+  try {
+    const d = await VIPStore.exportAll();
+    download("vip-backup.json", JSON.stringify(d, null, 2), "application/json");
+    toast("Backup exportado.");
+  } catch (e) {
+    toast("Erro ao exportar: " + (e.message || e), true);
+  }
 });
 
 $("#importar-btn").addEventListener("click", () => $("#importar-file").click());
@@ -453,48 +487,53 @@ $("#importar-file").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
   const fr = new FileReader();
-  fr.onload = () => {
+  fr.onload = async () => {
     try {
       const d = JSON.parse(fr.result);
-      if (!d.cidades || !Array.isArray(d.perfis)) throw new Error("formato");
-      DATA = d;
-      persist();
+      if (!d.cidades || !Array.isArray(d.perfis)) throw new Error("formato inválido");
+      if (!confirm("Importar este backup vai SUBSTITUIR os dados atuais do site. Continuar?")) return;
+      await VIPStore.importAll(d);
+      await reload();
       toast("Backup importado com sucesso!");
       showTab("perfis");
     } catch (err) {
-      toast("Arquivo inválido.", true);
+      toast("Erro ao importar: " + (err.message || err), true);
     }
   };
   fr.readAsText(file);
   e.target.value = "";
 });
 
-$("#reset-tudo").addEventListener("click", () => {
-  if (!confirm("Restaurar tudo para o padrão de fábrica? Suas alterações salvas serão perdidas.")) return;
-  VIPStore.reset();
-  DATA = VIPStore.seed();
-  persist();
-  toast("Padrão de fábrica restaurado.");
-  showTab("perfis");
+$("#reset-tudo").addEventListener("click", async () => {
+  if (!confirm("Restaurar tudo para o padrão de fábrica? Os dados atuais do site serão substituídos.")) return;
+  try {
+    await VIPStore.resetToSeed();
+    await reload();
+    toast("Padrão de fábrica restaurado.");
+    showTab("perfis");
+  } catch (e) {
+    toast("Erro ao restaurar: " + (e.message || e), true);
+  }
 });
 
 function renderStorage() {
-  const bytes = new Blob([JSON.stringify(DATA)]).size;
-  const kb = (bytes / 1024).toFixed(0);
-  const pct = Math.min(100, (bytes / (5 * 1024 * 1024)) * 100);
+  const online = !!(window.VIPData && window.VIPData.online);
   $("#storage-info").innerHTML = `
-    Espaço usado: <b>${kb} KB</b> de ~5 MB (limite do navegador).
-    <div class="storage__bar"><div class="storage__fill" style="width:${pct}%"></div></div>
-    ${pct > 80 ? `<span style="color:#e88">Atenção: perto do limite. Use menos fotos por perfil.</span>` : ""}`;
+    Perfis: <b>${DATA.perfis.length}</b> · Cidades: <b>${Object.keys(DATA.cidades).length}</b><br>
+    Conexão: <b style="color:${online ? "#8e8" : "#e88"}">${online ? "Supabase conectado" : "verificando / offline"}</b>`;
 }
 
 /* ============================================================
    BOOT
    ============================================================ */
-function boot() {
-  DATA = VIPStore.current();
-  updateBadge();
-  // filtro de cidade na lista
+async function boot() {
+  try {
+    await reload();
+  } catch (e) {
+    toast("Erro ao carregar dados: " + (e.message || e), true);
+    DATA = { adminWhatsapp: "", cidades: {}, perfis: [] };
+    updateBadge();
+  }
   $("#filtro-cidade").innerHTML = `<option value="">Todas as cidades</option>` +
     Object.keys(DATA.cidades).map(k => `<option value="${k}">${DATA.cidades[k].nome}</option>`).join("");
   renderLista();

@@ -313,8 +313,7 @@ function viewAnuncie() {
             <label>Cidade</label>
             <select name="cidade" id="sel-cidade" required>
               <option value="">Selecione...</option>
-              <option value="rio-de-janeiro">Rio de Janeiro — RJ</option>
-              <option value="cuiaba">Cuiabá — MT</option>
+              ${Object.keys(CIDADES).map(k => `<option value="${k}">${CIDADES[k].nome} — ${CIDADES[k].uf}</option>`).join("")}
             </select>
           </div>
           <div>
@@ -497,10 +496,20 @@ function initHeader() {
   window.addEventListener("hashchange", updateFloat); updateFloat();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   $("#year").textContent = new Date().getFullYear();
-  montarMenus();
   initAgeGate();
   initHeader();
+
+  // Estado de carregamento enquanto buscamos os dados no Supabase
+  app.innerHTML = `<section class="page"><div class="container" style="text-align:center;padding:4rem 0;color:var(--muted)">
+    <p>Carregando…</p></div></section>`;
+
+  // Aguarda os dados (Supabase, com fallback para o SEED) antes de montar a UI
+  if (window.VIPData && window.VIPData.ready) {
+    try { await window.VIPData.ready; } catch (e) {}
+  }
+
+  montarMenus();
   router();
 });
