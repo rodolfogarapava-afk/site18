@@ -109,10 +109,12 @@ function viewHome() {
 
   const cidadeCard = key => {
     const c = CIDADES[key];
+    if (!c) return "";
     const n = PERFIS.filter(p => p.cidade === key).length;
     return `<a class="hero__city" href="#/cidade/${key}">
       <b>${c.nome}</b><span>${c.uf} • ${n} acompanhantes</span></a>`;
   };
+  const cardsCidades = Object.keys(CIDADES || {}).map(cidadeCard).join("");
 
   app.innerHTML = `
   <section class="hero">
@@ -122,8 +124,7 @@ function viewHome() {
       <p>Perfis selecionados, fotos reais e atendimento exclusivo. Escolha sua cidade
          e fale diretamente pelo WhatsApp, com total sigilo.</p>
       <div class="hero__cities">
-        ${cidadeCard("rio-de-janeiro")}
-        ${cidadeCard("cuiaba")}
+        ${cardsCidades}
       </div>
     </div>
   </section>

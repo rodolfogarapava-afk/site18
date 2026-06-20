@@ -154,16 +154,17 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
 }
 .hero::after{content:"";position:absolute;inset:0;background:
   repeating-linear-gradient(135deg,transparent,transparent 38px,rgba(201,162,39,.03) 38px,rgba(201,162,39,.03) 39px)}
-.hero__content{position:relative;max-width:680px}
+.hero__content{position:relative;max-width:720px;margin:0 auto;text-align:center}
+.hero__content h1,.hero__content>p{margin-left:auto;margin-right:auto}
 .hero__eyebrow{color:var(--gold-2);letter-spacing:.32em;font-size:.78rem;text-transform:uppercase;margin-bottom:1.1rem}
 .hero h1{font-size:clamp(2.3rem,6vw,4rem);margin-bottom:1.1rem}
 .hero h1 em{color:var(--gold-2);font-style:italic}
 .hero p{color:var(--muted);font-size:1.08rem;max-width:540px;margin-bottom:2rem}
-.hero__cities{display:flex;gap:1rem;flex-wrap:wrap}
+.hero__cities{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
 .hero__city{
   display:flex;flex-direction:column;gap:.2rem;padding:1.1rem 1.6rem;
   border:1px solid var(--line);border-radius:var(--radius);background:#0d0d0db3;
-  transition:.2s;min-width:170px;
+  transition:.2s;min-width:170px;text-align:center;cursor:pointer;
 }
 .hero__city:hover{border-color:var(--gold);transform:translateY(-3px)}
 .hero__city b{font-family:var(--serif);font-size:1.25rem;color:var(--white)}
