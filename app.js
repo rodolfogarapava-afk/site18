@@ -102,19 +102,29 @@ const ordena = list => [...list].sort((a, b) =>
    VIEWS
    ============================================================ */
 
+/* Cartão de cidade da home/busca */
+function cidadeCard(key) {
+  const c = CIDADES[key];
+  if (!c) return "";
+  const n = PERFIS.filter(p => p.cidade === key).length;
+  return `<a class="city-card" href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
+    <b>${c.nome}</b><span>${c.uf}${n ? ` • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : ""}</span></a>`;
+}
+
+/* Cidades ordenadas: as com mais perfis primeiro, depois alfabética */
+function cidadesOrdenadas() {
+  const cont = key => PERFIS.filter(p => p.cidade === key).length;
+  return Object.keys(CIDADES || {}).sort((a, b) =>
+    (cont(b) - cont(a)) || CIDADES[a].nome.localeCompare(CIDADES[b].nome, "pt-BR"));
+}
+
 function viewHome() {
   const exclusivas = ordena(PERFIS.filter(p => p.exclusiva));
   const novidades = ordena(PERFIS.filter(p => p.nova));
   const modelos = ordena(PERFIS);
 
-  const cidadeCard = key => {
-    const c = CIDADES[key];
-    if (!c) return "";
-    const n = PERFIS.filter(p => p.cidade === key).length;
-    return `<a class="hero__city" href="#/cidade/${key}">
-      <b>${c.nome}</b><span>${c.uf} • ${n} acompanhantes</span></a>`;
-  };
-  const cardsCidades = Object.keys(CIDADES || {}).map(cidadeCard).join("");
+  const cardsCidades = cidadesOrdenadas().map(cidadeCard).join("");
+  const totalCidades = Object.keys(CIDADES || {}).length;
 
   app.innerHTML = `
   <section class="hero">
@@ -123,13 +133,25 @@ function viewHome() {
       <h1>Acompanhantes de <em>luxo</em><br/>no Brasil</h1>
       <p>Perfis selecionados, fotos reais e atendimento exclusivo. Escolha sua cidade
          e fale diretamente pelo WhatsApp, com total sigilo.</p>
-      <div class="hero__cities">
-        ${cardsCidades}
-      </div>
     </div>
   </section>
 
   <section class="section">
+    <div class="container">
+      <div class="section__head">
+        <div><h2>Escolha sua <span>cidade</span></h2><p class="lead">${totalCidades} cidades em todo o Brasil</p></div>
+      </div>
+      <div class="toolbar">
+        <div class="search">
+          🔍 <input id="busca-cidade" type="text" placeholder="Buscar cidade ou estado (ex.: São Paulo, RJ)…" autocomplete="off" />
+        </div>
+      </div>
+      <div id="cidades-grid" class="city-grid">${cardsCidades}</div>
+      <p id="cidades-vazio" class="lead" style="text-align:center;margin-top:1rem" hidden>Nenhuma cidade encontrada.</p>
+    </div>
+  </section>
+
+  <section class="section section--alt">
     <div class="container">
       <div class="section__head">
         <div><h2>Acompanhantes <span>exclusivas</span></h2><p class="lead">Seleção premium verificada</p></div>
@@ -138,7 +160,7 @@ function viewHome() {
     </div>
   </section>
 
-  <section class="section section--alt">
+  <section class="section">
     <div class="container">
       <div class="section__head">
         <div><h2><span>Novidades</span></h2><p class="lead">Perfis recém-chegados</p></div>
@@ -147,7 +169,7 @@ function viewHome() {
     </div>
   </section>
 
-  <section class="section">
+  <section class="section section--alt">
     <div class="container">
       <div class="section__head">
         <div><h2><span>Modelos</span></h2><p class="lead">Conheça todas as nossas acompanhantes</p></div>
@@ -155,6 +177,19 @@ function viewHome() {
       ${gridHtml(modelos)}
     </div>
   </section>`;
+
+  // Busca de cidade ao vivo
+  const bc = $("#busca-cidade");
+  bc?.addEventListener("input", () => {
+    const q = bc.value.trim().toLowerCase();
+    let visiveis = 0;
+    $$("#cidades-grid .city-card").forEach(el => {
+      const hit = el.dataset.nome.includes(q);
+      el.hidden = !hit;
+      if (hit) visiveis++;
+    });
+    $("#cidades-vazio").hidden = visiveis > 0;
+  });
 }
 
 function viewCidade(cidade, filtro) {
@@ -304,8 +339,8 @@ function viewAnuncie() {
     <div class="container">
       <a class="back-link" href="#/">‹ Início</a>
       <h1>Anuncie aqui</h1>
-      <p>Faça parte da Aliança e divulgue seu perfil para o público de alto padrão do
-         Rio de Janeiro e de Cuiabá. Preencha os dados abaixo: ao enviar, abriremos o WhatsApp
+      <p>Faça parte da Aliança e divulgue seu perfil para o público de alto padrão em
+         todo o Brasil. Preencha os dados abaixo: ao enviar, abriremos o WhatsApp
          da nossa central com tudo preenchido — é só confirmar e enviar suas fotos.</p>
 
       <form class="form" id="form-anuncie">
@@ -322,8 +357,8 @@ function viewAnuncie() {
             </select>
           </div>
           <div>
-            <label>Bairro</label>
-            <select name="bairro" id="sel-bairro" required><option value="">Selecione a cidade...</option></select>
+            <label>Bairro <small style="color:var(--muted)">(se houver)</small></label>
+            <select name="bairro" id="sel-bairro"><option value="">Selecione a cidade...</option></select>
           </div>
         </div>
         <div class="row">
@@ -342,16 +377,18 @@ function viewAnuncie() {
   const selCidade = $("#sel-cidade"), selBairro = $("#sel-bairro");
   selCidade.addEventListener("change", () => {
     const c = CIDADES[selCidade.value];
-    selBairro.innerHTML = c
-      ? `<option value="">Selecione...</option>` + c.bairros.map(b => `<option value="${b.slug}">${b.nome}</option>`).join("")
-      : `<option value="">Selecione a cidade...</option>`;
+    selBairro.innerHTML = !c
+      ? `<option value="">Selecione a cidade...</option>`
+      : (c.bairros && c.bairros.length
+          ? `<option value="">Selecione...</option>` + c.bairros.map(b => `<option value="${b.slug}">${b.nome}</option>`).join("")
+          : `<option value="">Sem bairros cadastrados</option>`);
   });
 
   $("#form-anuncie").addEventListener("submit", e => {
     e.preventDefault();
     const f = e.target;
     const cidadeNome = CIDADES[f.cidade.value]?.nome || f.cidade.value;
-    const bairroN = bairroNome(f.cidade.value, f.bairro.value);
+    const bairroN = f.bairro.value ? bairroNome(f.cidade.value, f.bairro.value) : "-";
     const msg =
 `*Novo anúncio — Aliança*
 Nome: ${f.nome.value}
@@ -462,25 +499,21 @@ function montarMenus() {
   const host = $("#nav-cities");
   if (!host) return;
 
-  const keys = Object.keys(CIDADES || {});
-  host.innerHTML = keys.map(key => {
+  // Um único menu "Cidades" com busca e rolagem (27 capitais)
+  const links = cidadesOrdenadas().map(key => {
     const c = CIDADES[key];
-    if (!c) return "";
-    const bairros = (c.bairros || [])
-      .map(b => `<a href="#/cidade/${key}/bairro/${b.slug}">${b.nome}</a>`).join("");
-    return `<div class="nav__group">
-        <button class="nav__btn" type="button" aria-haspopup="true" aria-expanded="false">
-          ${c.nome} <span class="nav__caret" aria-hidden="true">▾</span>
-        </button>
-        <div class="nav__menu">
-          <a href="#/cidade/${key}">Todas em ${c.nome}</a>
-          <a href="#/cidade/${key}/novidades">✨ Novidades</a>
-          <a href="#/cidade/${key}/exclusivas">💎 Exclusivas</a>
-          <a href="#/cidade/${key}/videos">▶ Vídeos</a>
-          ${bairros ? `<div class="nav__menu-head">Bairros</div>${bairros}` : ""}
-        </div>
-      </div>`;
+    return `<a href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">${c.nome} <small>${c.uf}</small></a>`;
   }).join("");
+
+  host.innerHTML = `<div class="nav__group">
+      <button class="nav__btn" type="button" aria-haspopup="true" aria-expanded="false">
+        Cidades <span class="nav__caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="nav__menu nav__menu--cities">
+        <div class="nav__menu-search">🔍 <input id="nav-busca-cidade" type="text" placeholder="Buscar cidade…" autocomplete="off" /></div>
+        <div class="nav__menu-list">${links}</div>
+      </div>
+    </div>`;
 
   // Abrir/fechar no clique (funciona no mobile e no desktop)
   $$("#nav-cities .nav__btn").forEach(btn => {
@@ -491,8 +524,20 @@ function montarMenus() {
       fecharMenus();
       grupo.classList.toggle("open", abrir);
       btn.setAttribute("aria-expanded", abrir ? "true" : "false");
+      if (abrir) setTimeout(() => $("#nav-busca-cidade")?.focus(), 30);
     });
   });
+
+  // Busca dentro do menu
+  const nb = $("#nav-busca-cidade");
+  nb?.addEventListener("input", () => {
+    const q = nb.value.trim().toLowerCase();
+    $$("#nav-cities .nav__menu-list a").forEach(a => {
+      a.hidden = !a.dataset.nome.includes(q);
+    });
+  });
+  // Não fechar o menu ao clicar na busca
+  nb?.addEventListener("click", e => e.stopPropagation());
 
   // Ao clicar num link do menu, fecha tudo
   $$("#nav-cities .nav__menu a").forEach(a =>
@@ -506,13 +551,11 @@ function initAgeGate() {
   if (ok) { gate.hidden = true; return; }
   gate.hidden = false;
 
-  // Cada cidade confirma +18 e leva direto para a listagem da cidade
-  $$(".age-city[data-city]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      try { localStorage.setItem("vip_maior18_v2", "1"); } catch (e) {}
-      gate.hidden = true;
-      location.hash = "#/cidade/" + btn.dataset.city;
-    });
+  // Confirma +18 e entra no site (home), onde o cliente escolhe a cidade
+  $("#age-yes").addEventListener("click", () => {
+    try { localStorage.setItem("vip_maior18_v2", "1"); } catch (e) {}
+    gate.hidden = true;
+    if (!location.hash || location.hash === "#") location.hash = "#/";
   });
 
   $("#age-no").addEventListener("click", () => { location.href = "https://www.google.com"; });

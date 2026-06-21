@@ -88,19 +88,18 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
 .age-gate__list a{color:var(--gold-2);text-decoration:underline;text-underline-offset:3px}
 .age-gate__list a:hover{color:var(--white)}
 
-.age-gate__cities{display:flex;flex-direction:column;gap:.85rem;margin-bottom:1.6rem}
-.age-city{
-  display:flex;flex-direction:column;gap:.12rem;cursor:pointer;
-  background:rgba(255,255,255,.015);border:1px solid #8a463655;border-radius:999px;
-  padding:.85rem 1rem;color:var(--white);transition:.2s;font-family:var(--sans);
+.age-gate__actions{display:flex;flex-direction:column;gap:.85rem;margin-bottom:1.6rem}
+.age-btn{
+  display:flex;flex-direction:column;gap:.15rem;cursor:pointer;align-items:center;
+  border-radius:999px;padding:.9rem 1rem;color:var(--white);transition:.2s;font-family:var(--sans);
 }
-.age-city:hover{border-color:var(--gold);background:rgba(201,162,39,.08);transform:translateY(-2px)}
-.age-city b{font-family:var(--serif);font-size:1.25rem;letter-spacing:.2em;font-weight:600}
-.age-city span{font-size:.74rem;color:var(--muted);letter-spacing:.03em}
-.age-city span strong{color:var(--gold-2);font-weight:700}
-.age-city--exit{border-color:#4a2a2a;background:rgba(0,0,0,.15)}
-.age-city--exit:hover{border-color:#b05545;background:rgba(150,45,45,.14)}
-.age-city--exit span strong{color:var(--copper)}
+.age-btn b{font-family:var(--serif);font-size:1.1rem;letter-spacing:.14em;font-weight:600}
+.age-btn span{font-size:.74rem;color:var(--muted);letter-spacing:.04em}
+.age-btn--enter{background:linear-gradient(135deg,var(--gold),var(--gold-2));border:none;color:#1a1405}
+.age-btn--enter span{color:#3a2e08}
+.age-btn--enter:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(201,162,39,.25)}
+.age-btn--exit{background:rgba(0,0,0,.15);border:1px solid #4a2a2a}
+.age-btn--exit:hover{border-color:#b05545;background:rgba(150,45,45,.14);transform:translateY(-2px)}
 
 .age-gate__tagline{font-family:var(--serif);font-style:italic;font-size:.95rem;letter-spacing:.06em;color:var(--gold);opacity:.7}
 
@@ -143,6 +142,14 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
 .nav__menu a:hover{background:var(--black-3);color:var(--gold-2)}
 .nav__menu .nav__menu-head{color:var(--gold);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.5rem .8rem .2rem}
 
+/* menu único "Cidades" com busca + rolagem */
+.nav__menu--cities{min-width:240px;max-width:280px}
+.nav__menu-search{display:flex;align-items:center;gap:.4rem;background:var(--black-3);border:1px solid var(--line);border-radius:8px;padding:.35rem .6rem;margin:.1rem .1rem .35rem}
+.nav__menu-search input{flex:1;background:none;border:none;outline:none;color:var(--white);font-family:var(--sans);font-size:.85rem}
+.nav__menu-list{display:flex;flex-direction:column;max-height:min(60vh,340px);overflow-y:auto}
+.nav__menu-list a{display:flex;justify-content:space-between;align-items:center;gap:.6rem}
+.nav__menu-list a small{color:var(--gold);font-size:.7rem;letter-spacing:.08em}
+
 .header__cta{margin-left:.4rem}
 .header__burger{display:none;background:none;border:none;color:var(--white);font-size:1.5rem;cursor:pointer;margin-left:auto}
 
@@ -162,16 +169,18 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
 .hero__eyebrow{color:var(--gold-2);letter-spacing:.32em;font-size:.78rem;text-transform:uppercase;margin-bottom:1.1rem}
 .hero h1{font-size:clamp(2.3rem,6vw,4rem);margin-bottom:1.1rem}
 .hero h1 em{color:var(--gold-2);font-style:italic}
-.hero p{color:var(--muted);font-size:1.08rem;max-width:540px;margin-bottom:2rem}
-.hero__cities{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
-.hero__city{
-  display:flex;flex-direction:column;gap:.2rem;padding:1.1rem 1.6rem;
+.hero p{color:var(--muted);font-size:1.08rem;max-width:540px;margin-bottom:.5rem}
+
+/* ---------- Grade de cidades (busca) ---------- */
+.city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.9rem}
+.city-card{
+  display:flex;flex-direction:column;gap:.2rem;padding:1rem 1.2rem;
   border:1px solid var(--line);border-radius:var(--radius);background:#0d0d0db3;
-  transition:.2s;min-width:170px;text-align:center;cursor:pointer;
+  transition:.2s;text-align:center;cursor:pointer;
 }
-.hero__city:hover{border-color:var(--gold);transform:translateY(-3px)}
-.hero__city b{font-family:var(--serif);font-size:1.25rem;color:var(--white)}
-.hero__city span{color:var(--muted);font-size:.82rem}
+.city-card:hover{border-color:var(--gold);transform:translateY(-3px);background:rgba(201,162,39,.06)}
+.city-card b{font-family:var(--serif);font-size:1.2rem;color:var(--white)}
+.city-card span{color:var(--muted);font-size:.8rem}
 
 /* ---------- Sections ---------- */
 .section{padding:64px 0}

@@ -16,20 +16,17 @@ const SEED = {
      formulário "Anuncie aqui"). Formato: DDI + DDD + número, só dígitos. */
   adminWhatsapp: "5565999999999",
 
-  /* ---------- CIDADES E BAIRROS ---------- */
+  /* ---------- CIDADES E BAIRROS ----------
+     As 27 capitais do Brasil (26 estados + DF). Rio de Janeiro e Cuiabá
+     já vêm com bairros; as demais começam sem bairros — adicione-os pelo
+     painel admin conforme cadastrar acompanhantes em cada cidade. */
   cidades: {
-    "rio-de-janeiro": {
-      nome: "Rio de Janeiro",
-      uf: "RJ",
-      bairros: [
-        { slug: "zona-sul",        nome: "Zona Sul" },
-        { slug: "copacabana",      nome: "Copacabana" },
-        { slug: "barra-e-recreio", nome: "Barra e Recreio" },
-        { slug: "leblon-ipanema",  nome: "Leblon, Ipanema e Outros" },
-        { slug: "centro",          nome: "Centro" },
-        { slug: "tijuca",          nome: "Tijuca" },
-      ],
-    },
+    "aracaju":        { nome: "Aracaju",        uf: "SE", bairros: [] },
+    "belem":          { nome: "Belém",          uf: "PA", bairros: [] },
+    "belo-horizonte": { nome: "Belo Horizonte", uf: "MG", bairros: [] },
+    "boa-vista":      { nome: "Boa Vista",      uf: "RR", bairros: [] },
+    "brasilia":       { nome: "Brasília",       uf: "DF", bairros: [] },
+    "campo-grande":   { nome: "Campo Grande",   uf: "MS", bairros: [] },
     "cuiaba": {
       nome: "Cuiabá",
       uf: "MT",
@@ -43,6 +40,37 @@ const SEED = {
         { slug: "varzea-grande",    nome: "Várzea Grande" },
       ],
     },
+    "curitiba":       { nome: "Curitiba",       uf: "PR", bairros: [] },
+    "florianopolis":  { nome: "Florianópolis",  uf: "SC", bairros: [] },
+    "fortaleza":      { nome: "Fortaleza",      uf: "CE", bairros: [] },
+    "goiania":        { nome: "Goiânia",        uf: "GO", bairros: [] },
+    "joao-pessoa":    { nome: "João Pessoa",    uf: "PB", bairros: [] },
+    "macapa":         { nome: "Macapá",         uf: "AP", bairros: [] },
+    "maceio":         { nome: "Maceió",         uf: "AL", bairros: [] },
+    "manaus":         { nome: "Manaus",         uf: "AM", bairros: [] },
+    "natal":          { nome: "Natal",          uf: "RN", bairros: [] },
+    "palmas":         { nome: "Palmas",         uf: "TO", bairros: [] },
+    "porto-alegre":   { nome: "Porto Alegre",   uf: "RS", bairros: [] },
+    "porto-velho":    { nome: "Porto Velho",    uf: "RO", bairros: [] },
+    "recife":         { nome: "Recife",         uf: "PE", bairros: [] },
+    "rio-branco":     { nome: "Rio Branco",     uf: "AC", bairros: [] },
+    "rio-de-janeiro": {
+      nome: "Rio de Janeiro",
+      uf: "RJ",
+      bairros: [
+        { slug: "zona-sul",        nome: "Zona Sul" },
+        { slug: "copacabana",      nome: "Copacabana" },
+        { slug: "barra-e-recreio", nome: "Barra e Recreio" },
+        { slug: "leblon-ipanema",  nome: "Leblon, Ipanema e Outros" },
+        { slug: "centro",          nome: "Centro" },
+        { slug: "tijuca",          nome: "Tijuca" },
+      ],
+    },
+    "salvador":       { nome: "Salvador",       uf: "BA", bairros: [] },
+    "sao-luis":       { nome: "São Luís",       uf: "MA", bairros: [] },
+    "sao-paulo":      { nome: "São Paulo",      uf: "SP", bairros: [] },
+    "teresina":       { nome: "Teresina",       uf: "PI", bairros: [] },
+    "vitoria":        { nome: "Vitória",        uf: "ES", bairros: [] },
   },
 
   /* ---------- PERFIS (ACOMPANHANTES) ----------
