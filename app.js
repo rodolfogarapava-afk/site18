@@ -103,9 +103,9 @@ const ordena = list => [...list].sort((a, b) =>
    ============================================================ */
 
 function viewHome() {
-  const destaques = ordena(PERFIS.filter(p => p.destaque));
-  const novidades = ordena(PERFIS.filter(p => p.nova));
   const exclusivas = ordena(PERFIS.filter(p => p.exclusiva));
+  const novidades = ordena(PERFIS.filter(p => p.nova));
+  const modelos = ordena(PERFIS);
 
   const cidadeCard = key => {
     const c = CIDADES[key];
@@ -120,7 +120,7 @@ function viewHome() {
   <section class="hero">
     <div class="container hero__content">
       <p class="hero__eyebrow">Discrição · Elegância · Alto padrão</p>
-      <h1>Acompanhantes de <em>luxo</em><br/>no Rio de Janeiro &amp; Cuiabá</h1>
+      <h1>Acompanhantes de <em>luxo</em><br/>no Brasil</h1>
       <p>Perfis selecionados, fotos reais e atendimento exclusivo. Escolha sua cidade
          e fale diretamente pelo WhatsApp, com total sigilo.</p>
       <div class="hero__cities">
@@ -132,9 +132,9 @@ function viewHome() {
   <section class="section">
     <div class="container">
       <div class="section__head">
-        <div><h2>Em <span>destaque</span></h2><p class="lead">As mais procuradas do momento</p></div>
+        <div><h2>Acompanhantes <span>exclusivas</span></h2><p class="lead">Seleção premium verificada</p></div>
       </div>
-      ${gridHtml(destaques)}
+      ${gridHtml(exclusivas)}
     </div>
   </section>
 
@@ -150,9 +150,9 @@ function viewHome() {
   <section class="section">
     <div class="container">
       <div class="section__head">
-        <div><h2>Acompanhantes <span>exclusivas</span></h2><p class="lead">Seleção premium verificada</p></div>
+        <div><h2><span>Modelos</span></h2><p class="lead">Conheça todas as nossas acompanhantes</p></div>
       </div>
-      ${gridHtml(exclusivas)}
+      ${gridHtml(modelos)}
     </div>
   </section>`;
 }
@@ -263,6 +263,7 @@ function viewPerfil(slug) {
           <div><span>Medidas</span><b>${p.medidas}</b></div>
           <div><span>Idiomas</span><b>${(p.idiomas || ["Português"]).join(", ")}</b></div>
           <div><span>Horário</span><b>${p.horario}</b></div>
+          <div><span>Local p/ atendimento</span><b>${p.possuiLocal ? "Sim" : "Não"}</b></div>
         </div>
 
         <div class="profile__actions">
