@@ -190,6 +190,8 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
   background:linear-gradient(135deg,var(--gold),var(--gold-2));
 }
 .hero__search-btn:hover{filter:brightness(1.07);transform:scale(1.05)}
+/* Barra de busca repetida no meio da página (seção "Escolha sua cidade") */
+.hero__search--mid{margin:0 auto 1.6rem}
 .hero__hint{color:var(--gold-2)!important;font-size:.85rem;letter-spacing:.02em}
 
 /* ---------- Grade de cidades (busca) ---------- */
