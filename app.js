@@ -154,15 +154,7 @@ function viewHome() {
       <div class="section__head">
         <div><h2>Escolha sua <span>cidade</span></h2><p class="lead">Toque na sua cidade para ver as acompanhantes disponíveis</p></div>
       </div>
-      <form class="hero__search hero__search--mid" id="form-cidade-2" autocomplete="off">
-        <span class="hero__search-ico" aria-hidden="true">🔍</span>
-        <input id="busca-cidade-2" type="text" placeholder="Buscar acompanhantes por cidade…" />
-        <button class="hero__search-btn" type="submit" aria-label="Buscar">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </button>
-      </form>
       <div id="cidades-grid" class="city-grid">${cardsCidades}</div>
-      <p id="cidades-vazio" class="lead" style="text-align:center;margin-top:1rem" hidden>Nenhuma cidade encontrada com esse nome.</p>
     </div>
   </section>
 
@@ -239,28 +231,6 @@ function viewHome() {
     if (heroBox && !heroBox.hidden && !e.target.closest(".hero__search-wrap")) {
       heroBox.hidden = true;
     }
-  });
-
-  // ===== Busca da seção "Escolha sua cidade": filtra a grade =====
-  const midInput = $("#busca-cidade-2");
-  const cards = () => $$("#cidades-grid .city-card");
-  const filtrarGrade = (q) => {
-    const termo = (q || "").trim().toLowerCase();
-    const visiveis = [];
-    cards().forEach(el => {
-      const hit = el.dataset.nome.includes(termo);
-      el.hidden = !hit;
-      if (hit) visiveis.push(el);
-    });
-    $("#cidades-vazio").hidden = visiveis.length > 0;
-    return visiveis;
-  };
-  midInput?.addEventListener("input", () => filtrarGrade(midInput.value));
-  $("#form-cidade-2")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const visiveis = filtrarGrade(midInput.value);
-    if (visiveis.length === 1) { location.hash = visiveis[0].getAttribute("href").slice(1); return; }
-    $("#sec-cidades")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }
 
