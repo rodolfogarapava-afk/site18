@@ -107,8 +107,9 @@ function cidadeCard(key) {
   const c = CIDADES[key];
   if (!c) return "";
   const n = PERFIS.filter(p => p.cidade === key).length;
-  return `<a class="city-card" href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
-    <b>${c.nome}</b><span>${c.uf}${n ? ` • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : ""}</span></a>`;
+  const info = n ? `${c.uf} • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
+  return `<a class="city-card${n ? "" : " city-card--soon"}" href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
+    <b>${c.nome}</b><span>${info}</span></a>`;
 }
 
 /* Cidades ordenadas: as com mais perfis primeiro, depois alfabética */
@@ -131,23 +132,27 @@ function viewHome() {
     <div class="container hero__content">
       <p class="hero__eyebrow">Discrição · Elegância · Alto padrão</p>
       <h1>Acompanhantes de <em>luxo</em><br/>no Brasil</h1>
-      <p>Perfis selecionados, fotos reais e atendimento exclusivo. Escolha sua cidade
-         e fale diretamente pelo WhatsApp, com total sigilo.</p>
+      <p>Perfis selecionados, fotos reais e atendimento exclusivo. Encontre na
+         sua cidade e fale direto pelo WhatsApp, com total sigilo.</p>
+
+      <form class="hero__search" id="form-cidade" autocomplete="off">
+        <span class="hero__search-ico" aria-hidden="true">🔍</span>
+        <input id="busca-cidade" type="text" placeholder="Buscar acompanhantes por cidade…" />
+        <button class="hero__search-btn" type="submit" aria-label="Buscar">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </form>
+      <p class="hero__hint">${totalCidades} cidades em todo o Brasil — comece digitando a sua</p>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" id="sec-cidades">
     <div class="container">
       <div class="section__head">
-        <div><h2>Escolha sua <span>cidade</span></h2><p class="lead">${totalCidades} cidades em todo o Brasil</p></div>
-      </div>
-      <div class="toolbar">
-        <div class="search">
-          🔍 <input id="busca-cidade" type="text" placeholder="Buscar cidade ou estado (ex.: São Paulo, RJ)…" autocomplete="off" />
-        </div>
+        <div><h2>Escolha sua <span>cidade</span></h2><p class="lead">Toque na sua cidade para ver as acompanhantes disponíveis</p></div>
       </div>
       <div id="cidades-grid" class="city-grid">${cardsCidades}</div>
-      <p id="cidades-vazio" class="lead" style="text-align:center;margin-top:1rem" hidden>Nenhuma cidade encontrada.</p>
+      <p id="cidades-vazio" class="lead" style="text-align:center;margin-top:1rem" hidden>Nenhuma cidade encontrada com esse nome.</p>
     </div>
   </section>
 
@@ -180,15 +185,26 @@ function viewHome() {
 
   // Busca de cidade ao vivo
   const bc = $("#busca-cidade");
-  bc?.addEventListener("input", () => {
+  const cards = () => $$("#cidades-grid .city-card");
+  const aplicarBusca = () => {
     const q = bc.value.trim().toLowerCase();
-    let visiveis = 0;
-    $$("#cidades-grid .city-card").forEach(el => {
+    const visiveis = [];
+    cards().forEach(el => {
       const hit = el.dataset.nome.includes(q);
       el.hidden = !hit;
-      if (hit) visiveis++;
+      if (hit) visiveis.push(el);
     });
-    $("#cidades-vazio").hidden = visiveis > 0;
+    $("#cidades-vazio").hidden = visiveis.length > 0;
+    return visiveis;
+  };
+  bc?.addEventListener("input", aplicarBusca);
+
+  // Enviar (Enter ou botão): vai direto se houver 1 só; senão rola até a grade
+  $("#form-cidade")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const visiveis = aplicarBusca();
+    if (visiveis.length === 1) { location.hash = visiveis[0].getAttribute("href").slice(1); return; }
+    $("#sec-cidades")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }
 
