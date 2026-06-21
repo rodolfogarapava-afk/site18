@@ -1,5 +1,5 @@
 /* ============================================================
-   VIP LUXÚRIA — Painel Admin (Supabase)
+   ALIANÇA — Painel Admin (Supabase)
    Login (Supabase Auth) + CRUD de perfis/cidades/config no banco
    + upload de fotos no Storage + backup.
    Dados via window.VIPStore (store.js).

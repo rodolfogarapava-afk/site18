@@ -1,5 +1,5 @@
 /* ============================================================
-   VIP LUXÚRIA — Camada de dados (Supabase)
+   ALIANÇA — Camada de dados (Supabase)
    ------------------------------------------------------------
    Substitui o antigo store de localStorage. Agora:
      - O SITE PÚBLICO (app.js) lê do Supabase (leitura pública via RLS).

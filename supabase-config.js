@@ -1,5 +1,5 @@
 /* ============================================================
-   VIP LUXÚRIA — Configuração pública do Supabase
+   ALIANÇA — Configuração pública do Supabase
    ------------------------------------------------------------
    Estes valores são PÚBLICOS por design e podem ficar no Git:
      - SB_URL  : endereço do projeto (público)

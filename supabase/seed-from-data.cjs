@@ -1,5 +1,5 @@
 /* ============================================================
-   VIP LUXÚRIA — Seed do Supabase a partir do data.js (SEED)
+   ALIANÇA — Seed do Supabase a partir do data.js (SEED)
    Uso:  SUPA_PW='senha-do-banco' node supabase/seed-from-data.cjs
    ============================================================ */
 const fs = require("fs");

@@ -1,5 +1,5 @@
 ============================================================
- VIP LUXÚRIA — Site de Acompanhantes de Luxo (+18)
+ ALIANÇA — Site de Acompanhantes de Luxo (+18)
  Rio de Janeiro & Cuiabá • Conversão 100% via WhatsApp
 ============================================================
 

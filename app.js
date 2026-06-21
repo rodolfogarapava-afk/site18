@@ -1,5 +1,5 @@
 /* ============================================================
-   VIP LUXÚRIA — App (roteamento + render + WhatsApp)
+   ALIANÇA — App (roteamento + render + WhatsApp)
    Usa CIDADES, PERFIS e ADMIN_WHATSAPP de data.js
    ============================================================ */
 
@@ -19,13 +19,13 @@ const WA_ICON = '<svg class="ico-wa" viewBox="0 0 32 32" width="20" height="20" 
 /* WhatsApp da acompanhante (com mensagem contextual) */
 function waPerfil(p, contexto) {
   const msg = contexto
-    ? `Olá ${p.nome}! Vi seu anúncio na Vip Luxúria e tenho interesse em ${contexto} 💎`
-    : `Olá ${p.nome}! Vi seu anúncio na Vip Luxúria e gostaria de saber mais 😊`;
+    ? `Olá ${p.nome}! Vi seu anúncio na Aliança e tenho interesse em ${contexto} 💎`
+    : `Olá ${p.nome}! Vi seu anúncio na Aliança e gostaria de saber mais 😊`;
   return `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(msg)}`;
 }
 /* WhatsApp do administrador (home / anuncie) */
 function waAdmin(msg) {
-  const t = msg || "Olá! Gostaria de informações sobre a Vip Luxúria.";
+  const t = msg || "Olá! Gostaria de informações sobre a Aliança.";
   return `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(t)}`;
 }
 
@@ -303,7 +303,7 @@ function viewAnuncie() {
     <div class="container">
       <a class="back-link" href="#/">‹ Início</a>
       <h1>Anuncie aqui</h1>
-      <p>Faça parte da Vip Luxúria e divulgue seu perfil para o público de alto padrão do
+      <p>Faça parte da Aliança e divulgue seu perfil para o público de alto padrão do
          Rio de Janeiro e de Cuiabá. Preencha os dados abaixo: ao enviar, abriremos o WhatsApp
          da nossa central com tudo preenchido — é só confirmar e enviar suas fotos.</p>
 
@@ -352,7 +352,7 @@ function viewAnuncie() {
     const cidadeNome = CIDADES[f.cidade.value]?.nome || f.cidade.value;
     const bairroN = bairroNome(f.cidade.value, f.bairro.value);
     const msg =
-`*Novo anúncio — Vip Luxúria*
+`*Novo anúncio — Aliança*
 Nome: ${f.nome.value}
 Cidade: ${cidadeNome}
 Bairro: ${bairroN}
@@ -375,7 +375,7 @@ function viewInformacoes() {
          natureza adulta. Ao acessar, o visitante declara ter a maioridade legal.</p>
 
       <h2>Natureza do serviço</h2>
-      <p>A Vip Luxúria é uma <strong>plataforma de publicidade</strong> para profissionais
+      <p>A Aliança é uma <strong>plataforma de publicidade</strong> para profissionais
          autônomos(as). O site <strong>não intermedeia negociações</strong>, não cobra
          comissões sobre encontros e não se responsabiliza por acordos feitos entre as partes.
          Cada anunciante é o(a) único(a) responsável pelo conteúdo, fotos e informações do seu perfil.</p>

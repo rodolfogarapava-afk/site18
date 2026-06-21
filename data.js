@@ -1,5 +1,5 @@
 /* ============================================================
-   VIP LUXÚRIA — Dados SEMENTE (padrão de fábrica)
+   ALIANÇA — Dados SEMENTE (padrão de fábrica)
    ------------------------------------------------------------
    Este arquivo é o ponto de partida do site. Você pode:
      (A) Gerenciar tudo pelo PAINEL ADMIN (admin.html) — recomendado.

@@ -1,5 +1,5 @@
 -- ============================================================
--- VIP LUXÚRIA — Schema inicial
+-- ALIANÇA — Schema inicial
 -- Tabelas: config, cidades, perfis  +  RLS  +  bucket de fotos
 -- ============================================================
 create extension if not exists pgcrypto;
