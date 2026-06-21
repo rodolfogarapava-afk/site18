@@ -223,20 +223,26 @@ function viewCidade(cidade, filtro) {
         <div><h2>${titulo} <span>${c.uf}</span></h2><p class="lead">${sub}</p></div>
       </div>
 
-      <div class="chips">
-        <a class="chip${!filtro ? " active" : ""}" href="#/cidade/${cidade}">Todos</a>
-        ${chips}
-      </div>
-      <div class="chips">
-        <a class="chip${filtro?.tipo === "novidades" ? " active" : ""}" href="#/cidade/${cidade}/novidades">✨ Novidades</a>
-        <a class="chip${filtro?.tipo === "exclusivas" ? " active" : ""}" href="#/cidade/${cidade}/exclusivas">💎 Exclusivas</a>
-        <a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="#/cidade/${cidade}/videos">▶ Vídeos</a>
-      </div>
-
-      <div class="toolbar">
+      <div class="filtros">
         <div class="search">
           🔍 <input id="busca" type="text" placeholder="Buscar por nome..." />
         </div>
+
+        <div class="filtros__row">
+          <span class="filtros__label">Filtrar</span>
+          <div class="chips">
+            <a class="chip${!filtro ? " active" : ""}" href="#/cidade/${cidade}">Todos</a>
+            <a class="chip${filtro?.tipo === "novidades" ? " active" : ""}" href="#/cidade/${cidade}/novidades">✨ Novidades</a>
+            <a class="chip${filtro?.tipo === "exclusivas" ? " active" : ""}" href="#/cidade/${cidade}/exclusivas">💎 Exclusivas</a>
+            <a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="#/cidade/${cidade}/videos">▶ Vídeos</a>
+          </div>
+        </div>
+
+        ${c.bairros.length ? `
+        <div class="filtros__row">
+          <span class="filtros__label">Bairros</span>
+          <div class="chips">${chips}</div>
+        </div>` : ""}
       </div>
 
       <div id="resultados">${gridHtml(ordena(list))}</div>

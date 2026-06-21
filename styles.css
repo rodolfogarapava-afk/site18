@@ -200,8 +200,22 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
 }
 .chip:hover{border-color:var(--gold)}
 .chip.active{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#1a1405;border-color:transparent;font-weight:600}
+
+/* Painel de filtros unificado */
+.filtros{
+  background:var(--black-2);border:1px solid var(--line);border-radius:18px;
+  padding:1.1rem 1.2rem;margin-bottom:1.8rem;display:flex;flex-direction:column;gap:1rem;
+}
+.filtros__row{display:flex;align-items:flex-start;gap:1rem}
+.filtros__row + .filtros__row{border-top:1px solid var(--line);padding-top:1rem}
+.filtros__label{
+  flex:0 0 70px;padding-top:.5rem;font-size:.7rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);font-weight:600;
+}
+.filtros .chips{margin-bottom:0;flex:1}
+
 .toolbar{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin-bottom:1.4rem}
-.search{flex:1;min-width:200px;display:flex;align-items:center;gap:.5rem;background:#0d0d0d;border:1px solid var(--line);border-radius:999px;padding:.5rem 1rem}
+.search{flex:1;min-width:200px;display:flex;align-items:center;gap:.5rem;background:#000;border:1px solid var(--line);border-radius:999px;padding:.6rem 1.1rem}
 .search input{flex:1;background:none;border:none;color:var(--white);font-family:var(--sans);outline:none;font-size:.92rem}
 .search input::placeholder{color:#6f685a}
 
@@ -322,4 +336,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
   .card__name{font-size:1.05rem}
   .spec{grid-template-columns:1fr}
   .form .row{grid-template-columns:1fr}
+  .filtros{padding:1rem}
+  .filtros__row{flex-direction:column;gap:.6rem}
+  .filtros__label{flex:none;padding-top:0}
 }
