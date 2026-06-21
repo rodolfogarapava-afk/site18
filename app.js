@@ -135,13 +135,16 @@ function viewHome() {
       <p>Perfis selecionados, fotos reais e atendimento exclusivo. Encontre na
          sua cidade e fale direto pelo WhatsApp, com total sigilo.</p>
 
-      <form class="hero__search" id="form-cidade" autocomplete="off">
-        <span class="hero__search-ico" aria-hidden="true">🔍</span>
-        <input id="busca-cidade" type="text" placeholder="Buscar acompanhantes por cidade…" />
-        <button class="hero__search-btn" type="submit" aria-label="Buscar">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </button>
-      </form>
+      <div class="hero__search-wrap">
+        <form class="hero__search" id="form-cidade" autocomplete="off" role="search">
+          <span class="hero__search-ico" aria-hidden="true">🔍</span>
+          <input id="busca-cidade" type="text" placeholder="Buscar acompanhantes por cidade…" autocomplete="off" />
+          <button class="hero__search-btn" type="submit" aria-label="Buscar">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </form>
+        <ul class="hero__results" id="hero-results" hidden></ul>
+      </div>
       <p class="hero__hint">${totalCidades} cidades em todo o Brasil — comece digitando a sua</p>
     </div>
   </section>
@@ -190,10 +193,58 @@ function viewHome() {
     </div>
   </section>`;
 
-  // Busca de cidade ao vivo — duas barras (topo e meio), sincronizadas
-  const inputs = [$("#busca-cidade"), $("#busca-cidade-2")].filter(Boolean);
+  // ===== Busca REAL do hero: dropdown de cidades enquanto digita =====
+  const lista = cidadesOrdenadas().map(key => {
+    const c = CIDADES[key];
+    const n = PERFIS.filter(p => p.cidade === key).length;
+    return {
+      key, nome: c.nome, uf: c.uf, n,
+      busca: (c.nome + " " + c.uf).toLowerCase(),
+    };
+  });
+
+  const heroInput = $("#busca-cidade");
+  const heroBox = $("#hero-results");
+
+  const renderResultados = (q) => {
+    const termo = (q || "").trim().toLowerCase();
+    if (!termo) { heroBox.hidden = true; heroBox.innerHTML = ""; return []; }
+    const achados = lista.filter(c => c.busca.includes(termo));
+    if (!achados.length) {
+      heroBox.innerHTML = `<li class="hero__result hero__result--empty">Nenhuma cidade encontrada.</li>`;
+      heroBox.hidden = false;
+      return [];
+    }
+    heroBox.innerHTML = achados.map(c => {
+      const info = c.n ? `${c.uf} • ${c.n} ${c.n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
+      return `<li><a class="hero__result" href="#/cidade/${c.key}">
+        <b>${c.nome}</b><span>${info}</span></a></li>`;
+    }).join("");
+    heroBox.hidden = false;
+    return achados;
+  };
+
+  heroInput?.addEventListener("input", () => renderResultados(heroInput.value));
+  heroInput?.addEventListener("focus", () => { if (heroInput.value.trim()) renderResultados(heroInput.value); });
+
+  // Enviar (Enter/botão): vai direto para a 1ª cidade encontrada
+  $("#form-cidade")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const achados = renderResultados(heroInput.value);
+    if (achados.length) location.hash = `#/cidade/${achados[0].key}`;
+  });
+
+  // Fecha o dropdown ao clicar fora
+  document.addEventListener("click", (e) => {
+    if (heroBox && !heroBox.hidden && !e.target.closest(".hero__search-wrap")) {
+      heroBox.hidden = true;
+    }
+  });
+
+  // ===== Busca da seção "Escolha sua cidade": filtra a grade =====
+  const midInput = $("#busca-cidade-2");
   const cards = () => $$("#cidades-grid .city-card");
-  const aplicarBusca = (q) => {
+  const filtrarGrade = (q) => {
     const termo = (q || "").trim().toLowerCase();
     const visiveis = [];
     cards().forEach(el => {
@@ -204,25 +255,13 @@ function viewHome() {
     $("#cidades-vazio").hidden = visiveis.length > 0;
     return visiveis;
   };
-
-  inputs.forEach(inp => {
-    inp.addEventListener("input", () => {
-      // espelha o texto na outra barra para manter tudo igual
-      inputs.forEach(o => { if (o !== inp) o.value = inp.value; });
-      aplicarBusca(inp.value);
-    });
-  });
-
-  // Enviar (Enter ou botão): vai direto se houver 1 só; senão rola até a grade
-  const enviar = (e) => {
+  midInput?.addEventListener("input", () => filtrarGrade(midInput.value));
+  $("#form-cidade-2")?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const q = inputs[0] ? inputs[0].value : "";
-    const visiveis = aplicarBusca(q);
+    const visiveis = filtrarGrade(midInput.value);
     if (visiveis.length === 1) { location.hash = visiveis[0].getAttribute("href").slice(1); return; }
     $("#sec-cidades")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-  $("#form-cidade")?.addEventListener("submit", enviar);
-  $("#form-cidade-2")?.addEventListener("submit", enviar);
+  });
 }
 
 function viewCidade(cidade, filtro) {
