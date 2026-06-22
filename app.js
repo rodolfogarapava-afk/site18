@@ -197,14 +197,17 @@ function initBuscaCidade() {
   const box   = document.getElementById("hero-results");
   if (!input || !box) return;
 
+  // normaliza: minúsculas e SEM acentos (assim "sao", "goiania" etc. acham)
+  const norm = s => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
   const lista = cidadesOrdenadas().map(key => {
     const c = CIDADES[key];
     const n = PERFIS.filter(p => p.cidade === key).length;
-    return { key, nome: c.nome, uf: c.uf, n, busca: (c.nome + " " + c.uf).toLowerCase() };
+    return { key, nome: c.nome, uf: c.uf, n, busca: norm(c.nome + " " + c.uf) };
   });
 
   function achar(q) {
-    const termo = (q || "").trim().toLowerCase();
+    const termo = norm((q || "").trim());
     if (!termo) return [];
     return lista.filter(c => c.busca.includes(termo));
   }
