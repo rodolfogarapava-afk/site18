@@ -219,12 +219,18 @@ function viewHome() {
   heroInput?.addEventListener("input", () => renderResultados(heroInput.value));
   heroInput?.addEventListener("focus", () => { if (heroInput.value.trim()) renderResultados(heroInput.value); });
 
-  // Enviar (Enter/botão): vai direto para a 1ª cidade encontrada
-  $("#form-cidade")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const achados = renderResultados(heroInput.value);
-    if (achados.length) location.hash = `#/cidade/${achados[0].key}`;
-  });
+  // Ação de pesquisar (Enter ou clique na lupa)
+  const pesquisar = () => {
+    const termo = (heroInput?.value || "").trim();
+    if (!termo) { heroInput?.focus(); return; }     // vazio: convida a digitar
+    const achados = renderResultados(termo);
+    if (achados.length) location.hash = `#/cidade/${achados[0].key}`;  // 1ª cidade encontrada
+    // sem resultados: o dropdown já mostra "Nenhuma cidade encontrada"
+  };
+
+  $("#form-cidade")?.addEventListener("submit", (e) => { e.preventDefault(); pesquisar(); });
+  // Clique direto na lupa (garante o disparo mesmo se o submit não ocorrer)
+  $(".hero__search-btn")?.addEventListener("click", (e) => { e.preventDefault(); pesquisar(); });
 
   // Fecha o dropdown ao clicar fora
   document.addEventListener("click", (e) => {
