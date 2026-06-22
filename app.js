@@ -474,23 +474,22 @@ function viewInformacoes() {
       <h1>Informações &amp; Política</h1>
 
       <h2>Conteúdo adulto (+18)</h2>
-      <p>Este site é destinado exclusivamente a maiores de 18 anos e contém material de
-         natureza adulta. Ao acessar, o visitante declara ter a maioridade legal.</p>
+      <p>Este site é destinado a maiores de 18 anos e contém conteúdo adulto.
+         Ao acessar, você confirma ter 18 anos ou mais.</p>
 
       <h2>Natureza do serviço</h2>
-      <p>A Aliança é uma <strong>plataforma de publicidade</strong> para profissionais
-         autônomos(as). O site <strong>não intermedeia negociações</strong>, não cobra
-         comissões sobre encontros e não se responsabiliza por acordos feitos entre as partes.
-         Cada anunciante é o(a) único(a) responsável pelo conteúdo, fotos e informações do seu perfil.</p>
+      <p>A Aliança é uma plataforma de publicidade. Não intermediamos negociações,
+         não cobramos comissões e não nos responsabilizamos por acordos entre as
+         partes. Cada anunciante é responsável pelo conteúdo do seu próprio perfil.</p>
 
       <h2>Privacidade (LGPD)</h2>
-      <p>Respeitamos a Lei Geral de Proteção de Dados. Não exigimos cadastro do visitante e não
-         armazenamos dados pessoais de quem navega. A confirmação de idade fica salva apenas no
-         seu próprio navegador. Os contatos acontecem diretamente via WhatsApp, fora do nosso sistema.</p>
+      <p>Seguimos a Lei Geral de Proteção de Dados (LGPD). Não exigimos cadastro e não
+         armazenamos dados pessoais de quem navega. A confirmação de idade fica salva
+         apenas no seu navegador. O contato é feito diretamente pelo WhatsApp.</p>
 
       <h2>Discrição</h2>
-      <p>Não divulgamos endereços exatos — apenas cidade e bairro. Todo contato é tratado com
-         total sigilo entre você e o(a) anunciante.</p>
+      <p>Não divulgamos endereços exatos, apenas cidade e bairro.
+         Os contatos são tratados com sigilo.</p>
 
       <h2>Contato</h2>
       <p><a class="section__link" href="${waAdmin()}" target="_blank" rel="noopener">Falar com a central pelo WhatsApp</a></p>
