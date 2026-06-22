@@ -122,6 +122,18 @@
   /* ============================================================
      LEITURA  (usada pelo site público e pelo admin)
      ============================================================ */
+  /* Garante que uma Promise resolva/rejeite em no máximo `ms` (evita
+     ficar pendurado se o Supabase demorar ou estiver pausado). */
+  function withTimeout(promise, ms) {
+    return new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error("timeout ao carregar dados")), ms);
+      promise.then(
+        v => { clearTimeout(t); resolve(v); },
+        e => { clearTimeout(t); reject(e); }
+      );
+    });
+  }
+
   async function fetchAll() {
     if (!sb) throw new Error("Supabase indisponível.");
 
@@ -148,7 +160,7 @@
      ============================================================ */
   async function bootPublic() {
     try {
-      const d = await fetchAll();
+      const d = await withTimeout(fetchAll(), 7000);
       window.ADMIN_WHATSAPP = d.adminWhatsapp || (typeof SEED !== "undefined" ? SEED.adminWhatsapp : "");
       window.CIDADES        = d.cidades;
       window.PERFIS         = d.perfis;
@@ -164,6 +176,18 @@
     }
     return window.VIPData;
   }
+
+  /* Defaults SÍNCRONOS dos globais usados pelo app.js (a partir do SEED).
+     Sem isso, o app.js pode referenciar ADMIN_WHATSAPP/CIDADES/PERFIS
+     ANTES de bootPublic() resolver (ex.: initHeader -> waAdmin), causando
+     "ReferenceError: ADMIN_WHATSAPP is not defined" e tela em branco.
+     bootPublic() depois sobrescreve com os dados ao vivo do Supabase. */
+  if (typeof window.CIDADES === "undefined")
+    window.CIDADES = (typeof SEED !== "undefined") ? clone(SEED.cidades) : {};
+  if (typeof window.PERFIS === "undefined")
+    window.PERFIS = (typeof SEED !== "undefined") ? clone(SEED.perfis) : [];
+  if (typeof window.ADMIN_WHATSAPP === "undefined")
+    window.ADMIN_WHATSAPP = (typeof SEED !== "undefined") ? SEED.adminWhatsapp : "";
 
   window.VIPData = { online: false };
   window.VIPData.ready = bootPublic();
