@@ -139,8 +139,8 @@ function viewHome() {
         <form class="hero__search" id="form-cidade" autocomplete="off" role="search">
           <span class="hero__search-ico" aria-hidden="true">🔍</span>
           <input id="busca-cidade" type="text" placeholder="Buscar acompanhantes por cidade…" autocomplete="off" />
-          <button class="hero__search-btn" type="submit" aria-label="Buscar">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <button class="hero__search-btn" type="button" id="btn-busca-cidade" aria-label="Buscar">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </button>
         </form>
         <ul class="hero__results" id="hero-results" hidden></ul>
@@ -185,58 +185,66 @@ function viewHome() {
     </div>
   </section>`;
 
-  // ===== Busca REAL do hero: dropdown de cidades enquanto digita =====
+  // ===== Busca de cidade do hero (autocomplete + ação do botão) =====
+  initBuscaCidade();
+}
+
+/* Busca de cidade: dropdown ao digitar + botão/Enter sempre funcionais. */
+function initBuscaCidade() {
+  const input = document.getElementById("busca-cidade");
+  const botao = document.getElementById("btn-busca-cidade");
+  const form  = document.getElementById("form-cidade");
+  const box   = document.getElementById("hero-results");
+  if (!input || !box) return;
+
   const lista = cidadesOrdenadas().map(key => {
     const c = CIDADES[key];
     const n = PERFIS.filter(p => p.cidade === key).length;
-    return {
-      key, nome: c.nome, uf: c.uf, n,
-      busca: (c.nome + " " + c.uf).toLowerCase(),
-    };
+    return { key, nome: c.nome, uf: c.uf, n, busca: (c.nome + " " + c.uf).toLowerCase() };
   });
 
-  const heroInput = $("#busca-cidade");
-  const heroBox = $("#hero-results");
-
-  const renderResultados = (q) => {
+  function achar(q) {
     const termo = (q || "").trim().toLowerCase();
-    if (!termo) { heroBox.hidden = true; heroBox.innerHTML = ""; return []; }
-    const achados = lista.filter(c => c.busca.includes(termo));
+    if (!termo) return [];
+    return lista.filter(c => c.busca.includes(termo));
+  }
+
+  function mostrar(achados) {
     if (!achados.length) {
-      heroBox.innerHTML = `<li class="hero__result hero__result--empty">Nenhuma cidade encontrada.</li>`;
-      heroBox.hidden = false;
-      return [];
+      box.innerHTML = `<li class="hero__result hero__result--empty">Nenhuma cidade encontrada.</li>`;
+    } else {
+      box.innerHTML = achados.map(c => {
+        const info = c.n ? `${c.uf} • ${c.n} ${c.n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
+        return `<li><a class="hero__result" href="#/cidade/${c.key}"><b>${c.nome}</b><span>${info}</span></a></li>`;
+      }).join("");
     }
-    heroBox.innerHTML = achados.map(c => {
-      const info = c.n ? `${c.uf} • ${c.n} ${c.n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
-      return `<li><a class="hero__result" href="#/cidade/${c.key}">
-        <b>${c.nome}</b><span>${info}</span></a></li>`;
-    }).join("");
-    heroBox.hidden = false;
-    return achados;
-  };
+    box.hidden = false;
+  }
 
-  heroInput?.addEventListener("input", () => renderResultados(heroInput.value));
-  heroInput?.addEventListener("focus", () => { if (heroInput.value.trim()) renderResultados(heroInput.value); });
+  function esconder() { box.hidden = true; box.innerHTML = ""; }
 
-  // Ação de pesquisar (Enter ou clique na lupa)
-  const pesquisar = () => {
-    const termo = (heroInput?.value || "").trim();
-    if (!termo) { heroInput?.focus(); return; }     // vazio: convida a digitar
-    const achados = renderResultados(termo);
-    if (achados.length) location.hash = `#/cidade/${achados[0].key}`;  // 1ª cidade encontrada
-    // sem resultados: o dropdown já mostra "Nenhuma cidade encontrada"
-  };
+  // Digitar: abre/atualiza o dropdown
+  input.addEventListener("input", () => {
+    const termo = input.value.trim();
+    if (!termo) { esconder(); return; }
+    mostrar(achar(termo));
+  });
 
-  $("#form-cidade")?.addEventListener("submit", (e) => { e.preventDefault(); pesquisar(); });
-  // Clique direto na lupa (garante o disparo mesmo se o submit não ocorrer)
-  $(".hero__search-btn")?.addEventListener("click", (e) => { e.preventDefault(); pesquisar(); });
+  // Pesquisar (botão ou Enter): vai para a 1ª cidade; se vazio, foca; se nada, avisa
+  function pesquisar() {
+    const termo = input.value.trim();
+    if (!termo) { input.focus(); return; }
+    const achados = achar(termo);
+    if (achados.length) { esconder(); location.hash = "#/cidade/" + achados[0].key; }
+    else { mostrar([]); }
+  }
+
+  if (botao) botao.onclick = pesquisar;
+  if (form) form.onsubmit = (e) => { e.preventDefault(); pesquisar(); };
 
   // Fecha o dropdown ao clicar fora
   document.addEventListener("click", (e) => {
-    if (heroBox && !heroBox.hidden && !e.target.closest(".hero__search-wrap")) {
-      heroBox.hidden = true;
-    }
+    if (!box.hidden && !e.target.closest(".hero__search-wrap")) esconder();
   });
 }
 
