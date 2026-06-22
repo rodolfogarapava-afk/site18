@@ -162,9 +162,9 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
     linear-gradient(180deg,#0a0a0a,#050505);
   overflow:hidden;
 }
-.hero::after{content:"";position:absolute;inset:0;background:
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:
   repeating-linear-gradient(135deg,transparent,transparent 38px,rgba(201,162,39,.03) 38px,rgba(201,162,39,.03) 39px)}
-.hero__content{position:relative;max-width:720px;margin:0 auto;text-align:center}
+.hero__content{position:relative;z-index:2;max-width:720px;margin:0 auto;text-align:center}
 .hero__content h1,.hero__content>p{margin-left:auto;margin-right:auto}
 .hero__eyebrow{color:var(--gold-2);letter-spacing:.32em;font-size:.78rem;text-transform:uppercase;margin-bottom:1.1rem}
 .hero h1{font-size:clamp(2.3rem,6vw,4rem);margin-bottom:1.1rem}
