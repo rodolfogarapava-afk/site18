@@ -112,7 +112,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.2}
 .header.scrolled{background:rgba(8,8,8,.96);box-shadow:0 4px 20px rgba(0,0,0,.5);border-bottom:1px solid var(--line)}
 .header__inner{display:flex;align-items:center;gap:1.4rem;width:min(1180px,94%);margin-inline:auto;height:70px}
 .logo{display:inline-flex;align-items:center;gap:.55em;font-family:var(--serif);font-size:1.25rem;letter-spacing:.16em;color:var(--white)}
-.logo span{color:var(--gold)}
+.logo span{color:var(--white)}
 .logo__ring{height:1.8em;width:auto;display:block}
 .logo--sm{font-size:1.05rem}
 .logo--sm .logo__ring{height:1.6em}
