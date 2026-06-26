@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="admin.css?v=16" />
 </head>
 <body>
 
@@ -40,6 +40,7 @@
     <div class="wrap">
       <div class="tabs">
         <button class="tab active" data-tab="perfis">Perfis</button>
+        <button class="tab" data-tab="stories">Stories</button>
         <button class="tab" data-tab="cidades">Cidades &amp; Bairros</button>
         <button class="tab" data-tab="config">Configurações</button>
         <button class="tab" data-tab="backup">Publicar / Backup</button>
@@ -132,6 +133,74 @@
         </div>
       </section>
 
+      <!-- LISTA DE STORIES -->
+      <section id="tab-stories" class="tabpane" hidden>
+        <div class="toolbar">
+          <div class="desc" style="flex:1">Destaques que aparecem em círculos no topo do site. Arraste a ordem pelas setas. Tocar abre o visualizador.</div>
+          <button class="btn btn--gold" id="novo-story">+ Novo story</button>
+        </div>
+        <div id="lista-stories" class="adm-grid"></div>
+      </section>
+
+      <!-- FORM DE STORY -->
+      <section id="tab-story-form" class="tabpane" hidden>
+        <div class="panel">
+          <h2 id="story-form-titulo">Novo story</h2>
+          <p class="desc">Um story é um conjunto de fotos/vídeos que passam em sequência. Você pode vinculá-lo a uma acompanhante (o botão "Ver perfil" e o WhatsApp já vêm prontos).</p>
+
+          <div class="grid2">
+            <div class="field">
+              <label>Título (aparece sob o círculo)</label>
+              <input id="s-titulo" placeholder="Ex.: Jade • Copacabana" />
+              <small>Se vincular a uma acompanhante e deixar vazio, usa o nome dela.</small>
+            </div>
+            <div class="field">
+              <label>Vincular à acompanhante (opcional)</label>
+              <select id="s-perfil"></select>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label>WhatsApp do botão (opcional)</label>
+              <input id="s-whats" placeholder="Ex.: 5521999990001" />
+              <small>Vazio = usa o da acompanhante vinculada, ou o da central.</small>
+            </div>
+            <div class="field">
+              <label>Expira em (horas, opcional)</label>
+              <input id="s-expira" type="number" min="1" placeholder="Ex.: 24 (vazio = nunca)" />
+              <small>Depois desse tempo, some do site automaticamente.</small>
+            </div>
+          </div>
+
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="s-ativo" checked /> Ativo (visível no site)</label>
+          </div>
+
+          <h3>Capa do círculo (avatar)</h3>
+          <p class="desc">Opcional. Se vazio, usa a foto da acompanhante vinculada ou a 1ª imagem do story.</p>
+          <div class="drop drop--sm" id="s-drop-capa">
+            🟡 Clique para enviar a capa<br><small>Imagem quadrada fica melhor</small>
+            <input type="file" id="s-file-capa" accept="image/*" hidden />
+          </div>
+          <div class="thumbs" id="s-capa-thumb"></div>
+
+          <h3>Mídias do story (fotos e vídeos)</h3>
+          <p class="desc">Passam em sequência, na ordem abaixo. Fotos duram 5s; vídeos tocam por inteiro.</p>
+          <div class="drop" id="s-drop-midia">
+            📷🎬 Clique ou arraste fotos/vídeos aqui<br><small>JPG / PNG / MP4 — várias de uma vez</small>
+            <input type="file" id="s-file-midia" accept="image/*,video/*" multiple hidden />
+          </div>
+          <div class="thumbs" id="s-midias"></div>
+        </div>
+
+        <div class="formbar">
+          <button class="btn btn--ghost" id="story-cancelar">Cancelar</button>
+          <button class="btn btn--danger" id="story-excluir" hidden>Excluir</button>
+          <button class="btn btn--gold" id="story-salvar">Salvar story</button>
+        </div>
+      </section>
+
       <!-- CIDADES -->
       <section id="tab-cidades" class="tabpane" hidden>
         <div class="panel">
@@ -193,9 +262,9 @@
   <div id="toast" class="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="data.js"></script>
-  <script src="store.js"></script>
-  <script src="admin.js"></script>
+  <script src="supabase-config.js?v=16"></script>
+  <script src="data.js?v=16"></script>
+  <script src="store.js?v=16"></script>
+  <script src="admin.js?v=16"></script>
 </body>
 </html>

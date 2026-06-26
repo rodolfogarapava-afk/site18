@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="styles.css?v=15" />
+  <link rel="stylesheet" href="styles.css?v=16" />
 </head>
 <body>
 
@@ -109,10 +109,32 @@
     <button class="lightbox__nav lightbox__next" id="lb-next" aria-label="Próxima">›</button>
   </div>
 
+  <!-- ===== VISUALIZADOR DE STORIES ===== -->
+  <div id="story-viewer" class="sv" hidden>
+    <div class="sv__bar">
+      <div class="sv__progress" id="sv-progress"></div>
+      <div class="sv__head">
+        <div class="sv__author" id="sv-author">
+          <img id="sv-author-img" src="" alt="" />
+          <div class="sv__author-txt"><b id="sv-author-name"></b><span id="sv-author-sub"></span></div>
+        </div>
+        <button class="sv__close" id="sv-close" aria-label="Fechar">✕</button>
+      </div>
+    </div>
+
+    <div class="sv__stage" id="sv-stage"></div>
+
+    <!-- Zonas de toque: esquerda volta, direita avança -->
+    <button class="sv__zone sv__zone--prev" id="sv-prev" aria-label="Anterior"></button>
+    <button class="sv__zone sv__zone--next" id="sv-next" aria-label="Próximo"></button>
+
+    <div class="sv__cta" id="sv-cta"></div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=15"></script>
-  <script src="data.js?v=15"></script>
-  <script src="store.js?v=15"></script>
-  <script src="app.js?v=15"></script>
+  <script src="supabase-config.js?v=16"></script>
+  <script src="data.js?v=16"></script>
+  <script src="store.js?v=16"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>

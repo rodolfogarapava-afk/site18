@@ -9,9 +9,14 @@ const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 /* Estado de trabalho (cópia editável carregada do banco) */
-let DATA = { adminWhatsapp: "", cidades: {}, perfis: [] };
+let DATA = { adminWhatsapp: "", cidades: {}, perfis: [], stories: [] };
 let fotos = [];                  // fotos (URLs) do perfil em edição
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
+
+/* Estado do story em edição */
+let storyMidias = [];            // [{url, tipo, dur}]
+let storyCapaUrl = "";           // URL da capa (avatar)
+let storyEditId = null;          // id do story em edição (null = novo)
 
 /* ---------- Utilidades ---------- */
 function slugify(s) {
@@ -104,6 +109,7 @@ function showTab(name) {
   const pane = $("#tab-" + name);
   if (pane) pane.hidden = false;
   if (name === "perfis") renderLista();
+  if (name === "stories") renderStories();
   if (name === "cidades") renderCidades();
   if (name === "config") fillConfig();
   if (name === "backup") renderStorage();
@@ -349,6 +355,253 @@ fileInput.addEventListener("change", () => { addFiles(fileInput.files); fileInpu
 drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
 
 /* ============================================================
+   STORIES
+   ============================================================ */
+function storyThumb(s) {
+  if (s.capa) return s.capa;
+  const p = s.perfilId ? DATA.perfis.find(x => x.id === s.perfilId) : null;
+  if (p) return fotoCapa(p, 0);
+  const img = (s.midias || []).find(m => (m.tipo || "image") === "image");
+  if (img) return img.url;
+  return fotoCapa({ nome: s.titulo || "Story", hue: 300, fotos: [] });
+}
+function storyTituloAdmin(s) {
+  if (s.titulo) return s.titulo;
+  const p = s.perfilId ? DATA.perfis.find(x => x.id === s.perfilId) : null;
+  return p ? p.nome : "Story";
+}
+function storyExpiraLabel(s) {
+  if (!s.expiraEm) return "Não expira";
+  const t = new Date(s.expiraEm).getTime();
+  if (!t || t <= Date.now()) return "⚠ Expirado";
+  const h = Math.round((t - Date.now()) / 3600000);
+  return h >= 1 ? `Expira em ~${h}h` : "Expira em <1h";
+}
+
+function renderStories() {
+  const box = $("#lista-stories");
+  const list = DATA.stories || [];
+  if (!list.length) {
+    box.innerHTML = `<div class="empty">Nenhum story ainda. Clique em <b>+ Novo story</b> para criar o primeiro.</div>`;
+    return;
+  }
+  box.innerHTML = list.map((s, idx) => {
+    const p = s.perfilId ? DATA.perfis.find(x => x.id === s.perfilId) : null;
+    const nMid = (s.midias || []).length;
+    return `
+    <div class="adm-card">
+      <div class="adm-card__img">
+        <div class="adm-card__flags">
+          ${s.ativo ? `<span class="flag flag--nova">Ativo</span>` : `<span class="flag">Oculto</span>`}
+        </div>
+        <img src="${storyThumb(s)}" alt="${storyTituloAdmin(s)}" />
+      </div>
+      <div class="adm-card__body">
+        <div class="adm-card__name">${storyTituloAdmin(s)}</div>
+        <div class="adm-card__meta">${nMid} mídia(s)${p ? " · " + p.nome : ""}</div>
+        <div class="adm-card__meta">${storyExpiraLabel(s)}</div>
+        <div class="adm-card__actions">
+          <button class="btn btn--ghost btn--sm" data-up="${idx}" ${idx === 0 ? "disabled" : ""} title="Subir">↑</button>
+          <button class="btn btn--ghost btn--sm" data-down="${idx}" ${idx === list.length - 1 ? "disabled" : ""} title="Descer">↓</button>
+          <button class="btn btn--ghost btn--sm" data-edit="${s.id}">Editar</button>
+          <button class="btn btn--danger btn--sm" data-del="${s.id}">Excluir</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  $$("[data-edit]", box).forEach(b => b.addEventListener("click", () => abrirStoryForm(b.dataset.edit)));
+  $$("[data-del]", box).forEach(b => b.addEventListener("click", () => excluirStory(b.dataset.del)));
+  $$("[data-up]", box).forEach(b => b.addEventListener("click", () => moverStory(+b.dataset.up, -1)));
+  $$("[data-down]", box).forEach(b => b.addEventListener("click", () => moverStory(+b.dataset.down, 1)));
+}
+
+async function moverStory(idx, dir) {
+  const list = DATA.stories;
+  const j = idx + dir;
+  if (j < 0 || j >= list.length) return;
+  [list[idx], list[j]] = [list[j], list[idx]];
+  renderStories();
+  try {
+    await VIPStore.saveStoriesOrder(list);
+    await reload();
+    renderStories();
+  } catch (e) {
+    toast("Erro ao reordenar: " + (e.message || e), true);
+  }
+}
+
+function abrirStoryForm(id) {
+  storyEditId = id || null;
+  const s = id ? DATA.stories.find(x => x.id === id) : null;
+  storyMidias = s ? (s.midias || []).map(m => ({ ...m })) : [];
+  storyCapaUrl = s ? (s.capa || "") : "";
+
+  $("#story-form-titulo").textContent = s ? "Editar story" : "Novo story";
+  $("#story-excluir").hidden = !s;
+
+  $("#s-titulo").value = s ? (s.titulo || "") : "";
+  $("#s-perfil").innerHTML = `<option value="">— Nenhuma —</option>` +
+    DATA.perfis.map(p => `<option value="${p.id}" ${s && s.perfilId === p.id ? "selected" : ""}>${p.nome}${DATA.cidades[p.cidade] ? " — " + DATA.cidades[p.cidade].uf : ""}</option>`).join("");
+  $("#s-whats").value = s ? (s.whatsapp || "") : "";
+  $("#s-expira").value = "";
+  if (s && s.expiraEm) {
+    const h = Math.round((new Date(s.expiraEm).getTime() - Date.now()) / 3600000);
+    if (h > 0) $("#s-expira").value = h;
+  }
+  $("#s-ativo").checked = s ? s.ativo !== false : true;
+
+  renderStoryCapa();
+  renderStoryMidias();
+  $$(".tabpane").forEach(p => p.hidden = true);
+  $("#tab-story-form").hidden = false;
+  window.scrollTo(0, 0);
+}
+
+function renderStoryCapa() {
+  const box = $("#s-capa-thumb");
+  if (!storyCapaUrl) { box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="thumb">
+    <div class="thumb__bar"><button class="thumb__btn thumb__btn--del" data-capadel="1" title="Remover capa">✕</button></div>
+    <img src="${storyCapaUrl}" alt="capa" /></div>`;
+  const del = $("[data-capadel]", box);
+  if (del) del.addEventListener("click", () => { storyCapaUrl = ""; renderStoryCapa(); });
+}
+
+function renderStoryMidias() {
+  const box = $("#s-midias");
+  box.innerHTML = storyMidias.map((m, i) => {
+    const isVid = (m.tipo || "image") === "video";
+    const media = isVid
+      ? `<video src="${m.url}" muted playsinline preload="metadata"></video><span class="thumb__type">▶ vídeo</span>`
+      : `<img src="${m.url}" alt="mídia ${i + 1}" />`;
+    return `<div class="thumb">
+      <div class="thumb__bar">
+        <button class="thumb__btn" data-left="${i}" title="Mover p/ esquerda">‹</button>
+        <button class="thumb__btn thumb__btn--del" data-del="${i}" title="Remover">✕</button>
+      </div>
+      ${media}
+      ${i === 0 ? `<span class="thumb__cover">1ª</span>` : ""}
+    </div>`;
+  }).join("");
+
+  $$("[data-del]", box).forEach(b => b.addEventListener("click", () => {
+    storyMidias.splice(+b.dataset.del, 1); renderStoryMidias();
+  }));
+  $$("[data-left]", box).forEach(b => b.addEventListener("click", () => {
+    const i = +b.dataset.left;
+    if (i > 0) { [storyMidias[i - 1], storyMidias[i]] = [storyMidias[i], storyMidias[i - 1]]; renderStoryMidias(); }
+  }));
+}
+
+async function uploadStoryCapa(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  toast("Enviando capa...");
+  try {
+    const blob = await fileToBlob(file, 400, 0.85);
+    storyCapaUrl = await VIPStore.uploadFoto(blob, "jpg");
+    renderStoryCapa();
+    toast("Capa enviada.");
+  } catch (e) {
+    toast("Falha ao enviar a capa.", true);
+  }
+}
+
+async function addStoryMidias(fileList) {
+  const files = [...fileList].filter(f => f.type.startsWith("image/") || f.type.startsWith("video/"));
+  if (!files.length) return;
+  toast("Enviando mídias...");
+  let ok = 0;
+  for (const f of files) {
+    try {
+      if (f.type.startsWith("video/")) {
+        const ext = (f.name.split(".").pop() || "mp4").toLowerCase();
+        const url = await VIPStore.uploadArquivo(f, ext, "stories");
+        storyMidias.push({ url, tipo: "video" });
+      } else {
+        const blob = await fileToBlob(f, 1080, 0.85);
+        const url = await VIPStore.uploadFoto(blob, "jpg");
+        storyMidias.push({ url, tipo: "image" });
+      }
+      ok++; renderStoryMidias();
+    } catch (e) {
+      console.error(e);
+      toast("Falha ao enviar uma mídia.", true);
+    }
+  }
+  if (ok) toast(ok + " mídia(s) enviada(s).");
+}
+
+async function salvarStory() {
+  if (!storyMidias.length) return toast("Adicione ao menos uma foto ou vídeo.", true);
+  const expiraH = parseInt($("#s-expira").value, 10);
+  const expiraEm = (expiraH && expiraH > 0)
+    ? new Date(Date.now() + expiraH * 3600000).toISOString() : null;
+
+  const editing = !!storyEditId;
+  const atual = editing ? DATA.stories.find(x => x.id === storyEditId) : null;
+  const ordem = atual && typeof atual.ordem === "number" ? atual.ordem : (DATA.stories.length);
+
+  const story = {
+    id: storyEditId || undefined,
+    perfilId: $("#s-perfil").value || null,
+    titulo: $("#s-titulo").value.trim(),
+    capa: storyCapaUrl || "",
+    whatsapp: $("#s-whats").value.replace(/\D/g, ""),
+    midias: storyMidias,
+    ativo: $("#s-ativo").checked,
+    expiraEm,
+    ordem,
+  };
+
+  const btn = $("#story-salvar");
+  btn.disabled = true;
+  try {
+    await VIPStore.saveStory(story, ordem);
+    await reload();
+    toast("Story salvo com sucesso!");
+    showTab("stories");
+  } catch (e) {
+    toast("Erro ao salvar: " + (e.message || e), true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function excluirStory(id) {
+  const s = DATA.stories.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm("Excluir este story? Esta ação não pode ser desfeita.")) return;
+  try {
+    await VIPStore.deleteStory(s);
+    await reload();
+    renderStories();
+    toast("Story excluído.");
+  } catch (e) {
+    toast("Erro ao excluir: " + (e.message || e), true);
+  }
+}
+
+/* Eventos do formulário de story */
+$("#novo-story").addEventListener("click", () => abrirStoryForm(null));
+$("#story-cancelar").addEventListener("click", () => showTab("stories"));
+$("#story-salvar").addEventListener("click", salvarStory);
+$("#story-excluir").addEventListener("click", async () => {
+  if (storyEditId) { await excluirStory(storyEditId); showTab("stories"); }
+});
+
+const sDropCapa = $("#s-drop-capa"), sFileCapa = $("#s-file-capa");
+sDropCapa.addEventListener("click", () => sFileCapa.click());
+sFileCapa.addEventListener("change", () => { uploadStoryCapa(sFileCapa.files[0]); sFileCapa.value = ""; });
+
+const sDropMidia = $("#s-drop-midia"), sFileMidia = $("#s-file-midia");
+sDropMidia.addEventListener("click", () => sFileMidia.click());
+sFileMidia.addEventListener("change", () => { addStoryMidias(sFileMidia.files); sFileMidia.value = ""; });
+["dragenter", "dragover"].forEach(ev => sDropMidia.addEventListener(ev, e => { e.preventDefault(); sDropMidia.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => sDropMidia.addEventListener(ev, e => { e.preventDefault(); sDropMidia.classList.remove("over"); }));
+sDropMidia.addEventListener("drop", e => addStoryMidias(e.dataTransfer.files));
+
+/* ============================================================
    CIDADES & BAIRROS
    ============================================================ */
 function renderCidades() {
@@ -531,7 +784,7 @@ async function boot() {
     await reload();
   } catch (e) {
     toast("Erro ao carregar dados: " + (e.message || e), true);
-    DATA = { adminWhatsapp: "", cidades: {}, perfis: [] };
+    DATA = { adminWhatsapp: "", cidades: {}, perfis: [], stories: [] };
     updateBadge();
   }
   $("#filtro-cidade").innerHTML = `<option value="">Todas as cidades</option>` +

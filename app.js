@@ -140,6 +140,8 @@ function viewHome() {
     </div>
   </section>
 
+  ${storiesStripHtml()}
+
   <section class="section" id="sec-cidades">
     <div class="container">
       <div class="section__head">
@@ -175,6 +177,8 @@ function viewHome() {
       ${gridHtml(modelos)}
     </div>
   </section>`;
+
+  initStoriesStrip();
 }
 
 function viewCidade(cidade, filtro) {
@@ -448,6 +452,263 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowLeft") lbMove(-1);
   if (e.key === "ArrowRight") lbMove(1);
 });
+
+/* ============================================================
+   STORIES — faixa de destaques + visualizador (estilo Instagram)
+   Usa window.STORIES (preparado em store.js: ativos, com mídia e
+   não expirados, já ordenados).
+   ============================================================ */
+function storyPerfil(s) {
+  return s && s.perfilId ? PERFIS.find(p => p.id === s.perfilId) : null;
+}
+function storyTitulo(s) {
+  if (s.titulo) return s.titulo;
+  const p = storyPerfil(s);
+  return p ? p.nome : "Story";
+}
+function storyCapa(s) {
+  if (s.capa) return s.capa;
+  const p = storyPerfil(s);
+  if (p) return foto(p, 0);
+  const img = (s.midias || []).find(m => (m.tipo || "image") === "image");
+  if (img) return img.url;
+  return foto({ nome: s.titulo || "Aliança", hue: 300, fotos: [] });
+}
+
+/* HTML da faixa (vazio se não houver stories) */
+function storiesStripHtml() {
+  const list = window.STORIES || [];
+  if (!list.length) return "";
+  const items = list.map((s, i) => `
+    <button class="story-av" type="button" data-story="${i}">
+      <span class="story-av__ring"><span class="story-av__img"><img src="${storyCapa(s)}" alt="${storyTitulo(s)}" loading="lazy" /></span></span>
+      <span class="story-av__name">${storyTitulo(s)}</span>
+    </button>`).join("");
+  return `
+  <section class="stories" aria-label="Destaques">
+    <div class="container">
+      <div class="stories__track">${items}</div>
+    </div>
+  </section>`;
+}
+
+/* Liga os cliques da faixa ao visualizador (chamado após render da home) */
+function initStoriesStrip() {
+  $$(".story-av").forEach(btn =>
+    btn.addEventListener("click", () => openStoryViewer(+btn.dataset.story)));
+}
+
+/* ---------- Visualizador ---------- */
+const SV_IMG_DUR = 5000;                 // duração padrão de uma foto (ms)
+const sv         = $("#story-viewer");
+const svStage    = $("#sv-stage");
+const svProgress = $("#sv-progress");
+const svAuthorImg  = $("#sv-author-img");
+const svAuthorName = $("#sv-author-name");
+const svAuthorSub  = $("#sv-author-sub");
+const svCta      = $("#sv-cta");
+
+let svStories = [];      // lista em exibição
+let svSI = 0;            // índice do story atual
+let svMI = 0;            // índice da mídia (slide) atual
+let svRAF = null;        // requestAnimationFrame da barra
+let svPaused = false;
+let svCurVideo = null;   // <video> atual (ou null se foto)
+let svCurBar = null;     // <i> da barra de progresso atual
+let svCurDur = SV_IMG_DUR;
+let svStartTs = 0;       // início do slide (performance.now)
+let svElapsed = 0;       // tempo já decorrido antes de pausar (fotos)
+
+function openStoryViewer(si) {
+  svStories = window.STORIES || [];
+  if (!svStories.length) return;
+  svSI = Math.max(0, Math.min(si | 0, svStories.length - 1));
+  svMI = 0;
+  sv.hidden = false;
+  document.body.classList.add("sv-open");
+  renderStory();
+}
+
+function clearSvTimers() {
+  if (svRAF) { cancelAnimationFrame(svRAF); svRAF = null; }
+}
+
+function closeStoryViewer() {
+  clearSvTimers();
+  if (svCurVideo) { try { svCurVideo.pause(); } catch (e) {} svCurVideo = null; }
+  svStage.innerHTML = "";
+  sv.hidden = true;
+  svPaused = false;
+  sv.classList.remove("sv--paused");
+  document.body.classList.remove("sv-open");
+}
+
+function renderStory() {
+  const s = svStories[svSI];
+  if (!s) return closeStoryViewer();
+  const media = s.midias || [];
+  if (!media.length) return svNextStory();
+  if (svMI >= media.length) svMI = media.length - 1;
+
+  // Cabeçalho (autor)
+  svAuthorImg.src = storyCapa(s);
+  svAuthorName.textContent = storyTitulo(s);
+  const p = storyPerfil(s);
+  svAuthorSub.textContent = p && CIDADES[p.cidade]
+    ? `${bairroNome(p.cidade, p.bairro)} • ${CIDADES[p.cidade].uf}` : "";
+
+  // Barras de progresso (uma por slide)
+  svProgress.innerHTML = media.map((_, i) =>
+    `<span class="sv__seg"><i style="width:${i < svMI ? 100 : 0}%"></i></span>`).join("");
+
+  // CTA (WhatsApp / Ver perfil)
+  renderSvCta(s);
+
+  // Mídia atual
+  renderSvMedia(media[svMI]);
+}
+
+function renderSvMedia(m) {
+  clearSvTimers();
+  if (svCurVideo) { try { svCurVideo.pause(); } catch (e) {} svCurVideo = null; }
+  svStage.innerHTML = "";
+  svPaused = false;
+  sv.classList.remove("sv--paused");
+
+  const seg = svProgress.children[svMI];
+  svCurBar = seg ? seg.firstElementChild : null;
+
+  const tipo = (m.tipo || "image");
+  if (tipo === "video") {
+    const v = document.createElement("video");
+    v.className = "sv__media";
+    v.src = m.url;
+    v.setAttribute("playsinline", "");
+    v.playsInline = true;
+    v.autoplay = true;
+    v.preload = "auto";
+    svStage.appendChild(v);
+    svCurVideo = v;
+    // tenta tocar com som; se o navegador bloquear, toca mudo
+    v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
+    v.addEventListener("ended", svNext);
+    v.addEventListener("error", svNext);
+    svStartVideoProgress(v);
+  } else {
+    const img = document.createElement("img");
+    img.className = "sv__media";
+    img.alt = "";
+    img.src = m.url;
+    svStage.appendChild(img);
+    svCurDur = (m.dur ? m.dur * 1000 : SV_IMG_DUR);
+    svElapsed = 0;
+    svStartTs = performance.now();
+    svRAF = requestAnimationFrame(svImageTick);
+  }
+}
+
+function svImageTick() {
+  if (svPaused) return;
+  const elapsed = svElapsed + (performance.now() - svStartTs);
+  const pct = Math.min(100, (elapsed / svCurDur) * 100);
+  if (svCurBar) svCurBar.style.width = pct + "%";
+  if (pct >= 100) return svNext();
+  svRAF = requestAnimationFrame(svImageTick);
+}
+
+function svStartVideoProgress(v) {
+  const tick = () => {
+    if (!svCurVideo) return;
+    if (v.duration && isFinite(v.duration) && svCurBar)
+      svCurBar.style.width = Math.min(100, (v.currentTime / v.duration) * 100) + "%";
+    svRAF = requestAnimationFrame(tick);
+  };
+  svRAF = requestAnimationFrame(tick);
+}
+
+function renderSvCta(s) {
+  const p = storyPerfil(s);
+  const wa = (s.whatsapp || (p && p.whatsapp) || ADMIN_WHATSAPP || "").replace(/\D/g, "");
+  let html = "";
+  if (p) html += `<a class="sv__btn sv__btn--ghost" href="#/perfil/${p.slug}" data-sv-link>Ver perfil</a>`;
+  if (wa) {
+    const msg = p
+      ? `Olá ${p.nome}! Vi seu story na Aliança 💎`
+      : "Olá! Vi os stories na Aliança e gostaria de saber mais 😊";
+    html += `<a class="sv__btn sv__btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${WA_ICON} WhatsApp</a>`;
+  }
+  svCta.innerHTML = html;
+}
+
+/* Navegação */
+function svNext() {
+  const s = svStories[svSI];
+  const media = s ? (s.midias || []) : [];
+  if (svMI < media.length - 1) { svMI++; renderStory(); }
+  else svNextStory();
+}
+function svPrev() {
+  if (svMI > 0) { svMI--; renderStory(); }
+  else svPrevStory();
+}
+function svNextStory() {
+  if (svSI < svStories.length - 1) { svSI++; svMI = 0; renderStory(); }
+  else closeStoryViewer();
+}
+function svPrevStory() {
+  if (svSI > 0) { svSI--; svMI = 0; renderStory(); }
+  else { svMI = 0; renderStory(); }   // reinicia o primeiro
+}
+
+/* Pausar / retomar (segurar pressionado) */
+function svPause() {
+  if (svPaused) return;
+  svPaused = true;
+  sv.classList.add("sv--paused");
+  if (svCurVideo) { try { svCurVideo.pause(); } catch (e) {} }
+  else {
+    if (svRAF) { cancelAnimationFrame(svRAF); svRAF = null; }
+    svElapsed += performance.now() - svStartTs;
+  }
+}
+function svResume() {
+  if (!svPaused) return;
+  svPaused = false;
+  sv.classList.remove("sv--paused");
+  if (svCurVideo) { svCurVideo.play().catch(() => {}); }
+  else { svStartTs = performance.now(); svRAF = requestAnimationFrame(svImageTick); }
+}
+
+/* Zonas de toque: tap = navega; segurar = pausa */
+function bindSvZone(el, dir) {
+  let holdT = null, held = false;
+  const cancelHold = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
+  el.addEventListener("pointerdown", () => {
+    held = false;
+    holdT = setTimeout(() => { held = true; svPause(); }, 220);
+  });
+  el.addEventListener("pointerup", () => {
+    cancelHold();
+    if (held) { svResume(); held = false; return; }
+    dir < 0 ? svPrev() : svNext();
+  });
+  el.addEventListener("pointercancel", () => { cancelHold(); if (held) { svResume(); held = false; } });
+  el.addEventListener("pointerleave", () => { cancelHold(); if (held) { svResume(); held = false; } });
+}
+
+if (sv) {
+  $("#sv-close").addEventListener("click", closeStoryViewer);
+  bindSvZone($("#sv-prev"), -1);
+  bindSvZone($("#sv-next"), 1);
+  svCta.addEventListener("click", e => { if (e.target.closest("[data-sv-link]")) closeStoryViewer(); });
+  document.addEventListener("keydown", e => {
+    if (sv.hidden) return;
+    if (e.key === "Escape") closeStoryViewer();
+    else if (e.key === "ArrowLeft") svPrev();
+    else if (e.key === "ArrowRight") svNext();
+    else if (e.key === " ") { e.preventDefault(); svPaused ? svResume() : svPause(); }
+  });
+}
 
 /* ============================================================
    ROTEADOR (hash)

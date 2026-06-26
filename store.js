@@ -94,6 +94,37 @@
     return row;
   }
 
+  /* ----- Stories (destaques) ----- */
+  function rowToStory(r) {
+    return {
+      id:        r.id,
+      perfilId:  r.perfil_id || null,
+      titulo:    r.titulo || "",
+      capa:      r.capa || "",
+      whatsapp:  r.whatsapp || "",
+      midias:    Array.isArray(r.midias) ? r.midias : [],
+      ativo:     r.ativo !== false,
+      ordem:     r.ordem || 0,
+      expiraEm:  r.expira_em || null,
+      createdAt: r.created_at || null,
+    };
+  }
+  function storyToRow(s, ordem) {
+    const row = {
+      perfil_id: s.perfilId || null,
+      titulo:    s.titulo || "",
+      capa:      s.capa || "",
+      whatsapp:  (s.whatsapp || "").replace(/\D/g, ""),
+      midias:    Array.isArray(s.midias) ? s.midias : [],
+      ativo:     s.ativo !== false,
+      expira_em: s.expiraEm || null,
+    };
+    if (s.id) row.id = s.id;
+    if (typeof ordem === "number") row.ordem = ordem;
+    else if (typeof s.ordem === "number") row.ordem = s.ordem;
+    return row;
+  }
+
   /* Linhas de `cidades` (banco) -> objeto indexado por slug (JS) */
   function rowsToCidades(rows) {
     const out = {};
@@ -137,33 +168,53 @@
   async function fetchAll() {
     if (!sb) throw new Error("Supabase indisponível.");
 
-    const [cfgRes, cidRes, perRes] = await Promise.all([
+    const [cfgRes, cidRes, perRes, stoRes] = await Promise.all([
       sb.from("config").select("*").eq("id", 1).maybeSingle(),
       sb.from("cidades").select("*").order("ordem", { ascending: true }),
       sb.from("perfis").select("*")
         .order("ordem", { ascending: true })
         .order("created_at", { ascending: true }),
+      // Stories são opcionais: se a tabela ainda não existir, não quebramos o site.
+      sb.from("stories").select("*")
+        .order("ordem", { ascending: true })
+        .order("created_at", { ascending: false })
+        .then(r => r, () => ({ data: [], error: null })),
     ]);
 
     if (cidRes.error) throw cidRes.error;
     if (perRes.error) throw perRes.error;
 
+    const stories = (stoRes && !stoRes.error && Array.isArray(stoRes.data))
+      ? stoRes.data.map(rowToStory) : [];
+
     return {
       adminWhatsapp: (cfgRes.data && cfgRes.data.admin_whatsapp) || "",
       cidades: rowsToCidades(cidRes.data),
       perfis: (perRes.data || []).map(rowToPerfil),
+      stories,
     };
   }
 
   /* ============================================================
      SITE PÚBLICO — popula globais e expõe a Promise `ready`
      ============================================================ */
+  /* Mantém só os stories visíveis ao público: ativos, com mídia e não
+     expirados; ordenados por `ordem`. */
+  function storiesPublicas(list) {
+    const agora = Date.now();
+    return (list || [])
+      .filter(s => s.ativo && Array.isArray(s.midias) && s.midias.length &&
+                   (!s.expiraEm || new Date(s.expiraEm).getTime() > agora))
+      .sort((a, b) => (a.ordem - b.ordem));
+  }
+
   async function bootPublic() {
     try {
       const d = await withTimeout(fetchAll(), 7000);
       window.ADMIN_WHATSAPP = d.adminWhatsapp || (typeof SEED !== "undefined" ? SEED.adminWhatsapp : "");
       window.CIDADES        = d.cidades;
       window.PERFIS         = d.perfis;
+      window.STORIES        = storiesPublicas(d.stories);
       window.VIPData.online = true;
     } catch (e) {
       // Fallback offline: usa o SEED de fábrica (data.js)
@@ -172,6 +223,7 @@
       window.ADMIN_WHATSAPP = s.adminWhatsapp;
       window.CIDADES        = s.cidades;
       window.PERFIS         = s.perfis;
+      window.STORIES        = [];
       window.VIPData.online = false;
     }
     return window.VIPData;
@@ -188,6 +240,8 @@
     window.PERFIS = (typeof SEED !== "undefined") ? clone(SEED.perfis) : [];
   if (typeof window.ADMIN_WHATSAPP === "undefined")
     window.ADMIN_WHATSAPP = (typeof SEED !== "undefined") ? SEED.adminWhatsapp : "";
+  if (typeof window.STORIES === "undefined")
+    window.STORIES = [];
 
   window.VIPData = { online: false };
   window.VIPData.ready = bootPublic();
@@ -248,6 +302,31 @@
       if (error) throw error;
     },
 
+    /* ----- Stories ----- */
+    async saveStory(story, ordem) {
+      requireSb();
+      const { data, error } = await sb.from("stories")
+        .upsert(storyToRow(story, ordem))
+        .select()
+        .single();
+      if (error) throw error;
+      return rowToStory(data);
+    },
+    async deleteStory(story) {
+      requireSb();
+      const id = story && story.id ? story.id : story;
+      const { error } = await sb.from("stories").delete().eq("id", id);
+      if (error) throw error;
+    },
+    /* Grava a ordem (e o estado ativo) de uma lista de stories. */
+    async saveStoriesOrder(stories) {
+      requireSb();
+      const rows = (stories || []).map((s, i) => storyToRow(s, i));
+      if (!rows.length) return;
+      const { error } = await sb.from("stories").upsert(rows);
+      if (error) throw error;
+    },
+
     /* ----- Cidades ----- */
     /* Upsert das cidades atuais e remoção das que sumiram. */
     async saveCidades(cidades) {
@@ -296,6 +375,25 @@
       return data.publicUrl;
     },
 
+    /* ----- Upload genérico (ex.: vídeos de story) -> retorna URL pública -----
+       Envia o arquivo/blob "como está" (sem reprocessar no canvas).
+       `pasta` define o prefixo no bucket (padrão "stories"). */
+    async uploadArquivo(fileOrBlob, ext, pasta) {
+      requireSb();
+      const bucket = window.SB_BUCKET || "perfis";
+      const rand = Math.random().toString(36).slice(2, 10);
+      const stamp = (window.performance && performance.now ? Math.floor(performance.now()) : 0);
+      const safeExt = (ext || "bin").replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
+      const path = `${pasta || "stories"}/${stamp}-${rand}.${safeExt}`;
+      const { error } = await sb.storage.from(bucket).upload(path, fileOrBlob, {
+        contentType: fileOrBlob.type || "application/octet-stream",
+        upsert: false,
+      });
+      if (error) throw error;
+      const { data } = sb.storage.from(bucket).getPublicUrl(path);
+      return data.publicUrl;
+    },
+
     /* ----- Backup ----- */
     async exportAll() { return fetchAll(); },
 
@@ -319,6 +417,13 @@
       if (remover.length) {
         const { error: delErr } = await sb.from("perfis").delete().in("slug", remover);
         if (delErr) throw delErr;
+      }
+
+      // Stories (opcional no backup): se vier a lista, faz upsert sem apagar os atuais.
+      if (Array.isArray(d.stories) && d.stories.length) {
+        const sRows = d.stories.map((s, i) => storyToRow(s, i));
+        const { error: sErr } = await sb.from("stories").upsert(sRows);
+        if (sErr) throw sErr;
       }
     },
 
