@@ -48,11 +48,11 @@ function foto(p, i = 0) {
     </defs>
     <rect width='600' height='800' fill='url(#g)'/>
     <rect width='600' height='800' fill='url(#r)'/>
-    <circle cx='300' cy='300' r='150' fill='none' stroke='hsla(45,70%,70%,.25)' stroke-width='1.5'/>
+    <circle cx='300' cy='300' r='150' fill='none' stroke='hsla(344,70%,78%,.24)' stroke-width='1.5'/>
     <text x='300' y='350' font-family='Playfair Display,serif' font-size='200'
-          fill='hsla(45,75%,80%,.55)' text-anchor='middle'>${inicial}</text>
+          fill='hsla(42,82%,86%,.56)' text-anchor='middle'>${inicial}</text>
     <text x='300' y='720' font-family='Inter,sans-serif' font-size='34' letter-spacing='6'
-          fill='hsla(45,60%,82%,.7)' text-anchor='middle'>${p.nome.toUpperCase()}</text>
+          fill='hsla(344,72%,86%,.72)' text-anchor='middle'>${p.nome.toUpperCase()}</text>
   </svg>`;
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.trim());
 }
@@ -713,12 +713,18 @@ if (sv) {
 /* ============================================================
    ROTEADOR (hash)
    ============================================================ */
+function fecharNav() {
+  $("#nav")?.classList.remove("open");
+  document.body.classList.remove("nav-open");
+  $("#burger")?.setAttribute("aria-expanded", "false");
+  fecharMenus();
+}
+
 function router() {
   const hash = location.hash.replace(/^#\/?/, "");
   const parts = hash.split("/").filter(Boolean);
   window.scrollTo(0, 0);
-  $("#nav")?.classList.remove("open");
-  fecharMenus();
+  fecharNav();
 
   if (parts.length === 0)                 return viewHome();
   if (parts[0] === "anuncie")             return viewAnuncie();
@@ -753,7 +759,11 @@ function montarMenus() {
   // Um único menu "Cidades" com busca e rolagem (27 capitais)
   const links = cidadesOrdenadas().map(key => {
     const c = CIDADES[key];
-    return `<a href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">${c.nome} <small>${c.uf}</small></a>`;
+    const total = PERFIS.filter(p => p.cidade === key).length;
+    return `<a href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
+      <span class="nav__city-main"><b>${c.nome}</b>${total ? `<em>${total} ${total === 1 ? "perfil" : "perfis"}</em>` : ""}</span>
+      <small>${c.uf}</small>
+    </a>`;
   }).join("");
 
   host.innerHTML = `<div class="nav__group">
@@ -761,7 +771,8 @@ function montarMenus() {
         Cidades <span class="nav__caret" aria-hidden="true">▾</span>
       </button>
       <div class="nav__menu nav__menu--cities">
-        <div class="nav__menu-search">🔍 <input id="nav-busca-cidade" type="text" placeholder="Buscar cidade…" autocomplete="off" /></div>
+        <div class="nav__menu-title">Todas as cidades</div>
+        <div class="nav__menu-search"><span class="nav__search-ico" aria-hidden="true"></span><input id="nav-busca-cidade" type="text" placeholder="Buscar cidade…" autocomplete="off" /></div>
         <div class="nav__menu-list">${links}</div>
       </div>
     </div>`;
@@ -817,14 +828,37 @@ function initHeader() {
   const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 30);
   window.addEventListener("scroll", onScroll); onScroll();
 
-  $("#burger").addEventListener("click", e => {
+  const nav = $("#nav");
+  const burger = $("#burger");
+  const navClose = $("#nav-close");
+
+  const abrirNav = abrir => {
+    nav?.classList.toggle("open", abrir);
+    document.body.classList.toggle("nav-open", abrir);
+    burger?.setAttribute("aria-expanded", abrir ? "true" : "false");
+    if (!abrir) fecharMenus();
+  };
+
+  burger?.addEventListener("click", e => {
     e.stopPropagation();
-    $("#nav").classList.toggle("open");
+    abrirNav(!nav?.classList.contains("open"));
   });
 
-  // Clicar fora fecha os menus de cidade abertos
+  navClose?.addEventListener("click", () => abrirNav(false));
+
+  nav?.addEventListener("click", e => e.stopPropagation());
+  nav?.querySelectorAll("a").forEach(a => a.addEventListener("click", () => abrirNav(false)));
+
+  // Clicar fora fecha o drawer mobile e os menus de cidade abertos
   document.addEventListener("click", e => {
+    if (nav?.classList.contains("open") && !e.target.closest("#nav") && !e.target.closest("#burger")) {
+      abrirNav(false);
+      return;
+    }
     if (!e.target.closest(".nav__group")) fecharMenus();
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") abrirNav(false);
   });
   $("#header-wa").addEventListener("click", () => window.open(waAdmin(), "_blank", "noopener"));
 

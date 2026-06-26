@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="styles.css?v=16" />
+  <link rel="stylesheet" href="styles.css?v=23" />
 </head>
 <body>
 
@@ -54,14 +54,22 @@
     <div class="header__inner">
       <a href="#/" class="logo"><img class="logo__ring" src="logo.png" alt="" /><span class="logo__name">ALIANÇA</span></a>
 
-      <nav class="nav" id="nav">
+      <nav class="nav" id="nav" aria-label="Menu principal">
+        <div class="nav__mobile-head">
+          <span class="nav__mobile-brand"><img src="logo.png" alt="" /> ALIANÇA</span>
+          <button class="nav__close" id="nav-close" type="button" aria-label="Fechar menu">
+            <span></span><span></span>
+          </button>
+        </div>
         <span class="nav__cities" id="nav-cities"></span>
         <a href="#/anuncie" class="nav__link">Anuncie aqui</a>
         <a href="#/informacoes" class="nav__link">Informações</a>
       </nav>
 
       <button class="header__cta btn btn--gold" id="header-wa">WhatsApp</button>
-      <button class="header__burger" id="burger" aria-label="Menu">☰</button>
+      <button class="header__burger" id="burger" type="button" aria-label="Abrir menu" aria-controls="nav" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
 
@@ -135,6 +143,6 @@
   <script src="supabase-config.js?v=16"></script>
   <script src="data.js?v=16"></script>
   <script src="store.js?v=16"></script>
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>
