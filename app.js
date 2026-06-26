@@ -14,13 +14,21 @@ const bairroNome = (cidade, slug) =>
 const perfilBySlug = slug => PERFIS.find(p => p.slug === slug);
 
 /* Ícone oficial do WhatsApp (mesmo glifo do botão flutuante) */
-const WA_ICON = '<svg class="ico-wa" viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M16.04 3C9.4 3 4 8.4 4 15.04c0 2.12.56 4.18 1.62 6L4 29l8.16-1.58a12.02 12.02 0 0 0 3.88.64h.01c6.64 0 12.04-5.4 12.04-12.04C28.09 8.4 22.68 3 16.04 3zm0 21.93h-.01c-1.2 0-2.38-.32-3.41-.94l-.24-.14-4.84.94.97-4.72-.16-.25a9.9 9.9 0 0 1-1.52-5.29c0-5.5 4.48-9.98 9.99-9.98 2.67 0 5.17 1.04 7.06 2.93a9.9 9.9 0 0 1 2.92 7.06c0 5.5-4.48 9.98-9.99 9.98zm5.48-7.47c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.27-.47-2.42-1.49-.9-.8-1.5-1.79-1.67-2.09-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.22 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35z"/></svg>';
+const WA_ICON = '<svg class="ico-wa" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.6 6.31999C16.8669 5.58141 15.9943 4.99596 15.033 4.59767C14.0716 4.19938 13.0406 3.99622 12 3.99999C10.6089 4.00135 9.24248 4.36819 8.03771 5.06377C6.83294 5.75935 5.83208 6.75926 5.13534 7.96335C4.4386 9.16745 4.07046 10.5335 4.06776 11.9246C4.06507 13.3158 4.42793 14.6832 5.12 15.89L4 20L8.2 18.9C9.35975 19.5452 10.6629 19.8891 11.99 19.9C14.0997 19.9001 16.124 19.0668 17.6222 17.5816C19.1205 16.0965 19.9715 14.0796 19.99 11.97C19.983 10.9173 19.7682 9.87634 19.3581 8.9068C18.948 7.93725 18.3505 7.05819 17.6 6.31999ZM12 18.53C10.8177 18.5308 9.65701 18.213 8.64 17.61L8.4 17.46L5.91 18.12L6.57 15.69L6.41 15.44C5.55925 14.0667 5.24174 12.429 5.51762 10.8372C5.7935 9.24545 6.64361 7.81015 7.9069 6.80322C9.1702 5.79628 10.7589 5.28765 12.3721 5.37368C13.9853 5.4597 15.511 6.13441 16.66 7.26999C17.916 8.49818 18.635 10.1735 18.66 11.93C18.6442 13.6859 17.9355 15.3645 16.6882 16.6006C15.441 17.8366 13.756 18.5301 12 18.53ZM15.61 13.59C15.41 13.49 14.44 13.01 14.26 12.95C14.08 12.89 13.94 12.85 13.81 13.05C13.6144 13.3181 13.404 13.5751 13.18 13.82C13.07 13.96 12.95 13.97 12.75 13.82C11.6097 13.3694 10.6597 12.5394 10.06 11.47C9.85 11.12 10.26 11.14 10.64 10.39C10.6681 10.3359 10.6827 10.2759 10.6827 10.215C10.6827 10.1541 10.6681 10.0941 10.64 10.04C10.64 9.93999 10.19 8.95999 10.03 8.56999C9.87 8.17999 9.71 8.23999 9.58 8.22999H9.19C9.08895 8.23154 8.9894 8.25465 8.898 8.29776C8.8066 8.34087 8.72546 8.403 8.66 8.47999C8.43562 8.69817 8.26061 8.96191 8.14676 9.25343C8.03291 9.54495 7.98287 9.85749 8 10.17C8.0627 10.9181 8.34443 11.6311 8.81 12.22C9.6622 13.4958 10.8301 14.5293 12.2 15.22C12.9185 15.6394 13.7535 15.8148 14.58 15.72C14.8552 15.6654 15.1159 15.5535 15.345 15.3915C15.5742 15.2296 15.7667 15.0212 15.91 14.78C16.0428 14.4856 16.0846 14.1583 16.03 13.84C15.94 13.74 15.81 13.69 15.61 13.59Z"/></svg>';
+const ICON_SPARKLES = '<svg class="chip__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 14l.8 2.1L22 17l-2.2.9L19 20l-.8-2.1L16 17l2.2-.9L19 14z"/><path d="M5 14l.8 2.1L8 17l-2.2.9L5 20l-.8-2.1L2 17l2.2-.9L5 14z"/></svg>';
+const ICON_DIAMOND = '<svg class="chip__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20"/><path d="M9 3 8 9l4 12 4-12-1-6"/></svg>';
+const ICON_PLAY = '<svg class="chip__icon-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l12-7z"/></svg>';
+const ICON_PIN = '<svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s5-4.35 5-9a5 5 0 0 0-10 0c0 4.65 5 9 5 9z"/><circle cx="12" cy="12" r="1.8"/></svg>';
+const ICON_ARROW = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"/><path d="m12 5 7 7-7 7"/></svg>';
+const ICON_CHAT = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>';
+const ICON_AUDIO_PLAY = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l12-7z"/></svg>';
+const ICON_AUDIO_PAUSE = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7z"/><path d="M13 5h4v14h-4z"/></svg>';
 
 /* WhatsApp da acompanhante (com mensagem contextual) */
 function waPerfil(p, contexto) {
   const msg = contexto
-    ? `Olá ${p.nome}! Vi seu anúncio na Aliança e tenho interesse em ${contexto} 💎`
-    : `Olá ${p.nome}! Vi seu anúncio na Aliança e gostaria de saber mais 😊`;
+    ? `Olá ${p.nome}! Vi seu anúncio na Aliança e tenho interesse em ${contexto}.`
+    : `Olá ${p.nome}! Vi seu anúncio na Aliança e gostaria de saber mais.`;
   return `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(msg)}`;
 }
 /* WhatsApp do administrador (home / anuncie) */
@@ -57,16 +65,51 @@ function foto(p, i = 0) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.trim());
 }
 
+function cardResumo(p) {
+  const raw = (p.descricao || p.desc || "").trim().replace(/\s+/g, " ");
+  if (!raw) return "Perfil selecionado para quem busca presença, discrição e boa companhia.";
+  return raw.length > 118 ? raw.slice(0, 115).trimEnd() + "..." : raw;
+}
+
+function cardAudioTexto(p) {
+  const base = (p.descricao || p.desc || "").trim().replace(/\s+/g, " ");
+  const cidade = CIDADES[p.cidade]?.nome || "";
+  const bairro = bairroNome(p.cidade, p.bairro);
+  return `Olá, eu sou ${p.nome}. Atendo em ${bairro}, ${cidade}. ${base || "Perfil selecionado para quem busca presença, discrição e boa companhia."}`;
+}
+
+function cardAudioTempo(p) {
+  const seconds = Math.max(12, Math.min(28, Math.round(cardResumo(p).length / 7)));
+  return `00:${String(seconds).padStart(2, "0")}`;
+}
+
+function storyCidadeSlug(s) {
+  if (!s) return null;
+  if (s.cidade) return s.cidade;
+  const p = storyPerfil(s);
+  return p ? p.cidade : null;
+}
+
+function storiesDaCidade(cidade) {
+  return (window.STORIES || []).filter(s => storyCidadeSlug(s) === cidade);
+}
+
+function cidadesComConteudo() {
+  return cidadesOrdenadas().filter(key => PERFIS.some(p => p.cidade === key));
+}
+
 /* ---------- Componentes ---------- */
 function tagsHtml(p) {
   let t = "";
   if (p.nova)      t += `<span class="tag tag--nova">Nova</span>`;
   if (p.exclusiva) t += `<span class="tag tag--excl">Exclusiva</span>`;
-  if (p.temVideo)  t += `<span class="tag tag--video">▶ Vídeo</span>`;
+  if (p.temVideo)  t += `<span class="tag tag--video">${ICON_PLAY}<span>Vídeo</span></span>`;
   return t;
 }
 
-function cardHtml(p) {
+function cardHtml(p, opts = {}) {
+  const showCta = opts.showCta !== false;
+  const showAudio = opts.showAudio !== false;
   return `
   <article class="card">
     <a class="card__media" href="#/perfil/${p.slug}">
@@ -76,23 +119,104 @@ function cardHtml(p) {
     </a>
     <div class="card__body">
       <a href="#/perfil/${p.slug}"><h3 class="card__name">${p.nome}</h3></a>
+      ${showAudio ? `
+      <div class="card__audio" data-card-audio="${p.slug}">
+        <button class="card__audio-btn" type="button" aria-pressed="false" aria-label="Ouvir áudio do perfil ${p.nome}">
+          <span class="card__audio-play" aria-hidden="true" data-card-audio-icon>${ICON_AUDIO_PLAY}</span>
+          <span class="card__audio-copy">
+            <span class="card__audio-label">Ouvir áudio</span>
+            <span class="card__audio-sub">voz curta</span>
+          </span>
+        </button>
+        <div class="card__audio-wave" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <span class="card__audio-time">${cardAudioTempo(p)}</span>
+      </div>` : ""}
+      <p class="card__desc">${cardResumo(p)}</p>
       <div class="card__attrs">
         <span><b>${p.altura}</b> altura</span>
         <span><b>${p.idade}</b> anos</span>
         <span>MAN <b>${p.manequim}</b></span>
-        ${p.possuiLocal ? `<span>📍 <b>Local</b></span>` : ""}
+        ${p.possuiLocal ? `<span>${ICON_PIN}<b>Local</b></span>` : ""}
       </div>
-      <a class="btn btn--wa btn--block" href="${waPerfil(p)}" target="_blank" rel="noopener">
-        ${WA_ICON} WhatsApp
-      </a>
+      ${showCta ? `
+      <div class="card__actions">
+        <a class="btn btn--ghost btn--card" href="#/perfil/${p.slug}">
+          ${ICON_ARROW}<span>Abrir perfil</span>
+        </a>
+        <a class="btn btn--gold btn--card" href="${waPerfil(p)}" target="_blank" rel="noopener">
+          ${ICON_CHAT}<span>Conversar</span>
+        </a>
+      </div>` : ""}
     </div>
   </article>`;
 }
 
-function gridHtml(list) {
+function gridHtml(list, opts = {}) {
   if (!list.length) return `<div class="empty">Nenhum perfil encontrado nesta seleção.</div>`;
-  return `<div class="grid">${list.map(cardHtml).join("")}</div>`;
+  return `<div class="grid">${list.map(p => cardHtml(p, opts)).join("")}</div>`;
 }
+
+let activeCardAudio = null;
+
+function resetCardAudio() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (activeCardAudio) {
+    activeCardAudio.classList.remove("is-playing");
+    const btn = $(".card__audio-btn", activeCardAudio);
+    if (btn) {
+      btn.setAttribute("aria-pressed", "false");
+      btn.setAttribute("aria-label", `Ouvir áudio do perfil ${perfilBySlug(activeCardAudio.dataset.cardAudio)?.nome || "selecionado"}`);
+      const icon = $("[data-card-audio-icon]", activeCardAudio);
+      if (icon) icon.innerHTML = ICON_AUDIO_PLAY;
+      const label = $(".card__audio-label", activeCardAudio);
+      if (label) label.textContent = "Ouvir áudio";
+    }
+  }
+  activeCardAudio = null;
+}
+
+function toggleCardAudio(slug, btn) {
+  const card = btn.closest(".card__audio");
+  const p = perfilBySlug(slug);
+  if (!card || !p || !window.speechSynthesis) return;
+
+  if (activeCardAudio === card) {
+    resetCardAudio();
+    return;
+  }
+
+  resetCardAudio();
+
+  const utter = new SpeechSynthesisUtterance(cardAudioTexto(p));
+  utter.lang = "pt-BR";
+  utter.rate = 1.0;
+  utter.pitch = 1.02;
+  utter.onend = resetCardAudio;
+  utter.onerror = resetCardAudio;
+
+  activeCardAudio = card;
+  card.classList.add("is-playing");
+  btn.setAttribute("aria-pressed", "true");
+  btn.setAttribute("aria-label", `Pausar áudio do perfil ${p.nome}`);
+  const icon = $("[data-card-audio-icon]", card);
+  if (icon) icon.innerHTML = ICON_AUDIO_PAUSE;
+  const label = $(".card__audio-label", card);
+  if (label) label.textContent = "Pausar áudio";
+  window.speechSynthesis.speak(utter);
+}
+
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".card__audio-btn");
+  if (!btn) return;
+  const wrap = btn.closest(".card__audio");
+  if (!wrap) return;
+  toggleCardAudio(wrap.dataset.cardAudio, btn);
+});
+
+window.addEventListener("hashchange", resetCardAudio);
 
 /* Ordena: novidades e destaques primeiro */
 const ordena = list => [...list].sort((a, b) =>
@@ -122,8 +246,6 @@ function cidadesOrdenadas() {
 function viewHome() {
   const exclusivas = ordena(PERFIS.filter(p => p.exclusiva));
   const novidades = ordena(PERFIS.filter(p => p.nova));
-  const modelos = ordena(PERFIS);
-
   // Home: apenas Rio de Janeiro e Cuiabá (como era no começo)
   const HOME_CIDADES = ["rio-de-janeiro", "cuiaba"];
   const cardsCidades = cidadesOrdenadas()
@@ -131,16 +253,29 @@ function viewHome() {
     .map(cidadeCard).join("");
 
   app.innerHTML = `
-  <section class="hero">
-    <div class="container hero__content">
-      <p class="hero__eyebrow">Discrição · Elegância · Alto padrão</p>
-      <h1>Acompanhantes de <em>luxo</em><br/>no Brasil</h1>
-      <p>Perfis selecionados, fotos reais e atendimento exclusivo. Encontre na
-         sua cidade e fale direto pelo WhatsApp, com total sigilo.</p>
+  <section class="hero hero--home" style="--hero-image:url('instagram_post.webp')">
+    <div class="hero__scrim" aria-hidden="true"></div>
+    <div class="hero__layout">
+      <div class="hero__content">
+        <div class="hero__panel">
+          <p class="hero__eyebrow">Discrição · Elegância · Alto padrão</p>
+          <h1>Acompanhantes de <em>luxo</em><br/>no Brasil</h1>
+          <p>Perfis selecionados, fotos reais e atendimento exclusivo. Encontre na
+             sua cidade e fale direto pelo WhatsApp, com total sigilo.</p>
+          <div class="hero__proofs" aria-label="Destaques da plataforma">
+            <span class="hero__proof">Fotos reais</span>
+            <span class="hero__proof">Sigilo total</span>
+            <span class="hero__proof">Seleção premium</span>
+          </div>
+          <div class="hero__actions">
+            <a class="btn btn--gold btn--lg" href="#sec-cidades">Explorar cidades</a>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  ${storiesStripHtml()}
+  ${storiesStripHtml({ extraClass: "stories--home", limit: 2, showMore: true })}
 
   <section class="section" id="sec-cidades">
     <div class="container">
@@ -167,15 +302,6 @@ function viewHome() {
       </div>
       ${gridHtml(novidades)}
     </div>
-  </section>
-
-  <section class="section section--alt">
-    <div class="container">
-      <div class="section__head">
-        <div><h2><span>Modelos</span></h2><p class="lead">Conheça todas as nossas acompanhantes</p></div>
-      </div>
-      ${gridHtml(modelos)}
-    </div>
   </section>`;
 
   initStoriesStrip();
@@ -187,6 +313,16 @@ function viewCidade(cidade, filtro) {
 
   let list = PERFIS.filter(p => p.cidade === cidade);
   let titulo = c.nome, sub = `${list.length} acompanhantes em ${c.nome} (${c.uf})`;
+  const total = list.length;
+  const filtroAtual = !filtro
+    ? "Todos"
+    : filtro.tipo === "novidades"
+      ? "Novidades"
+      : filtro.tipo === "exclusivas"
+        ? "Exclusivas"
+        : filtro.tipo === "videos"
+          ? "Vídeos"
+          : bairroNome(cidade, filtro.valor);
 
   if (filtro?.tipo === "bairro") {
     list = list.filter(p => p.bairro === filtro.valor);
@@ -203,40 +339,56 @@ function viewCidade(cidade, filtro) {
   const chips = c.bairros.map(b =>
     `<a class="chip${filtro?.valor === b.slug ? " active" : ""}" href="#/cidade/${cidade}/bairro/${b.slug}">${b.nome}</a>`
   ).join("");
+  const resultados = ordena(list);
+  const filterChips = [
+    `<a class="chip${!filtro ? " active" : ""}" href="#/cidade/${cidade}">Todos</a>`,
+    `<a class="chip${filtro?.tipo === "novidades" ? " active" : ""}" href="#/cidade/${cidade}/novidades">${ICON_SPARKLES}<span>Novidades</span></a>`,
+    `<a class="chip${filtro?.tipo === "exclusivas" ? " active" : ""}" href="#/cidade/${cidade}/exclusivas">${ICON_DIAMOND}<span>Exclusivas</span></a>`,
+    `<a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="#/cidade/${cidade}/videos">${ICON_PLAY}<span>Vídeos</span></a>`,
+  ].join("");
 
   app.innerHTML = `
-  <section class="page">
+  <section class="page page--cidade">
     <div class="container">
       <a class="back-link" href="#/">‹ Início</a>
-      <div class="section__head">
-        <div><h2>${titulo} <span>${c.uf}</span></h2><p class="lead">${sub}</p></div>
-      </div>
+      ${storiesStripHtml({ cidade })}
+      <div class="page-divider" aria-hidden="true"></div>
+      <header class="cidade-hero">
+        <div class="cidade-hero__title">
+          <h1>${titulo} <span>${c.uf}</span></h1>
+          <p class="lead">${sub}</p>
+        </div>
+        <div class="cidade-hero__meta">${total} perfis • ${c.bairros.length} bairros • ${filtroAtual}</div>
+      </header>
 
-      <div class="filtros">
-        <div class="search">
-          🔍 <input id="busca" type="text" placeholder="Buscar por nome..." />
+      <div class="filtros filtros--cidade">
+        <div class="filtros__row filtros__row--search">
+          <div class="search search--city">
+            <span class="search__ico" aria-hidden="true"></span>
+            <input id="busca" type="text" placeholder="Buscar por nome..." />
+          </div>
         </div>
 
-        <div class="filtros__row">
-          <span class="filtros__label">Filtrar</span>
-          <div class="chips">
-            <a class="chip${!filtro ? " active" : ""}" href="#/cidade/${cidade}">Todos</a>
-            <a class="chip${filtro?.tipo === "novidades" ? " active" : ""}" href="#/cidade/${cidade}/novidades">✨ Novidades</a>
-            <a class="chip${filtro?.tipo === "exclusivas" ? " active" : ""}" href="#/cidade/${cidade}/exclusivas">💎 Exclusivas</a>
-            <a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="#/cidade/${cidade}/videos">▶ Vídeos</a>
+        <div class="filtros__row filtros__row--compact">
+          <span class="filtros__label">Perfis</span>
+          <div class="chips chips--rail">
+            ${filterChips}
           </div>
         </div>
 
         ${c.bairros.length ? `
-        <div class="filtros__row">
+        <div class="filtros__row filtros__row--compact">
           <span class="filtros__label">Bairros</span>
-          <div class="chips">${chips}</div>
+          <div class="chips chips--rail">${chips}</div>
         </div>` : ""}
       </div>
 
-      <div id="resultados">${gridHtml(ordena(list))}</div>
+      <div class="resultados-meta">${resultados.length} perfis encontrados</div>
+      <div id="resultados">${gridHtml(resultados)}</div>
     </div>
   </section>`;
+
+  initStoriesStrip();
 
   const busca = $("#busca");
   busca?.addEventListener("input", () => {
@@ -334,48 +486,64 @@ function viewAnuncie() {
     <div class="container">
       <a class="back-link" href="#/">‹ Início</a>
       <h1>Anuncie aqui</h1>
-      <p>Faça parte da Aliança e divulgue seu perfil para o público de alto padrão em
-         todo o Brasil. Preencha os dados abaixo: ao enviar, abriremos o WhatsApp
-         da nossa central com tudo preenchido — é só confirmar e enviar suas fotos.</p>
 
-      <form class="form" id="form-anuncie">
+      <form class="form" id="form-anuncie" novalidate>
         <div>
-          <label>Nome artístico</label>
-          <input name="nome" required placeholder="Ex.: Luna Sophie" />
+          <label>Nome artístico <span class="req">*</span></label>
+          <input name="nome" required placeholder="Ex: Luna Sophie" />
         </div>
+
         <div class="row">
           <div>
-            <label>Cidade</label>
+            <label>Cidade <span class="req">*</span></label>
             <select name="cidade" id="sel-cidade" required>
-              <option value="">Selecione...</option>
+              <option value="">Selecione a cidade</option>
               ${Object.keys(CIDADES).map(k => `<option value="${k}">${CIDADES[k].nome} — ${CIDADES[k].uf}</option>`).join("")}
             </select>
           </div>
           <div>
-            <label>Bairro <small style="color:var(--muted)">(se houver)</small></label>
-            <select name="bairro" id="sel-bairro"><option value="">Selecione a cidade...</option></select>
+            <label>Bairro</label>
+            <select name="bairro" id="sel-bairro"><option value="">Selecione a cidade primeiro</option></select>
           </div>
         </div>
+
         <div class="row">
-          <div><label>Idade</label><input name="idade" type="number" min="18" required placeholder="18+" /></div>
-          <div><label>Seu WhatsApp</label><input name="whats" required placeholder="(00) 00000-0000" /></div>
+          <div>
+            <label>Idade <span class="req">*</span></label>
+            <input name="idade" type="number" min="18" required placeholder="18" />
+          </div>
+          <div>
+            <label>Seu WhatsApp <span class="req">*</span></label>
+            <input name="whats" required placeholder="(00) 00000-0000" />
+          </div>
         </div>
+
         <div>
           <label>Descrição / apresentação</label>
-          <textarea name="desc" placeholder="Conte um pouco sobre você, atendimento, serviços..."></textarea>
+          <textarea name="desc" placeholder="Conte um pouco sobre você, serviços, preferências de atendimento..."></textarea>
         </div>
-        <button class="btn btn--gold btn--lg" type="submit">Enviar pelo WhatsApp</button>
+
+        <div class="form__actions">
+          <button class="btn btn--wa btn--lg" type="submit">
+            ${WA_ICON} Enviar pelo WhatsApp
+          </button>
+          <p class="form__note">Você será levado ao WhatsApp da central com os dados já preenchidos.</p>
+        </div>
       </form>
     </div>
   </section>`;
+
+  // Zen: esconde o botão flutuante nesta página (evita sobreposição e mantém clean)
+  const fwa = $("#float-wa");
+  if (fwa) fwa.style.display = 'none';
 
   const selCidade = $("#sel-cidade"), selBairro = $("#sel-bairro");
   selCidade.addEventListener("change", () => {
     const c = CIDADES[selCidade.value];
     selBairro.innerHTML = !c
-      ? `<option value="">Selecione a cidade...</option>`
+      ? `<option value="">Selecione a cidade primeiro</option>`
       : (c.bairros && c.bairros.length
-          ? `<option value="">Selecione...</option>` + c.bairros.map(b => `<option value="${b.slug}">${b.nome}</option>`).join("")
+          ? `<option value="">Selecione o bairro</option>` + c.bairros.map(b => `<option value="${b.slug}">${b.nome}</option>`).join("")
           : `<option value="">Sem bairros cadastrados</option>`);
   });
 
@@ -476,18 +644,35 @@ function storyCapa(s) {
 }
 
 /* HTML da faixa (vazio se não houver stories) */
-function storiesStripHtml() {
+function storiesStripHtml(opts = {}) {
+  if (typeof opts === "string") opts = { extraClass: opts };
+  const {
+    extraClass = "",
+    cidade = null,
+    limit = null,
+    showMore = false,
+  } = opts;
   const list = window.STORIES || [];
-  if (!list.length) return "";
-  const items = list.map((s, i) => `
+  const filtered = cidade ? list.filter(s => storyCidadeSlug(s) === cidade) : list;
+  const shown = Number.isFinite(limit) ? filtered.slice(0, limit) : filtered;
+  if (!shown.length) return "";
+  const items = shown.map((s, i) => `
     <button class="story-av" type="button" data-story="${i}">
       <span class="story-av__ring"><span class="story-av__img"><img src="${storyCapa(s)}" alt="${storyTitulo(s)}" loading="lazy" /></span></span>
       <span class="story-av__name">${storyTitulo(s)}</span>
     </button>`).join("");
+  const moreBtn = showMore ? `
+    <button class="story-av story-av--more" type="button" id="home-stories-more" aria-label="Ver mais cidades">
+      <span class="story-av__ring story-av__ring--more">
+        <span class="story-av__img story-av__img--more"><span class="story-av__plus">+</span></span>
+      </span>
+      <span class="story-av__name">Ver mais</span>
+    </button>` : "";
+  const homeWrap = `<div class="stories__track">${items}${moreBtn}</div>`;
   return `
-  <section class="stories" aria-label="Destaques">
+  <section class="stories ${extraClass}" aria-label="Destaques"${cidade ? ` data-cidade="${cidade}"` : ""}>
     <div class="container">
-      <div class="stories__track">${items}</div>
+      ${homeWrap}
     </div>
   </section>`;
 }
@@ -495,7 +680,16 @@ function storiesStripHtml() {
 /* Liga os cliques da faixa ao visualizador (chamado após render da home) */
 function initStoriesStrip() {
   $$(".story-av").forEach(btn =>
-    btn.addEventListener("click", () => openStoryViewer(+btn.dataset.story)));
+    btn.addEventListener("click", () => {
+      if (btn.id === "home-stories-more") {
+        openCityPicker();
+        return;
+      }
+      const wrap = btn.closest(".stories");
+      const cidade = wrap?.dataset.cidade || "";
+      const list = cidade ? storiesDaCidade(cidade) : (window.STORIES || []);
+      openStoryViewer(+btn.dataset.story, list);
+    }));
 }
 
 /* ---------- Visualizador ---------- */
@@ -507,6 +701,55 @@ const svAuthorImg  = $("#sv-author-img");
 const svAuthorName = $("#sv-author-name");
 const svAuthorSub  = $("#sv-author-sub");
 const svCta      = $("#sv-cta");
+const cityPicker = $("#city-picker");
+const cityPickerGrid = $("#city-picker-grid");
+const cityPickerClose = $("#city-picker-close");
+const cityPickerLead = $("#city-picker-lead");
+
+function renderCityPicker() {
+  if (!cityPickerGrid) return;
+  const cities = cidadesComConteudo();
+  cityPickerGrid.innerHTML = cities.map(key => {
+    const c = CIDADES[key];
+    const perfis = PERFIS.filter(p => p.cidade === key).length;
+    const stories = storiesDaCidade(key).length;
+    return `
+      <button class="city-picker__item" type="button" data-city-key="${key}">
+        <span class="city-picker__name">${c.nome}</span>
+        <span class="city-picker__uf">${c.uf}</span>
+        <span class="city-picker__meta">${perfis} perfis • ${stories} stories</span>
+      </button>`;
+  }).join("");
+  if (cityPickerLead) cityPickerLead.textContent = "Os stories e perfis mudam conforme a cidade escolhida.";
+}
+
+function openCityPicker() {
+  if (!cityPicker) return;
+  renderCityPicker();
+  cityPicker.hidden = false;
+  document.body.classList.add("city-picker-open");
+}
+
+function closeCityPicker() {
+  if (!cityPicker) return;
+  cityPicker.hidden = true;
+  document.body.classList.remove("city-picker-open");
+}
+
+cityPickerGrid?.addEventListener("click", e => {
+  const btn = e.target.closest("[data-city-key]");
+  if (!btn) return;
+  closeCityPicker();
+  location.hash = `#/cidade/${btn.dataset.cityKey}`;
+});
+cityPickerClose?.addEventListener("click", closeCityPicker);
+cityPicker?.addEventListener("click", e => {
+  if (e.target.closest("[data-city-picker-close]")) closeCityPicker();
+});
+document.addEventListener("keydown", e => {
+  if (!cityPicker || cityPicker.hidden) return;
+  if (e.key === "Escape") closeCityPicker();
+});
 
 let svStories = [];      // lista em exibição
 let svSI = 0;            // índice do story atual
@@ -519,8 +762,8 @@ let svCurDur = SV_IMG_DUR;
 let svStartTs = 0;       // início do slide (performance.now)
 let svElapsed = 0;       // tempo já decorrido antes de pausar (fotos)
 
-function openStoryViewer(si) {
-  svStories = window.STORIES || [];
+function openStoryViewer(si, list = window.STORIES || []) {
+  svStories = list || [];
   if (!svStories.length) return;
   svSI = Math.max(0, Math.min(si | 0, svStories.length - 1));
   svMI = 0;
@@ -633,8 +876,8 @@ function renderSvCta(s) {
   if (p) html += `<a class="sv__btn sv__btn--ghost" href="#/perfil/${p.slug}" data-sv-link>Ver perfil</a>`;
   if (wa) {
     const msg = p
-      ? `Olá ${p.nome}! Vi seu story na Aliança 💎`
-      : "Olá! Vi os stories na Aliança e gostaria de saber mais 😊";
+      ? `Olá ${p.nome}! Vi seu story na Aliança.`
+      : "Olá! Vi os stories na Aliança e gostaria de saber mais.";
     html += `<a class="sv__btn sv__btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${WA_ICON} WhatsApp</a>`;
   }
   svCta.innerHTML = html;
@@ -725,6 +968,7 @@ function router() {
   const parts = hash.split("/").filter(Boolean);
   window.scrollTo(0, 0);
   fecharNav();
+  closeCityPicker();
 
   if (parts.length === 0)                 return viewHome();
   if (parts[0] === "anuncie")             return viewAnuncie();
@@ -862,10 +1106,16 @@ function initHeader() {
   });
   $("#header-wa").addEventListener("click", () => window.open(waAdmin(), "_blank", "noopener"));
 
-  // Botão flutuante: na home -> admin; em perfil -> acompanhante
+  // Botão flutuante: em perfil -> acompanhante; esconde na home e em páginas de cidade/anuncie
   const float = $("#float-wa");
   const updateFloat = () => {
-    const m = location.hash.match(/^#\/perfil\/(.+)$/);
+    const hash = location.hash || '';
+    if (!hash || hash === '#/' || hash === '#' || hash.includes('/anuncie') || hash.startsWith('#/cidade/')) {
+      float.style.display = 'none';
+      return;
+    }
+    float.style.display = '';
+    const m = hash.match(/^#\/perfil\/(.+)$/);
     const p = m && perfilBySlug(m[1]);
     float.href = p ? waPerfil(p) : waAdmin();
   };
