@@ -233,7 +233,20 @@ function cidadeCard(key) {
   const n = PERFIS.filter(p => p.cidade === key).length;
   const info = n ? `${c.uf} • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
   return `<a class="city-card${n ? "" : " city-card--soon"}" href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
-    <b>${c.nome}</b><span>${info}</span></a>`;
+    <span class="city-card__kicker">Cidade</span>
+    <b>${c.nome}</b>
+    <span class="city-card__info">${info}</span>
+    <span class="city-card__badge">${n ? "Ativa" : "Em breve"}</span>
+    <span class="city-card__arrow" aria-hidden="true">→</span>
+  </a>`;
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const headerH = $(".header")?.offsetHeight || 0;
+  const top = Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerH - 12);
+  window.scrollTo({ top, behavior: "smooth" });
 }
 
 /* Cidades ordenadas: as com mais perfis primeiro, depois alfabética */
@@ -244,22 +257,21 @@ function cidadesOrdenadas() {
 }
 
 function viewHome() {
-  const exclusivas = ordena(PERFIS.filter(p => p.exclusiva));
-  const novidades = ordena(PERFIS.filter(p => p.nova));
   // Home: apenas Rio de Janeiro e Cuiabá (como era no começo)
   const HOME_CIDADES = ["rio-de-janeiro", "cuiaba"];
+  const cidadesAtivas = HOME_CIDADES.length;
+  const perfisAtivos = PERFIS.filter(p => HOME_CIDADES.includes(p.cidade)).length;
   const cardsCidades = cidadesOrdenadas()
     .filter(key => HOME_CIDADES.includes(key))
     .map(cidadeCard).join("");
 
   app.innerHTML = `
-  <section class="hero hero--home" style="--hero-image:url('instagram_post.webp')">
+  <section class="hero hero--home" style="--hero-image:url('instagram_post.webp?v=2')">
     <div class="hero__scrim" aria-hidden="true"></div>
     <div class="hero__layout">
       <div class="hero__content">
         <div class="hero__panel">
-          <p class="hero__eyebrow">Discrição · Elegância · Alto padrão</p>
-          <h1>Acompanhantes de <em>luxo</em><br/>no Brasil</h1>
+          <h1>Acompanhantes de alto padrão<br/>no Brasil</h1>
           <p>Perfis selecionados, fotos reais e atendimento exclusivo. Encontre na
              sua cidade e fale direto pelo WhatsApp, com total sigilo.</p>
           <div class="hero__proofs" aria-label="Destaques da plataforma">
@@ -268,43 +280,48 @@ function viewHome() {
             <span class="hero__proof">Seleção premium</span>
           </div>
           <div class="hero__actions">
-            <a class="btn btn--gold btn--lg" href="#sec-cidades">Explorar cidades</a>
+            <button class="btn btn--gold btn--lg hero__cta" type="button" id="hero-explore-cities">
+              <span>Explorar cidades</span>
+              <span class="hero__cta-ico" aria-hidden="true">${ICON_ARROW}</span>
+            </button>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  ${storiesStripHtml({ extraClass: "stories--home", limit: 2, showMore: true })}
+  ${storiesStripHtml({
+    extraClass: "stories--home",
+    limit: 3,
+    showMore: true,
+    title: "Stories em destaque",
+    lead: "Toque em um perfil ou vá direto para as cidades",
+    showMoreLabel: "Cidades",
+    showMoreAria: "Ver cidades",
+  })}
 
-  <section class="section" id="sec-cidades">
+  <section class="section section--cities" id="sec-cidades">
     <div class="container">
-      <div class="section__head">
-        <div><h2>Escolha sua <span>cidade</span></h2><p class="lead">Toque na sua cidade para ver as acompanhantes disponíveis</p></div>
+      <div class="city-showcase">
+        <div class="section__head city-showcase__head">
+          <div>
+            <h2>Escolha sua <span>cidade</span></h2>
+            <p class="lead">Toque na sua cidade para ver as acompanhantes disponíveis</p>
+          </div>
+          <div class="city-showcase__stats" aria-label="Resumo da seleção">
+            <span>${cidadesAtivas} cidades</span>
+            <span>${perfisAtivos} perfis</span>
+          </div>
+        </div>
+        <div class="city-showcase__grid" id="cidades-grid">${cardsCidades}</div>
       </div>
-      <div id="cidades-grid" class="city-grid">${cardsCidades}</div>
     </div>
   </section>
 
-  <section class="section section--alt">
-    <div class="container">
-      <div class="section__head">
-        <div><h2>Acompanhantes <span>exclusivas</span></h2><p class="lead">Seleção premium verificada</p></div>
-      </div>
-      ${gridHtml(exclusivas)}
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="section__head">
-        <div><h2><span>Novidades</span></h2><p class="lead">Perfis recém-chegados</p></div>
-      </div>
-      ${gridHtml(novidades)}
-    </div>
-  </section>`;
+  `;
 
   initStoriesStrip();
+  $("#hero-explore-cities")?.addEventListener("click", () => scrollToSection("sec-cidades"));
 }
 
 function viewCidade(cidade, filtro) {
@@ -403,9 +420,20 @@ function viewPerfil(slug) {
   if (!p) return view404();
   const c = CIDADES[p.cidade];
 
-  const galeria = [0, 1, 2, 3].map(i =>
-    `<img src="${foto(p, i)}" alt="${p.nome} ${i + 1}" data-i="${i}" class="lb-trigger" />`
-  ).join("");
+  const fotos = [0, 1, 2, 3].map(i => foto(p, i));
+  const galeria = `
+    <button class="profile__photo profile__photo--hero lb-trigger" type="button" data-i="0" aria-label="Abrir foto principal de ${p.nome}">
+      <img src="${fotos[0]}" alt="${p.nome} foto principal" loading="eager" />
+      <span class="profile__photo-fade" aria-hidden="true"></span>
+      <span class="profile__photo-count" aria-hidden="true">4 fotos</span>
+    </button>
+    <div class="profile__thumbs" aria-label="Miniaturas do perfil">
+      ${fotos.slice(1).map((src, i) => `
+        <button class="profile__photo profile__photo--thumb lb-trigger" type="button" data-i="${i + 1}" aria-label="Abrir foto ${i + 2} de ${p.nome}">
+          <img src="${src}" alt="${p.nome} ${i + 2}" loading="lazy" />
+        </button>
+      `).join("")}
+    </div>`;
 
   const servicos = p.servicos.map(s =>
     `<a class="pill" href="${waPerfil(p, s)}" target="_blank" rel="noopener">${s}</a>`
@@ -436,6 +464,11 @@ function viewPerfil(slug) {
         <div class="profile__loc">${bairroNome(p.cidade, p.bairro)} • ${c.nome} ${c.uf}</div>
         <div class="profile__badges">${tagsHtml(p) || ""}${p.possuiLocal ? `<span class="tag tag--excl">Possui Local</span>` : ""}</div>
 
+        <div class="profile__actions profile__actions--top">
+          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">${WA_ICON} Consultar</a>
+          <a class="btn btn--ghost btn--lg" href="${waPerfil(p, "agendar um horário")}" target="_blank" rel="noopener">Agendar</a>
+        </div>
+
         <p class="profile__desc">${p.descricao}</p>
 
         <div class="spec">
@@ -448,10 +481,6 @@ function viewPerfil(slug) {
           <div><span>Local p/ atendimento</span><b>${p.possuiLocal ? "Sim" : "Não"}</b></div>
         </div>
 
-        <div class="profile__actions">
-          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">${WA_ICON} Falar no WhatsApp</a>
-          <a class="btn btn--ghost btn--lg" href="${waPerfil(p, "agendar um horário")}" target="_blank" rel="noopener">Agendar</a>
-        </div>
       </div>
     </div>
 
@@ -475,9 +504,8 @@ function viewPerfil(slug) {
   </section>`;
 
   // Lightbox
-  const fotos = [0, 1, 2, 3].map(i => foto(p, i));
-  $$(".lb-trigger").forEach(img =>
-    img.addEventListener("click", () => openLightbox(fotos, +img.dataset.i)));
+  $$(".lb-trigger").forEach(node =>
+    node.addEventListener("click", () => openLightbox(fotos, +node.dataset.i)));
 }
 
 function viewAnuncie() {
@@ -532,10 +560,6 @@ function viewAnuncie() {
       </form>
     </div>
   </section>`;
-
-  // Zen: esconde o botão flutuante nesta página (evita sobreposição e mantém clean)
-  const fwa = $("#float-wa");
-  if (fwa) fwa.style.display = 'none';
 
   const selCidade = $("#sel-cidade"), selBairro = $("#sel-bairro");
   selCidade.addEventListener("change", () => {
@@ -651,10 +675,23 @@ function storiesStripHtml(opts = {}) {
     cidade = null,
     limit = null,
     showMore = false,
+    title = "",
+    lead = "",
+    showMoreLabel = "Ver mais",
+    showMoreAria = "Ver mais cidades",
   } = opts;
   const list = window.STORIES || [];
   const filtered = cidade ? list.filter(s => storyCidadeSlug(s) === cidade) : list;
-  const shown = Number.isFinite(limit) ? filtered.slice(0, limit) : filtered;
+  const homeFeature = {
+    titulo: "Noite Privé",
+    capa: "instagram_post.webp?v=2",
+    midias: [{ tipo: "image", url: "instagram_post.webp?v=2", dur: 6 }],
+    whatsapp: ADMIN_WHATSAPP || "",
+  };
+  const curated = (!cidade && extraClass.includes("stories--home"))
+    ? [...filtered.slice(0, 2), homeFeature, ...filtered.slice(2)]
+    : filtered;
+  const shown = Number.isFinite(limit) ? curated.slice(0, limit) : curated;
   if (!shown.length) return "";
   const items = shown.map((s, i) => `
     <button class="story-av" type="button" data-story="${i}">
@@ -662,13 +699,20 @@ function storiesStripHtml(opts = {}) {
       <span class="story-av__name">${storyTitulo(s)}</span>
     </button>`).join("");
   const moreBtn = showMore ? `
-    <button class="story-av story-av--more" type="button" id="home-stories-more" aria-label="Ver mais cidades">
+    <button class="story-av story-av--more" type="button" id="home-stories-more" aria-label="${showMoreAria}">
       <span class="story-av__ring story-av__ring--more">
         <span class="story-av__img story-av__img--more"><span class="story-av__plus">+</span></span>
       </span>
-      <span class="story-av__name">Ver mais</span>
+      <span class="story-av__name">${showMoreLabel}</span>
     </button>` : "";
-  const homeWrap = `<div class="stories__track">${items}${moreBtn}</div>`;
+  const header = title ? `
+    <div class="stories__head">
+      <div>
+        <p class="stories__eyebrow">${title}</p>
+        ${lead ? `<p class="stories__lead">${lead}</p>` : ""}
+      </div>
+    </div>` : "";
+  const homeWrap = `${header}<div class="stories__track">${items}${moreBtn}</div>`;
   return `
   <section class="stories ${extraClass}" aria-label="Destaques"${cidade ? ` data-cidade="${cidade}"` : ""}>
     <div class="container">
@@ -1106,20 +1150,6 @@ function initHeader() {
   });
   $("#header-wa").addEventListener("click", () => window.open(waAdmin(), "_blank", "noopener"));
 
-  // Botão flutuante: em perfil -> acompanhante; esconde na home e em páginas de cidade/anuncie
-  const float = $("#float-wa");
-  const updateFloat = () => {
-    const hash = location.hash || '';
-    if (!hash || hash === '#/' || hash === '#' || hash.includes('/anuncie') || hash.startsWith('#/cidade/')) {
-      float.style.display = 'none';
-      return;
-    }
-    float.style.display = '';
-    const m = hash.match(/^#\/perfil\/(.+)$/);
-    const p = m && perfilBySlug(m[1]);
-    float.href = p ? waPerfil(p) : waAdmin();
-  };
-  window.addEventListener("hashchange", updateFloat); updateFloat();
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
