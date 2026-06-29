@@ -9,8 +9,9 @@ const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 /* Estado de trabalho (cópia editável carregada do banco) */
-let DATA = { adminWhatsapp: "", cidades: {}, perfis: [], stories: [] };
+let DATA = { adminWhatsapp: "", pixel: { metaPixelId: "", metaPixelEnabled: false }, cidades: {}, perfis: [], stories: [] };
 let fotos = [];                  // fotos (URLs) do perfil em edição
+let audioUrl = "";               // áudio real da acompanhante (URL pública)
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
 
 /* Estado do story em edição */
@@ -41,12 +42,45 @@ function toast(msg, isErr) {
   toast._t = setTimeout(() => t.className = "toast", 3200);
 }
 
+function setFieldInvalid(selector, invalid = true) {
+  const field = $(selector)?.closest(".field");
+  if (field) field.classList.toggle("is-invalid", invalid);
+}
+
+function clearCadastroErrors() {
+  ["#f-nome", "#f-whats"].forEach(selector => setFieldInvalid(selector, false));
+}
+
+function extractMetaPixelId(value) {
+  const raw = (value || "").trim();
+  const direct = raw.replace(/\D/g, "");
+  if (direct.length >= 8) return direct;
+  const match = raw.match(/\b\d{8,}\b/);
+  return match ? match[0] : direct;
+}
+
 function updateBadge() { $("#count-badge").textContent = DATA.perfis.length + " perfis"; }
+
+function updateDashboardStats() {
+  const perfis = DATA.perfis.length;
+  const stories = (DATA.stories || []).filter(s => s.ativo !== false).length;
+  const cidades = Object.keys(DATA.cidades || {}).length;
+  const bairros = Object.values(DATA.cidades || {}).reduce((acc, cidade) => acc + ((cidade.bairros || []).length), 0);
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  set("stat-perfis", perfis);
+  set("stat-stories", stories);
+  set("stat-cidades", cidades);
+  set("stat-bairros", bairros);
+}
 
 /* Recarrega DATA do banco (após gravações). */
 async function reload() {
   DATA = await VIPStore.loadAll();
   updateBadge();
+  updateDashboardStats();
 }
 
 /* Placeholder igual ao do site (para a lista do admin) */
@@ -62,6 +96,28 @@ function fotoCapa(p, i = 0) {
     <text x='150' y='360' font-family='sans-serif' font-size='20' letter-spacing='3' fill='hsla(45,60%,82%,.7)' text-anchor='middle'>${(p.nome||"").toUpperCase()}</text>
   </svg>`;
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.trim());
+}
+
+function adminBairroNome(cidadeKey, bairroSlug) {
+  const cidade = DATA.cidades[cidadeKey];
+  const bairro = cidade && (cidade.bairros || []).find(b => b.slug === bairroSlug);
+  return bairro ? bairro.nome : "Bairro";
+}
+
+function adminResumo(p) {
+  const raw = (p.descricao || p.desc || "").trim().replace(/\s+/g, " ");
+  if (!raw) return "Sem descrição publicada ainda. Adicione um texto curto para fortalecer o card no site.";
+  return raw.length > 112 ? raw.slice(0, 109).trimEnd() + "..." : raw;
+}
+
+function adminWhatsLabel(value) {
+  const n = (value || "").replace(/\D/g, "");
+  if (n.length >= 12) return `+${n.slice(0, 2)} (${n.slice(2, 4)}) ${n.slice(4, -4)}-${n.slice(-4)}`;
+  return n || "Sem WhatsApp";
+}
+
+function perfilAudioUrl(p) {
+  return (p && (p.audioUrl || p.audio || p.audio_url)) || "";
 }
 
 /* ============================================================
@@ -133,20 +189,43 @@ function renderLista() {
   box.innerHTML = list.map(p => {
     const idx = DATA.perfis.indexOf(p);
     const c = DATA.cidades[p.cidade];
+    const cidadeLabel = c ? `${c.nome} • ${c.uf}` : (p.cidade || "Cidade");
+    const bairroLabel = adminBairroNome(p.cidade, p.bairro);
     return `
     <div class="adm-card">
       <div class="adm-card__img">
         <div class="adm-card__flags">
           ${p.nova ? `<span class="flag flag--nova">Nova</span>` : ""}
           ${p.exclusiva ? `<span class="flag flag--excl">Excl</span>` : ""}
-          ${p.temVideo ? `<span class="flag">▶</span>` : ""}
+          ${p.temVideo ? `<span class="flag">Vídeo</span>` : ""}
+          ${p.possuiLocal ? `<span class="flag">Local</span>` : ""}
         </div>
         <img src="${fotoCapa(p)}" alt="${p.nome}" />
+        <div class="adm-card__local">${bairroLabel} • ${c ? c.uf : ""}</div>
       </div>
       <div class="adm-card__body">
-        <div class="adm-card__name">${p.nome}</div>
-        <div class="adm-card__meta">${c ? c.nome + " • " + c.uf : (p.cidade || "—")} · ${p.idade || "?"} anos</div>
-        <div class="adm-card__meta">📱 ${p.whatsapp || "—"}</div>
+        <div class="adm-card__head">
+          <div>
+            <div class="adm-card__name">${p.nome}</div>
+            <div class="adm-card__meta">${cidadeLabel} · ${p.idade || "?"} anos</div>
+          </div>
+          <span class="adm-card__status">No site</span>
+        </div>
+        <div class="adm-audio ${perfilAudioUrl(p) ? "" : "adm-audio--empty"}" aria-label="${perfilAudioUrl(p) ? "Áudio real enviado" : "Perfil sem áudio enviado"}">
+          <span class="adm-audio__play" aria-hidden="true">${perfilAudioUrl(p) ? "▶" : "—"}</span>
+          <span class="adm-audio__copy">
+            <b>${perfilAudioUrl(p) ? "Voz da acompanhante" : "Sem áudio"}</b>
+            <small>${perfilAudioUrl(p) ? "arquivo real enviado" : "envie no editor do perfil"}</small>
+          </span>
+          <span class="adm-audio__bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        </div>
+        <p class="adm-card__desc">${adminResumo(p)}</p>
+        <div class="adm-card__stats">
+          ${p.altura ? `<span><b>${p.altura}</b> altura</span>` : ""}
+          ${p.manequim ? `<span>MAN <b>${p.manequim}</b></span>` : ""}
+          ${p.valorHora ? `<span><b>${p.valorHora}</b></span>` : ""}
+        </div>
+        <div class="adm-card__meta">WhatsApp: ${adminWhatsLabel(p.whatsapp)}</div>
         <div class="adm-card__actions">
           <button class="btn btn--ghost btn--sm" data-edit="${idx}">Editar</button>
           <button class="btn btn--danger btn--sm" data-del="${idx}">Excluir</button>
@@ -196,6 +275,7 @@ function abrirForm(idx) {
   const novo = idx < 0;
   const p = novo ? {} : DATA.perfis[idx];
   fotos = novo ? [] : [...(p.fotos || [])];
+  audioUrl = novo ? "" : perfilAudioUrl(p);
 
   $("#form-titulo").textContent = novo ? "Novo perfil" : "Editar: " + p.nome;
   $("#form-excluir").hidden = novo;
@@ -222,12 +302,17 @@ function abrirForm(idx) {
   $("#f-destaque").checked = !!p.destaque;
 
   renderThumbs();
+  renderPerfilAudio();
   $$(".tabpane").forEach(pane => pane.hidden = true);
   $("#tab-form").hidden = false;
   window.scrollTo(0, 0);
 }
 
 $("#f-cidade").addEventListener("change", () => preencherSelectBairros($("#f-cidade").value));
+["#f-nome", "#f-whats"].forEach(selector => {
+  const input = $(selector);
+  if (input) input.addEventListener("input", () => setFieldInvalid(selector, false));
+});
 
 $("#form-cancelar").addEventListener("click", () => showTab("perfis"));
 $("#form-excluir").addEventListener("click", async () => {
@@ -235,10 +320,19 @@ $("#form-excluir").addEventListener("click", async () => {
 });
 
 $("#form-salvar").addEventListener("click", async () => {
+  clearCadastroErrors();
   const nome = $("#f-nome").value.trim();
-  if (!nome) return toast("Informe o nome.", true);
+  if (!nome) {
+    setFieldInvalid("#f-nome", true);
+    $("#f-nome").focus();
+    return toast("Informe o nome.", true);
+  }
   const whats = $("#f-whats").value.replace(/\D/g, "");
-  if (!whats) return toast("Informe o WhatsApp (só números).", true);
+  if (!whats) {
+    setFieldInvalid("#f-whats", true);
+    $("#f-whats").focus();
+    return toast("Informe o WhatsApp (só números).", true);
+  }
 
   const editando = editIndex >= 0;
   const perfil = {
@@ -265,6 +359,7 @@ $("#form-salvar").addEventListener("click", async () => {
     possuiLocal: $("#f-possuiLocal").checked,
     destaque: $("#f-destaque").checked,
     fotos: [...fotos],
+    audioUrl,
   };
 
   const btn = $("#form-salvar");
@@ -347,12 +442,52 @@ function renderThumbs() {
   }));
 }
 
+function renderPerfilAudio() {
+  const box = $("#audio-preview");
+  if (!box) return;
+  if (!audioUrl) {
+    box.innerHTML = `<div class="audio-file__empty">Nenhum áudio enviado para este perfil.</div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="audio-file">
+      <audio controls preload="metadata" src="${audioUrl}"></audio>
+      <button class="btn btn--danger btn--sm" id="audio-remover" type="button">Remover áudio</button>
+    </div>`;
+  const remover = $("#audio-remover", box);
+  if (remover) remover.addEventListener("click", () => {
+    audioUrl = "";
+    renderPerfilAudio();
+  });
+}
+
+async function uploadPerfilAudio(file) {
+  if (!file || !file.type.startsWith("audio/")) return toast("Envie um arquivo de áudio válido.", true);
+  toast("Enviando áudio...");
+  try {
+    const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
+    audioUrl = await VIPStore.uploadArquivo(file, ext, "audios");
+    renderPerfilAudio();
+    toast("Áudio enviado.");
+  } catch (e) {
+    console.error(e);
+    toast("Falha ao enviar o áudio: " + (e.message || e), true);
+  }
+}
+
 const drop = $("#drop"), fileInput = $("#file-input");
 drop.addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", () => { addFiles(fileInput.files); fileInput.value = ""; });
 ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+const audioDrop = $("#audio-drop"), audioFile = $("#audio-file");
+audioDrop.addEventListener("click", () => audioFile.click());
+audioFile.addEventListener("change", () => { uploadPerfilAudio(audioFile.files[0]); audioFile.value = ""; });
+["dragenter", "dragover"].forEach(ev => audioDrop.addEventListener(ev, e => { e.preventDefault(); audioDrop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => audioDrop.addEventListener(ev, e => { e.preventDefault(); audioDrop.classList.remove("over"); }));
+audioDrop.addEventListener("drop", e => uploadPerfilAudio(e.dataTransfer.files[0]));
 
 /* ============================================================
    STORIES
@@ -617,8 +752,8 @@ function renderCidades() {
     return `
     <div class="city-block" data-citykey="${key}">
       <div class="city-block__head">
-        <input class="cnome" value="${c.nome.replace(/"/g, "&quot;")}" placeholder="Nome da cidade" style="background:#16151a;border:1px solid var(--line);border-radius:8px;padding:.5rem .7rem;color:#fff;outline:none" />
-        <input class="cuf" value="${c.uf}" maxlength="2" placeholder="UF" style="width:70px;background:#16151a;border:1px solid var(--line);border-radius:8px;padding:.5rem .7rem;color:#fff;outline:none;text-transform:uppercase" />
+        <input class="cnome city-input" value="${c.nome.replace(/"/g, "&quot;")}" placeholder="Nome da cidade" />
+        <input class="cuf city-input city-input--uf" value="${c.uf}" maxlength="2" placeholder="UF" />
         <span class="slug">${key}</span>
         <div style="flex:1"></div>
         <button class="btn btn--danger btn--sm" data-delcity="${key}">Remover cidade</button>
@@ -691,16 +826,27 @@ $("#salvar-cidades").addEventListener("click", async () => {
    ============================================================ */
 function fillConfig() {
   $("#cfg-admin-wa").value = DATA.adminWhatsapp || "";
+  $("#cfg-meta-pixel-id").value = DATA.pixel?.metaPixelId || "";
+  $("#cfg-meta-pixel-enabled").checked = !!DATA.pixel?.metaPixelEnabled;
   $("#cfg-pass").value = "";
 }
 $("#salvar-config").addEventListener("click", async () => {
   const wa = $("#cfg-admin-wa").value.replace(/\D/g, "") || DATA.adminWhatsapp;
+  const metaPixelId = extractMetaPixelId($("#cfg-meta-pixel-id").value);
+  const metaPixelEnabled = $("#cfg-meta-pixel-enabled").checked && !!metaPixelId;
   const np = $("#cfg-pass").value.trim();
   const btn = $("#salvar-config");
   btn.disabled = true;
   try {
-    await VIPStore.saveConfig(wa);
+    await VIPStore.saveConfig({
+      adminWhatsapp: wa,
+      metaPixelId,
+      metaPixelEnabled,
+    });
     DATA.adminWhatsapp = wa;
+    DATA.pixel = { metaPixelId, metaPixelEnabled };
+    $("#cfg-meta-pixel-id").value = metaPixelId;
+    $("#cfg-meta-pixel-enabled").checked = metaPixelEnabled;
     if (np) {
       if (np.length < 6) throw new Error("a nova senha precisa de ao menos 6 caracteres.");
       await VIPStore.auth.updatePassword(np);
@@ -784,11 +930,12 @@ async function boot() {
     await reload();
   } catch (e) {
     toast("Erro ao carregar dados: " + (e.message || e), true);
-    DATA = { adminWhatsapp: "", cidades: {}, perfis: [], stories: [] };
+    DATA = { adminWhatsapp: "", pixel: { metaPixelId: "", metaPixelEnabled: false }, cidades: {}, perfis: [], stories: [] };
     updateBadge();
   }
   $("#filtro-cidade").innerHTML = `<option value="">Todas as cidades</option>` +
     Object.keys(DATA.cidades).map(k => `<option value="${k}">${DATA.cidades[k].nome}</option>`).join("");
+  updateDashboardStats();
   renderLista();
 }
 

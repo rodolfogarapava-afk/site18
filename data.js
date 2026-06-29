@@ -15,6 +15,10 @@ const SEED = {
   /* WhatsApp central do administrador (home, botão flutuante na home,
      formulário "Anuncie aqui"). Formato: DDI + DDD + número, só dígitos. */
   adminWhatsapp: "5565999999999",
+  pixel: {
+    metaPixelId: "",
+    metaPixelEnabled: false,
+  },
 
   /* ---------- CIDADES E BAIRROS ----------
      As 27 capitais do Brasil (26 estados + DF). Rio de Janeiro e Cuiabá

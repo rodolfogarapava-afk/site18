@@ -58,6 +58,7 @@
       idiomas:     Array.isArray(r.idiomas)     ? r.idiomas     : [],
       horario:     r.horario || "",
       fotos:       Array.isArray(r.fotos)       ? r.fotos       : [],
+      audioUrl:    r.audio_url || "",
       ordem:       r.ordem || 0,
     };
   }
@@ -88,6 +89,7 @@
       idiomas:      p.idiomas     || [],
       horario:      p.horario || "",
       fotos:        p.fotos       || [],
+      audio_url:    p.audioUrl || null,
     };
     if (p.id) row.id = p.id;
     if (typeof ordem === "number") row.ordem = ordem;
@@ -189,6 +191,10 @@
 
     return {
       adminWhatsapp: (cfgRes.data && cfgRes.data.admin_whatsapp) || "",
+      pixel: {
+        metaPixelId: (cfgRes.data && cfgRes.data.meta_pixel_id) || "",
+        metaPixelEnabled: !!(cfgRes.data && cfgRes.data.meta_pixel_enabled),
+      },
       cidades: rowsToCidades(cidRes.data),
       perfis: (perRes.data || []).map(rowToPerfil),
       stories,
@@ -212,6 +218,8 @@
     try {
       const d = await withTimeout(fetchAll(), 7000);
       window.ADMIN_WHATSAPP = d.adminWhatsapp || (typeof SEED !== "undefined" ? SEED.adminWhatsapp : "");
+      window.META_PIXEL_ID = d.pixel?.metaPixelId || "";
+      window.META_PIXEL_ENABLED = !!d.pixel?.metaPixelEnabled;
       window.CIDADES        = d.cidades;
       window.PERFIS         = d.perfis;
       window.STORIES        = storiesPublicas(d.stories);
@@ -221,6 +229,8 @@
       console.warn("Usando dados de fallback (SEED). Motivo:", e && e.message);
       const s = (typeof SEED !== "undefined") ? clone(SEED) : { adminWhatsapp: "", cidades: {}, perfis: [] };
       window.ADMIN_WHATSAPP = s.adminWhatsapp;
+      window.META_PIXEL_ID = s.pixel?.metaPixelId || "";
+      window.META_PIXEL_ENABLED = !!s.pixel?.metaPixelEnabled;
       window.CIDADES        = s.cidades;
       window.PERFIS         = s.perfis;
       window.STORIES        = [];
@@ -240,6 +250,10 @@
     window.PERFIS = (typeof SEED !== "undefined") ? clone(SEED.perfis) : [];
   if (typeof window.ADMIN_WHATSAPP === "undefined")
     window.ADMIN_WHATSAPP = (typeof SEED !== "undefined") ? SEED.adminWhatsapp : "";
+  if (typeof window.META_PIXEL_ID === "undefined")
+    window.META_PIXEL_ID = (typeof SEED !== "undefined" && SEED.pixel) ? SEED.pixel.metaPixelId || "" : "";
+  if (typeof window.META_PIXEL_ENABLED === "undefined")
+    window.META_PIXEL_ENABLED = !!(typeof SEED !== "undefined" && SEED.pixel && SEED.pixel.metaPixelEnabled);
   if (typeof window.STORIES === "undefined")
     window.STORIES = [];
 
@@ -352,10 +366,18 @@
     },
 
     /* ----- Config (WhatsApp central) ----- */
-    async saveConfig(adminWhatsapp) {
+    async saveConfig(config) {
       requireSb();
+      const cfg = typeof config === "object"
+        ? config
+        : { adminWhatsapp: config };
       const { error } = await sb.from("config")
-        .upsert({ id: 1, admin_whatsapp: adminWhatsapp || "" }, { onConflict: "id" });
+        .upsert({
+          id: 1,
+          admin_whatsapp: cfg.adminWhatsapp || "",
+          meta_pixel_id: cfg.metaPixelId || "",
+          meta_pixel_enabled: !!cfg.metaPixelEnabled,
+        }, { onConflict: "id" });
       if (error) throw error;
     },
 
@@ -401,7 +423,11 @@
     async importAll(d) {
       requireSb();
       if (!d || !d.cidades || !Array.isArray(d.perfis)) throw new Error("Formato de backup inválido.");
-      await this.saveConfig(d.adminWhatsapp);
+      await this.saveConfig({
+        adminWhatsapp: d.adminWhatsapp,
+        metaPixelId: d.pixel?.metaPixelId || "",
+        metaPixelEnabled: !!d.pixel?.metaPixelEnabled,
+      });
       await this.saveCidades(d.cidades);
 
       // perfis: upsert de todos e remoção dos que não vieram no backup

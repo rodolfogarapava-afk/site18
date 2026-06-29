@@ -71,16 +71,8 @@ function cardResumo(p) {
   return raw.length > 118 ? raw.slice(0, 115).trimEnd() + "..." : raw;
 }
 
-function cardAudioTexto(p) {
-  const base = (p.descricao || p.desc || "").trim().replace(/\s+/g, " ");
-  const cidade = CIDADES[p.cidade]?.nome || "";
-  const bairro = bairroNome(p.cidade, p.bairro);
-  return `Olá, eu sou ${p.nome}. Atendo em ${bairro}, ${cidade}. ${base || "Perfil selecionado para quem busca presença, discrição e boa companhia."}`;
-}
-
-function cardAudioTempo(p) {
-  const seconds = Math.max(12, Math.min(28, Math.round(cardResumo(p).length / 7)));
-  return `00:${String(seconds).padStart(2, "0")}`;
+function perfilAudioUrl(p) {
+  return (p && (p.audioUrl || p.audio || p.audio_url)) || "";
 }
 
 function storyCidadeSlug(s) {
@@ -110,6 +102,7 @@ function tagsHtml(p) {
 function cardHtml(p, opts = {}) {
   const showCta = opts.showCta !== false;
   const showAudio = opts.showAudio !== false;
+  const audio = perfilAudioUrl(p);
   return `
   <article class="card">
     <a class="card__media" href="#/perfil/${p.slug}">
@@ -119,20 +112,20 @@ function cardHtml(p, opts = {}) {
     </a>
     <div class="card__body">
       <a href="#/perfil/${p.slug}"><h3 class="card__name">${p.nome}</h3></a>
-      ${showAudio ? `
-      <div class="card__audio" data-card-audio="${p.slug}">
+      ${showAudio && audio ? `
+      <div class="card__audio" data-card-audio="${p.slug}" data-audio-src="${audio}">
         <button class="card__audio-btn" type="button" aria-pressed="false" aria-label="Ouvir áudio do perfil ${p.nome}">
           <span class="card__audio-play" aria-hidden="true" data-card-audio-icon>${ICON_AUDIO_PLAY}</span>
           <span class="card__audio-copy">
-            <span class="card__audio-label">Ouvir áudio</span>
-            <span class="card__audio-sub">voz curta</span>
+            <span class="card__audio-label">Ouvir voz</span>
+            <span class="card__audio-sub">áudio da acompanhante</span>
           </span>
         </button>
         <div class="card__audio-wave" aria-hidden="true">
           <span></span><span></span><span></span><span></span><span></span>
           <span></span><span></span><span></span><span></span><span></span>
         </div>
-        <span class="card__audio-time">${cardAudioTempo(p)}</span>
+        <span class="card__audio-time">Áudio</span>
       </div>` : ""}
       <p class="card__desc">${cardResumo(p)}</p>
       <div class="card__attrs">
@@ -160,9 +153,14 @@ function gridHtml(list, opts = {}) {
 }
 
 let activeCardAudio = null;
+let activeCardAudioPlayer = null;
 
 function resetCardAudio() {
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (activeCardAudioPlayer) {
+    activeCardAudioPlayer.pause();
+    activeCardAudioPlayer.currentTime = 0;
+    activeCardAudioPlayer = null;
+  }
   if (activeCardAudio) {
     activeCardAudio.classList.remove("is-playing");
     const btn = $(".card__audio-btn", activeCardAudio);
@@ -172,7 +170,7 @@ function resetCardAudio() {
       const icon = $("[data-card-audio-icon]", activeCardAudio);
       if (icon) icon.innerHTML = ICON_AUDIO_PLAY;
       const label = $(".card__audio-label", activeCardAudio);
-      if (label) label.textContent = "Ouvir áudio";
+      if (label) label.textContent = "Ouvir voz";
     }
   }
   activeCardAudio = null;
@@ -181,7 +179,8 @@ function resetCardAudio() {
 function toggleCardAudio(slug, btn) {
   const card = btn.closest(".card__audio");
   const p = perfilBySlug(slug);
-  if (!card || !p || !window.speechSynthesis) return;
+  const src = perfilAudioUrl(p) || card?.dataset.audioSrc;
+  if (!card || !p || !src) return;
 
   if (activeCardAudio === card) {
     resetCardAudio();
@@ -190,14 +189,16 @@ function toggleCardAudio(slug, btn) {
 
   resetCardAudio();
 
-  const utter = new SpeechSynthesisUtterance(cardAudioTexto(p));
-  utter.lang = "pt-BR";
-  utter.rate = 1.0;
-  utter.pitch = 1.02;
-  utter.onend = resetCardAudio;
-  utter.onerror = resetCardAudio;
+  const audio = new Audio(src);
+  audio.addEventListener("ended", () => {
+    if (activeCardAudioPlayer === audio) resetCardAudio();
+  });
+  audio.addEventListener("error", () => {
+    if (activeCardAudioPlayer === audio) resetCardAudio();
+  });
 
   activeCardAudio = card;
+  activeCardAudioPlayer = audio;
   card.classList.add("is-playing");
   btn.setAttribute("aria-pressed", "true");
   btn.setAttribute("aria-label", `Pausar áudio do perfil ${p.nome}`);
@@ -205,7 +206,9 @@ function toggleCardAudio(slug, btn) {
   if (icon) icon.innerHTML = ICON_AUDIO_PAUSE;
   const label = $(".card__audio-label", card);
   if (label) label.textContent = "Pausar áudio";
-  window.speechSynthesis.speak(utter);
+  audio.play().catch(() => {
+    if (activeCardAudioPlayer === audio) resetCardAudio();
+  });
 }
 
 document.addEventListener("click", e => {
@@ -217,6 +220,38 @@ document.addEventListener("click", e => {
 });
 
 window.addEventListener("hashchange", resetCardAudio);
+
+let metaPixelInitialized = false;
+
+function initMetaPixel() {
+  const id = String(window.META_PIXEL_ID || "").replace(/\D/g, "");
+  if (!window.META_PIXEL_ENABLED || !id || metaPixelInitialized) return;
+
+  (function(f, b, e, v, n, t, s) {
+    if (f.fbq) return;
+    n = f.fbq = function() {
+      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+    };
+    if (!f._fbq) f._fbq = n;
+    n.push = n;
+    n.loaded = true;
+    n.version = "2.0";
+    n.queue = [];
+    t = b.createElement(e);
+    t.async = true;
+    t.src = v;
+    s = b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t, s);
+  })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+
+  window.fbq("init", id);
+  metaPixelInitialized = true;
+}
+
+function trackMetaPixel(eventName, params) {
+  if (!metaPixelInitialized || !window.fbq) return;
+  window.fbq("track", eventName, params || {});
+}
 
 /* Ordena: novidades e destaques primeiro */
 const ordena = list => [...list].sort((a, b) =>
@@ -469,6 +504,24 @@ function viewPerfil(slug) {
           <a class="btn btn--ghost btn--lg" href="${waPerfil(p, "agendar um horário")}" target="_blank" rel="noopener">Agendar</a>
         </div>
 
+        ${perfilAudioUrl(p) ? `
+        <div class="profile__voice">
+          <div class="card__audio" data-card-audio="${p.slug}" data-audio-src="${perfilAudioUrl(p)}">
+            <button class="card__audio-btn" type="button" aria-pressed="false" aria-label="Ouvir áudio do perfil ${p.nome}">
+              <span class="card__audio-play" aria-hidden="true" data-card-audio-icon>${ICON_AUDIO_PLAY}</span>
+              <span class="card__audio-copy">
+                <span class="card__audio-label">Ouvir voz</span>
+                <span class="card__audio-sub">áudio da acompanhante</span>
+              </span>
+            </button>
+            <div class="card__audio-wave" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <span class="card__audio-time">Áudio</span>
+          </div>
+        </div>` : ""}
+
         <p class="profile__desc">${p.descricao}</p>
 
         <div class="spec">
@@ -510,43 +563,68 @@ function viewPerfil(slug) {
 
 function viewAnuncie() {
   app.innerHTML = `
-  <section class="page">
-    <div class="container">
+  <section class="page page--signup">
+    <div class="container signup">
       <a class="back-link" href="#/">‹ Início</a>
-      <h1>Anuncie aqui</h1>
+      <div class="signup__hero">
+        <span>Cadastro de anunciante</span>
+        <h1>Anuncie com discrição</h1>
+        <p>Envie seus dados para análise. A central recebe tudo no WhatsApp com a mensagem pronta.</p>
+        <div class="signup__proofs">
+          <span>Sigilo total</span>
+          <span>Análise manual</span>
+          <span>Resposta direta</span>
+        </div>
+      </div>
 
       <form class="form" id="form-anuncie" novalidate>
-        <div>
+        <div class="form__step">
+          <span>01</span>
+          <div>
+            <b>Identificação</b>
+            <small>Nome, cidade e contato para retorno.</small>
+          </div>
+        </div>
+
+        <div class="form__field">
           <label>Nome artístico <span class="req">*</span></label>
-          <input name="nome" required placeholder="Ex: Luna Sophie" />
+          <input name="nome" required placeholder="Ex: Luna Sophie" autocomplete="name" />
         </div>
 
         <div class="row">
-          <div>
+          <div class="form__field">
             <label>Cidade <span class="req">*</span></label>
             <select name="cidade" id="sel-cidade" required>
               <option value="">Selecione a cidade</option>
               ${Object.keys(CIDADES).map(k => `<option value="${k}">${CIDADES[k].nome} — ${CIDADES[k].uf}</option>`).join("")}
             </select>
           </div>
-          <div>
+          <div class="form__field">
             <label>Bairro</label>
-            <select name="bairro" id="sel-bairro"><option value="">Selecione a cidade primeiro</option></select>
+            <select name="bairro" id="sel-bairro" disabled><option value="">Selecione a cidade primeiro</option></select>
           </div>
         </div>
 
         <div class="row">
-          <div>
+          <div class="form__field">
             <label>Idade <span class="req">*</span></label>
             <input name="idade" type="number" min="18" required placeholder="18" />
           </div>
-          <div>
+          <div class="form__field">
             <label>Seu WhatsApp <span class="req">*</span></label>
-            <input name="whats" required placeholder="(00) 00000-0000" />
+            <input name="whats" required placeholder="(00) 00000-0000" inputmode="tel" autocomplete="tel" />
           </div>
         </div>
 
-        <div>
+        <div class="form__step">
+          <span>02</span>
+          <div>
+            <b>Apresentação</b>
+            <small>Texto curto para entendermos o perfil.</small>
+          </div>
+        </div>
+
+        <div class="form__field">
           <label>Descrição / apresentação</label>
           <textarea name="desc" placeholder="Conte um pouco sobre você, serviços, preferências de atendimento..."></textarea>
         </div>
@@ -555,7 +633,7 @@ function viewAnuncie() {
           <button class="btn btn--wa btn--lg" type="submit">
             ${WA_ICON} Enviar pelo WhatsApp
           </button>
-          <p class="form__note">Você será levado ao WhatsApp da central com os dados já preenchidos.</p>
+          <p class="form__note">O envio abre uma conversa com a central. Nenhum dado fica publicado automaticamente.</p>
         </div>
       </form>
     </div>
@@ -564,6 +642,7 @@ function viewAnuncie() {
   const selCidade = $("#sel-cidade"), selBairro = $("#sel-bairro");
   selCidade.addEventListener("change", () => {
     const c = CIDADES[selCidade.value];
+    selBairro.disabled = !c;
     selBairro.innerHTML = !c
       ? `<option value="">Selecione a cidade primeiro</option>`
       : (c.bairros && c.bairros.length
@@ -571,9 +650,33 @@ function viewAnuncie() {
           : `<option value="">Sem bairros cadastrados</option>`);
   });
 
-  $("#form-anuncie").addEventListener("submit", e => {
+  const form = $("#form-anuncie");
+  const whatsInput = form.whats;
+  whatsInput.addEventListener("input", () => {
+    const n = whatsInput.value.replace(/\D/g, "").slice(0, 11);
+    whatsInput.value = n.length > 10
+      ? `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`
+      : n.length > 6
+        ? `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`
+        : n.length > 2
+          ? `(${n.slice(0, 2)}) ${n.slice(2)}`
+          : n;
+    whatsInput.closest(".form__field")?.classList.remove("is-invalid");
+  });
+  $$("input, select, textarea", form).forEach(el =>
+    el.addEventListener("input", () => el.closest(".form__field")?.classList.remove("is-invalid")));
+
+  form.addEventListener("submit", e => {
     e.preventDefault();
     const f = e.target;
+    const required = [f.nome, f.cidade, f.idade, f.whats];
+    const firstInvalid = required.find(el => !String(el.value || "").trim());
+    $$(".form__field", f).forEach(field => field.classList.remove("is-invalid"));
+    if (firstInvalid) {
+      firstInvalid.closest(".form__field")?.classList.add("is-invalid");
+      firstInvalid.focus();
+      return;
+    }
     const cidadeNome = CIDADES[f.cidade.value]?.nome || f.cidade.value;
     const bairroN = f.bairro.value ? bairroNome(f.cidade.value, f.bairro.value) : "-";
     const msg =
@@ -584,6 +687,7 @@ Bairro: ${bairroN}
 Idade: ${f.idade.value}
 WhatsApp: ${f.whats.value}
 Descrição: ${f.desc.value || "-"}`;
+    trackMetaPixel("Lead", { content_name: "Anuncie aqui" });
     window.open(waAdmin(msg), "_blank", "noopener");
   });
 }
@@ -1013,6 +1117,9 @@ function router() {
   window.scrollTo(0, 0);
   fecharNav();
   closeCityPicker();
+  setTimeout(() => trackMetaPixel("PageView", {
+    page_path: location.pathname + location.hash,
+  }), 0);
 
   if (parts.length === 0)                 return viewHome();
   if (parts[0] === "anuncie")             return viewAnuncie();
@@ -1166,6 +1273,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try { await window.VIPData.ready; } catch (e) {}
   }
 
+  initMetaPixel();
   montarMenus();
   router();
 });

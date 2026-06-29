@@ -994,6 +994,13 @@ body.nav-open .header__burger span:nth-child(3){top:21px;transform:rotate(-45deg
   border:1px solid rgba(255,247,241,.1);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
 }
+.profile__voice{
+  max-width:390px;
+  margin:0 0 1.05rem;
+}
+.profile__voice .card__audio{
+  background:linear-gradient(180deg,rgba(18,14,15,.98),rgba(10,8,9,.92));
+}
 .profile__desc{color:var(--muted);margin-bottom:1.6rem}
 .spec{
   display:grid;
@@ -1238,6 +1245,50 @@ body.nav-open .header__burger span:nth-child(3){top:21px;transform:rotate(-45deg
 
 .form .req{color:var(--rose);font-size:.7rem;margin-left:2px}
 .page__lead{max-width:620px}
+.page--signup{padding-top:96px}
+.signup{max-width:760px}
+.signup__hero{
+  padding:1.25rem;
+  border:1px solid rgba(255,247,241,.08);
+  border-radius:22px;
+  background:linear-gradient(160deg,rgba(72,15,28,.44),rgba(11,9,10,.96));
+  margin-bottom:1rem;
+  box-shadow:0 22px 48px rgba(0,0,0,.28);
+}
+.signup__hero span{
+  display:block;
+  color:var(--gold-2);
+  font-size:.68rem;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  margin-bottom:.5rem;
+}
+.signup__hero h1{
+  margin-bottom:.45rem;
+  line-height:1.04;
+}
+.signup__hero p{
+  margin-bottom:.9rem;
+  max-width:560px;
+}
+.signup__proofs{
+  display:flex;
+  gap:.45rem;
+  flex-wrap:wrap;
+}
+.signup__proofs span{
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  margin:0;
+  padding:.42rem .68rem;
+  border-radius:999px;
+  border:1px solid rgba(255,247,241,.09);
+  background:rgba(255,255,255,.025);
+  color:var(--white);
+  letter-spacing:.08em;
+  font-size:.62rem;
+}
 
 .form__actions{
   display:flex;
@@ -1255,6 +1306,52 @@ body.nav-open .header__burger span:nth-child(3){top:21px;transform:rotate(-45deg
   margin:0;
   line-height:1.35;
   text-align:center;
+}
+.form__step{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:.72rem;
+  align-items:center;
+  padding:.78rem;
+  border:1px solid rgba(255,247,241,.08);
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.012));
+}
+.form__step>span{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(213,175,84,.14);
+  border:1px solid rgba(213,175,84,.2);
+  color:var(--gold-2);
+  font-size:.74rem;
+  font-weight:700;
+}
+.form__step b{
+  display:block;
+  color:var(--white);
+  font-size:.9rem;
+}
+.form__step small{
+  color:var(--muted);
+  font-size:.74rem;
+}
+.form__field{position:relative}
+.form__field.is-invalid label{color:#f0a7a7}
+.form__field.is-invalid input,
+.form__field.is-invalid select,
+.form__field.is-invalid textarea{
+  border-color:#874343;
+  box-shadow:0 0 0 3px rgba(216,83,88,.14);
+}
+.form__field.is-invalid::after{
+  content:"Preencha este campo";
+  display:block;
+  color:#f0a7a7;
+  font-size:.68rem;
+  margin-top:.32rem;
 }
 
 /* Custom select - remove native arrow completely */
@@ -1996,7 +2093,38 @@ body.sv-open{overflow:hidden}
     font-size:.9rem;
     line-height:1.28;
   }
-  .form .row{grid-template-columns:1fr}
+  .page--signup{padding-top:86px}
+  .signup__hero{
+    padding:.95rem;
+    border-radius:18px;
+    margin-bottom:.75rem;
+  }
+  .signup__hero h1{font-size:clamp(1.7rem,9vw,2.05rem)}
+  .signup__hero p{font-size:.86rem;line-height:1.5}
+  .signup__proofs{gap:.36rem}
+  .signup__proofs span{min-height:29px;padding:.36rem .54rem;font-size:.56rem}
+  .form{
+    padding:.92rem;
+    border-radius:18px;
+    gap:.86rem;
+    margin-top:.8rem;
+  }
+  .form .row{grid-template-columns:1fr;gap:.86rem}
+  .form__step{
+    padding:.68rem;
+    border-radius:14px;
+    gap:.56rem;
+  }
+  .form__step>span{width:30px;height:30px;font-size:.68rem}
+  .form__step b{font-size:.84rem}
+  .form__step small{font-size:.68rem}
+  .form input,.form select,.form textarea{
+    min-height:50px;
+    border-radius:13px;
+    padding:.86rem .96rem;
+    font-size:.94rem;
+  }
+  .form textarea{min-height:118px}
   .page--cidade{padding-top:88px}
   .page--cidade .stories{padding:.72rem .75rem .45rem;margin-bottom:.8rem}
   .page-divider{margin-bottom:.85rem}
