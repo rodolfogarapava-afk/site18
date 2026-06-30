@@ -5,11 +5,18 @@
 
 COMO ABRIR
 ----------
-1. Dê dois cliques no arquivo "index.html".
-   O site abre direto no navegador, sem instalar nada.
+1. Instale as dependências:
 
-   (Para evitar qualquer bloqueio de navegador, você também pode
-    rodar um servidor local simples — veja "SERVIDOR LOCAL" abaixo.)
+   corepack yarn install
+
+2. Rode o Next em desenvolvimento:
+
+   corepack yarn dev
+
+3. Acesse no navegador:
+
+   Site:   http://localhost:3000
+   Admin:  http://localhost:3000/admin
 
 
 O QUE JÁ FUNCIONA
@@ -33,8 +40,7 @@ O QUE JÁ FUNCIONA
 
 PAINEL ADMIN  (jeito fácil — recomendado)
 -----------------------------------------
-Abra "admin.html" (ou acesse /admin.html, ou o link "Painel Admin"
-no rodapé do site).
+Acesse /admin (o antigo /admin.html redireciona para /admin).
 
   Login: E-MAIL + SENHA do administrador (Supabase Auth).
   O usuário admin é criado no painel do Supabase (veja "BACK-END").
@@ -58,7 +64,7 @@ IMPORTANTE — como as alterações ficam salvas:
 
 COMO PERSONALIZAR À MÃO  (alternativa ao painel — arquivo data.js)
 ------------------------------------------------------------------
-Abra "data.js". Tudo fica dentro do objeto SEED:
+Abra "public/data.js". Tudo fica dentro do objeto SEED:
 
 1) NÚMERO DA CENTRAL:
    adminWhatsapp: "5565999999999"
@@ -92,12 +98,11 @@ Para usar fotos reais:
 
 SERVIDOR LOCAL (opcional, recomendado)
 --------------------------------------
-Abra o PowerShell nesta pasta e rode UM destes:
+Abra o terminal nesta pasta e rode:
 
-  Python:   python -m http.server 8080
-  Node:     npx serve .
+  corepack yarn dev
 
-Depois acesse no navegador:  http://localhost:8080
+Depois acesse no navegador:  http://localhost:3000
 
 
 BACK-END (Supabase) — configuração necessária
@@ -116,31 +121,31 @@ Passos no painel do Supabase (uma vez só):
 
 PUBLICAR NA INTERNET (Vercel)
 -----------------------------
-Site estático sem build. Na Vercel (vercel.com):
+Projeto Next.js. Na Vercel (vercel.com):
   1) Importe o repositório do GitHub (site18).
-  2) Framework Preset: "Other"; Build Command: vazio;
-     Output Directory: "./" (raiz).
+  2) Framework Preset: "Next.js".
+     Build Command: corepack yarn build
   3) NÃO precisa cadastrar variáveis de ambiente (a config pública já
-     está em supabase-config.js).
+     está em public/supabase-config.js).
   4) Deploy. A cada "git push" a Vercel publica de novo automaticamente.
-(Também funciona em Netlify, Cloudflare Pages, etc.)
 
 
 ARQUIVOS
 --------
-index.html         -> estrutura do site público
-styles.css         -> visual do site (tema preto/dourado + entrada vinho)
-supabase-config.js -> config PÚBLICA do Supabase (URL + chave anon)
-data.js            -> dados SEMENTE (SEED): fallback offline / restaurar
-store.js           -> camada de dados (lê/grava no Supabase; auth; Storage)
-app.js             -> lógica do site (rotas, render, WhatsApp, age gate)
-admin.html         -> PAINEL ADMIN (login + abas)
-admin.css          -> visual do painel admin
-admin.js           -> lógica do painel (login, CRUD, upload, backup)
-vercel.json        -> config de deploy (headers de segurança)
+pages/index.js     -> rota pública Next (/)
+pages/admin.js     -> rota admin Next (/admin)
+legacy/*.html      -> HTML legado usado pelas páginas Next
+public/styles.css  -> visual do site (tema preto/dourado + entrada vinho)
+public/supabase-config.js -> config PÚBLICA do Supabase (URL + chave anon)
+public/data.js     -> dados SEMENTE (SEED): fallback offline / restaurar
+public/store.js    -> camada de dados (lê/grava no Supabase; auth; Storage)
+public/app.js      -> lógica do site (rotas, render, WhatsApp, age gate)
+public/admin.css   -> visual do painel admin
+public/admin.js    -> lógica do painel (login, CRUD, upload, backup)
+next.config.js     -> redirects e headers de segurança
 README.txt         -> este arquivo
 
-OBS.: a ordem dos scripts no index.html/admin.html importa:
+OBS.: a ordem dos scripts carregados pelo Next importa:
       supabase-js (CDN) -> supabase-config.js -> data.js -> store.js
       -> app.js (ou admin.js)
 

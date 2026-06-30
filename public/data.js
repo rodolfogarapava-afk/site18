@@ -18,6 +18,9 @@ const SEED = {
   pixel: {
     metaPixelId: "",
     metaPixelEnabled: false,
+    googleTagId: "",
+    googleTagEnabled: false,
+    googleAdsConversionLabel: "",
   },
 
   /* ---------- CIDADES E BAIRROS ----------

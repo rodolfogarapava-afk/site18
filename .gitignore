@@ -2,6 +2,8 @@
 Thumbs.db
 *.log
 node_modules/
+.next/
+.yarn/install-state.gz
 vip-backup.json
 
 # Segredos / variáveis de ambiente (NÃO versionar)

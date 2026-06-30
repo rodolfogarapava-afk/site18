@@ -9,7 +9,19 @@ const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 /* Estado de trabalho (cópia editável carregada do banco) */
-let DATA = { adminWhatsapp: "", pixel: { metaPixelId: "", metaPixelEnabled: false }, cidades: {}, perfis: [], stories: [] };
+let DATA = {
+  adminWhatsapp: "",
+  pixel: {
+    metaPixelId: "",
+    metaPixelEnabled: false,
+    googleTagId: "",
+    googleTagEnabled: false,
+    googleAdsConversionLabel: "",
+  },
+  cidades: {},
+  perfis: [],
+  stories: [],
+};
 let fotos = [];                  // fotos (URLs) do perfil em edição
 let audioUrl = "";               // áudio real da acompanhante (URL pública)
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
@@ -53,10 +65,44 @@ function clearCadastroErrors() {
 
 function extractMetaPixelId(value) {
   const raw = (value || "").trim();
-  const direct = raw.replace(/\D/g, "");
-  if (direct.length >= 8) return direct;
+  if (!raw) return "";
+
+  const initMatch = raw.match(/fbq\s*\(\s*['"]init['"]\s*,\s*['"](\d{8,})['"]/i);
+  if (initMatch) return initMatch[1];
+
+  const urlMatch = raw.match(/[?&]id=(\d{8,})/i);
+  if (urlMatch) return urlMatch[1];
+
+  if (/^[\d\s().+-]+$/.test(raw)) return raw.replace(/\D/g, "");
+
   const match = raw.match(/\b\d{8,}\b/);
-  return match ? match[0] : direct;
+  return match ? match[0] : "";
+}
+
+function extractGoogleTagId(value) {
+  const raw = (value || "").trim();
+  if (!raw) return "";
+
+  const configMatch = raw.match(/gtag\s*\(\s*['"]config['"]\s*,\s*['"]((?:AW|G|GT|DC)-[A-Z0-9_-]+)['"]/i);
+  if (configMatch) return configMatch[1].toUpperCase();
+
+  const urlMatch = raw.match(/[?&]id=((?:AW|G|GT|DC)-[A-Z0-9_-]+)/i);
+  if (urlMatch) return urlMatch[1].toUpperCase();
+
+  const directMatch = raw.match(/\b((?:AW|G|GT|DC)-[A-Z0-9_-]+)\b/i);
+  return directMatch ? directMatch[1].toUpperCase() : "";
+}
+
+function extractGoogleConversionLabel(value) {
+  const raw = (value || "").trim();
+  if (!raw) return "";
+  if (/^(?:AW|G|GT|DC)-[A-Z0-9_-]+$/i.test(raw)) return "";
+  if (/gtag\s*\(\s*['"]config['"]/i.test(raw)) return "";
+  const sendToMatch = raw.match(/send_to\s*:\s*['"](?:AW-\d+\/)?([^'"]+)['"]/i);
+  if (sendToMatch) return sendToMatch[1].trim();
+  const pathMatch = raw.match(/AW-\d+\/([A-Z0-9_-]+)/i);
+  if (pathMatch) return pathMatch[1].trim();
+  return raw.replace(/^AW-\d+\//i, "").trim();
 }
 
 function updateBadge() { $("#count-badge").textContent = DATA.perfis.length + " perfis"; }
@@ -167,6 +213,7 @@ function showTab(name) {
   if (name === "perfis") renderLista();
   if (name === "stories") renderStories();
   if (name === "cidades") renderCidades();
+  if (name === "pixel") fillPixel();
   if (name === "config") fillConfig();
   if (name === "backup") renderStorage();
 }
@@ -826,27 +873,16 @@ $("#salvar-cidades").addEventListener("click", async () => {
    ============================================================ */
 function fillConfig() {
   $("#cfg-admin-wa").value = DATA.adminWhatsapp || "";
-  $("#cfg-meta-pixel-id").value = DATA.pixel?.metaPixelId || "";
-  $("#cfg-meta-pixel-enabled").checked = !!DATA.pixel?.metaPixelEnabled;
   $("#cfg-pass").value = "";
 }
 $("#salvar-config").addEventListener("click", async () => {
   const wa = $("#cfg-admin-wa").value.replace(/\D/g, "") || DATA.adminWhatsapp;
-  const metaPixelId = extractMetaPixelId($("#cfg-meta-pixel-id").value);
-  const metaPixelEnabled = $("#cfg-meta-pixel-enabled").checked && !!metaPixelId;
   const np = $("#cfg-pass").value.trim();
   const btn = $("#salvar-config");
   btn.disabled = true;
   try {
-    await VIPStore.saveConfig({
-      adminWhatsapp: wa,
-      metaPixelId,
-      metaPixelEnabled,
-    });
+    await VIPStore.saveConfig({ adminWhatsapp: wa });
     DATA.adminWhatsapp = wa;
-    DATA.pixel = { metaPixelId, metaPixelEnabled };
-    $("#cfg-meta-pixel-id").value = metaPixelId;
-    $("#cfg-meta-pixel-enabled").checked = metaPixelEnabled;
     if (np) {
       if (np.length < 6) throw new Error("a nova senha precisa de ao menos 6 caracteres.");
       await VIPStore.auth.updatePassword(np);
@@ -855,6 +891,75 @@ $("#salvar-config").addEventListener("click", async () => {
     toast("Configurações salvas!");
   } catch (e) {
     toast("Erro ao salvar: " + (e.message || e), true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ============================================================
+   PIXEL / TRÁFEGO PAGO
+   ============================================================ */
+function updatePixelStatus() {
+  const metaBox = $("#meta-pixel-status");
+  if (metaBox) {
+    const id = extractMetaPixelId(DATA.pixel?.metaPixelId || "");
+    const enabled = !!DATA.pixel?.metaPixelEnabled && !!id;
+    metaBox.classList.toggle("is-active", enabled);
+    metaBox.innerHTML = `
+    <span class="pixel-status__dot"></span>
+    <b>${enabled ? "Meta ativo" : "Meta inativo"}</b>
+    <small>${id ? "ID " + id : "Nenhum ID salvo"}</small>`;
+  }
+
+  const googleBox = $("#google-pixel-status");
+  if (googleBox) {
+    const id = extractGoogleTagId(DATA.pixel?.googleTagId || "");
+    const enabled = !!DATA.pixel?.googleTagEnabled && !!id;
+    googleBox.classList.toggle("is-active", enabled);
+    googleBox.innerHTML = `
+    <span class="pixel-status__dot"></span>
+    <b>${enabled ? "Google ativo" : "Google inativo"}</b>
+    <small>${id || "Nenhum ID salvo"}</small>`;
+  }
+}
+
+function fillPixel() {
+  const metaId = extractMetaPixelId(DATA.pixel?.metaPixelId || "");
+  const googleTagId = extractGoogleTagId(DATA.pixel?.googleTagId || "");
+  $("#cfg-meta-pixel-id").value = metaId;
+  $("#cfg-meta-pixel-enabled").checked = !!DATA.pixel?.metaPixelEnabled && !!metaId;
+  $("#cfg-google-tag-id").value = googleTagId;
+  $("#cfg-google-tag-enabled").checked = !!DATA.pixel?.googleTagEnabled && !!googleTagId;
+  $("#cfg-google-conversion-label").value = DATA.pixel?.googleAdsConversionLabel || "";
+  updatePixelStatus();
+}
+
+$("#salvar-pixel").addEventListener("click", async () => {
+  const metaPixelId = extractMetaPixelId($("#cfg-meta-pixel-id").value);
+  const metaPixelEnabled = $("#cfg-meta-pixel-enabled").checked && !!metaPixelId;
+  const googleTagId = extractGoogleTagId($("#cfg-google-tag-id").value);
+  const googleTagEnabled = $("#cfg-google-tag-enabled").checked && !!googleTagId;
+  const googleAdsConversionLabel = extractGoogleConversionLabel($("#cfg-google-conversion-label").value);
+  const btn = $("#salvar-pixel");
+  btn.disabled = true;
+  try {
+    await VIPStore.saveConfig({
+      metaPixelId,
+      metaPixelEnabled,
+      googleTagId,
+      googleTagEnabled,
+      googleAdsConversionLabel,
+    });
+    DATA.pixel = { metaPixelId, metaPixelEnabled, googleTagId, googleTagEnabled, googleAdsConversionLabel };
+    $("#cfg-meta-pixel-id").value = metaPixelId;
+    $("#cfg-meta-pixel-enabled").checked = metaPixelEnabled;
+    $("#cfg-google-tag-id").value = googleTagId;
+    $("#cfg-google-tag-enabled").checked = googleTagEnabled;
+    $("#cfg-google-conversion-label").value = googleAdsConversionLabel;
+    updatePixelStatus();
+    toast((metaPixelEnabled || googleTagEnabled) ? "Pixels atualizados para tráfego pago." : "Pixels salvos como inativos.");
+  } catch (e) {
+    toast("Erro ao salvar pixels: " + (e.message || e), true);
   } finally {
     btn.disabled = false;
   }
@@ -930,7 +1035,19 @@ async function boot() {
     await reload();
   } catch (e) {
     toast("Erro ao carregar dados: " + (e.message || e), true);
-    DATA = { adminWhatsapp: "", pixel: { metaPixelId: "", metaPixelEnabled: false }, cidades: {}, perfis: [], stories: [] };
+    DATA = {
+      adminWhatsapp: "",
+      pixel: {
+        metaPixelId: "",
+        metaPixelEnabled: false,
+        googleTagId: "",
+        googleTagEnabled: false,
+        googleAdsConversionLabel: "",
+      },
+      cidades: {},
+      perfis: [],
+      stories: [],
+    };
     updateBadge();
   }
   $("#filtro-cidade").innerHTML = `<option value="">Todas as cidades</option>` +

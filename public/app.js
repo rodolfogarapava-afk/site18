@@ -222,6 +222,7 @@ document.addEventListener("click", e => {
 window.addEventListener("hashchange", resetCardAudio);
 
 let metaPixelInitialized = false;
+let googleTagInitialized = false;
 
 function initMetaPixel() {
   const id = String(window.META_PIXEL_ID || "").replace(/\D/g, "");
@@ -251,6 +252,51 @@ function initMetaPixel() {
 function trackMetaPixel(eventName, params) {
   if (!metaPixelInitialized || !window.fbq) return;
   window.fbq("track", eventName, params || {});
+}
+
+function normalizeGoogleTagId(value) {
+  const match = String(value || "").trim().match(/\b((?:AW|G|GT|DC)-[A-Z0-9_-]+)\b/i);
+  return match ? match[1].toUpperCase() : "";
+}
+
+function initGoogleTag() {
+  const id = normalizeGoogleTagId(window.GOOGLE_TAG_ID);
+  if (!window.GOOGLE_TAG_ENABLED || !id || googleTagInitialized) return;
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function() { window.dataLayer.push(arguments); };
+
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(id);
+  document.head.appendChild(s);
+
+  window.gtag("js", new Date());
+  window.gtag("config", id, { send_page_view: false });
+  googleTagInitialized = true;
+}
+
+function trackGoogleTag(eventName, params) {
+  if (!googleTagInitialized || !window.gtag) return;
+  const id = normalizeGoogleTagId(window.GOOGLE_TAG_ID);
+  const payload = { ...(params || {}) };
+
+  if (eventName === "PageView") {
+    window.gtag("event", "page_view", payload);
+    return;
+  }
+
+  if (eventName === "Lead") {
+    const label = String(window.GOOGLE_ADS_CONVERSION_LABEL || "").trim();
+    const hasAdsConversion = /^AW-/i.test(id) && !!label;
+    if (hasAdsConversion) payload.send_to = id + "/" + label.replace(/^AW-\d+\//i, "");
+    window.gtag("event", hasAdsConversion ? "conversion" : "generate_lead", payload);
+  }
+}
+
+function trackTraffic(eventName, params) {
+  trackMetaPixel(eventName, params);
+  trackGoogleTag(eventName, params);
 }
 
 /* Ordena: novidades e destaques primeiro */
@@ -687,7 +733,7 @@ Bairro: ${bairroN}
 Idade: ${f.idade.value}
 WhatsApp: ${f.whats.value}
 Descrição: ${f.desc.value || "-"}`;
-    trackMetaPixel("Lead", { content_name: "Anuncie aqui" });
+    trackTraffic("Lead", { content_name: "Anuncie aqui" });
     window.open(waAdmin(msg), "_blank", "noopener");
   });
 }
@@ -1117,7 +1163,7 @@ function router() {
   window.scrollTo(0, 0);
   fecharNav();
   closeCityPicker();
-  setTimeout(() => trackMetaPixel("PageView", {
+  setTimeout(() => trackTraffic("PageView", {
     page_path: location.pathname + location.hash,
   }), 0);
 
@@ -1274,6 +1320,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   initMetaPixel();
+  initGoogleTag();
   montarMenus();
   router();
 });

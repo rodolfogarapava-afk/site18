@@ -2,9 +2,12 @@
   "name": "site-acompanhantes",
   "version": "1.0.0",
   "description": "",
-  "main": "admin.js",
+  "packageManager": "yarn@4.17.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "next build"
   },
   "repository": {
     "type": "git",
@@ -13,12 +16,14 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/rodolfogarapava-afk/site18/issues"
   },
   "homepage": "https://github.com/rodolfogarapava-afk/site18#readme",
   "dependencies": {
-    "pg": "^8.21.0"
+    "next": "^15.3.4",
+    "pg": "^8.21.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   }
 }

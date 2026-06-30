@@ -6,8 +6,8 @@ const fs = require("fs");
 const path = require("path");
 const { Client } = require("pg");
 
-// Extrai o SEED do data.js (o arquivo faz window.SEED = SEED)
-const code = fs.readFileSync(path.join(__dirname, "..", "data.js"), "utf8");
+// Extrai o SEED do public/data.js (o arquivo faz window.SEED = SEED)
+const code = fs.readFileSync(path.join(__dirname, "..", "public", "data.js"), "utf8");
 global.window = {};
 eval(code);
 const SEED = global.window.SEED;

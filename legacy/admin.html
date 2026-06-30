@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=20" />
+  <link rel="stylesheet" href="admin.css?v=22" />
 </head>
 <body>
 
@@ -70,6 +70,7 @@
         <button class="tab active" data-tab="perfis">Perfis</button>
         <button class="tab" data-tab="stories">Stories</button>
         <button class="tab" data-tab="cidades">Cidades &amp; Bairros</button>
+        <button class="tab" data-tab="pixel">Pixel / Tráfego Pago</button>
         <button class="tab" data-tab="config">Configurações</button>
         <button class="tab" data-tab="backup">Publicar / Backup</button>
       </div>
@@ -363,21 +364,6 @@
             <input id="cfg-admin-wa" placeholder="5565999999999" />
             <small>Recebe os contatos da home e os cadastros de "Anuncie aqui".</small>
           </div>
-          <h3>Pixel / Rastreamento</h3>
-          <div class="config-card">
-            <div class="config-card__copy">
-              <b>Meta Pixel</b>
-              <span>Cole o ID do Pixel para ativar rastreamento de PageView no site público.</span>
-            </div>
-            <div class="grid2">
-              <div class="field">
-                <label>ID do Meta Pixel</label>
-                <input id="cfg-meta-pixel-id" placeholder="Ex.: 123456789012345" inputmode="numeric" />
-                <small>Pode colar o ID ou o script completo; o painel tenta extrair o ID.</small>
-              </div>
-              <label class="check check--config"><input type="checkbox" id="cfg-meta-pixel-enabled" /> Ativar Pixel no site</label>
-            </div>
-          </div>
           <h3>Segurança</h3>
           <div class="grid2">
             <div class="field">
@@ -387,6 +373,103 @@
             </div>
           </div>
           <button class="btn btn--gold" id="salvar-config">Salvar configurações</button>
+        </div>
+      </section>
+
+      <!-- PIXEL / TRÁFEGO PAGO -->
+      <section id="tab-pixel" class="tabpane" hidden>
+        <div class="panel panel--traffic">
+          <div class="traffic-hero">
+            <div>
+              <span>Tráfego pago</span>
+              <h2>Pixel e rastreamento</h2>
+              <p>Ative Meta Pixel e Google tag para medir visitas e leads enviados pelo site.</p>
+            </div>
+            <div class="traffic-statuses">
+              <div class="pixel-status" id="meta-pixel-status">
+                <span class="pixel-status__dot"></span>
+                <b>Meta inativo</b>
+              </div>
+              <div class="pixel-status" id="google-pixel-status">
+                <span class="pixel-status__dot"></span>
+                <b>Google inativo</b>
+              </div>
+            </div>
+          </div>
+
+          <div class="traffic-grid">
+            <div class="traffic-card traffic-card--main">
+              <div class="traffic-card__head">
+                <div>
+                  <span>Meta Pixel</span>
+                  <h3>Instalação do pixel</h3>
+                </div>
+                <label class="traffic-switch">
+                  <input type="checkbox" id="cfg-meta-pixel-enabled" />
+                  <span></span>
+                </label>
+              </div>
+
+              <div class="field">
+                <label>ID do Meta Pixel</label>
+                <input id="cfg-meta-pixel-id" placeholder="Ex.: 123456789012345" inputmode="numeric" />
+                <small>Pode colar o ID ou o script completo; o painel extrai o ID automaticamente.</small>
+              </div>
+
+            </div>
+
+            <div class="traffic-card traffic-card--main">
+              <div class="traffic-card__head">
+                <div>
+                  <span>Google tag</span>
+                  <h3>Instalação do Google</h3>
+                </div>
+                <label class="traffic-switch">
+                  <input type="checkbox" id="cfg-google-tag-enabled" />
+                  <span></span>
+                </label>
+              </div>
+
+              <div class="field">
+                <label>ID da Google tag</label>
+                <input id="cfg-google-tag-id" placeholder="Ex.: AW-123456789 ou G-ABC123" />
+                <small>Pode colar o ID ou o script completo; o painel extrai o ID automaticamente.</small>
+              </div>
+
+              <div class="field">
+                <label>Label de conversão de lead</label>
+                <input id="cfg-google-conversion-label" placeholder="Opcional para Google Ads" />
+                <small>Use quando o Google Ads fornecer um send_to no formato AW-ID/label.</small>
+              </div>
+
+            </div>
+
+            <div class="traffic-card traffic-card--events">
+              <div class="traffic-card__head">
+                <div>
+                  <span>Eventos ativos</span>
+                  <h3>Medição no site</h3>
+                </div>
+              </div>
+              <div class="event-list">
+                <div class="event-card">
+                  <b>PageView</b>
+                  <span>Dispara ao acessar ou navegar pelo site.</span>
+                </div>
+                <div class="event-card">
+                  <b>Lead</b>
+                  <span>Dispara no envio do formulário "Anuncie aqui".</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn--gold btn--wide traffic-save" id="salvar-pixel">Salvar Pixels</button>
+
+          <div class="pixel-note">
+            <b>Resumo</b>
+            <span>Depois de salvar, cada pixel só carrega no site público quando estiver ativado e com ID válido.</span>
+          </div>
         </div>
       </section>
 
@@ -418,8 +501,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20"></script>
-  <script src="data.js?v=20"></script>
-  <script src="store.js?v=20"></script>
-  <script src="admin.js?v=20"></script>
+  <script src="data.js?v=21"></script>
+  <script src="store.js?v=22"></script>
+  <script src="admin.js?v=23"></script>
 </body>
 </html>

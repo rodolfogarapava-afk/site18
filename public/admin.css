@@ -209,6 +209,48 @@ input,select,textarea{font-family:var(--sans)}
 .config-card__copy span{max-width:440px;color:var(--muted);font-size:.8rem;text-align:right;line-height:1.45}
 .check--config{align-self:end;margin-bottom:1rem}
 
+/* ---------- Pixel / Tráfego pago ---------- */
+.panel--traffic{position:relative;overflow:hidden;background:
+  radial-gradient(90% 70% at 12% 0%,rgba(90,16,32,.34),transparent 58%),
+  linear-gradient(180deg,#17141a,#0f0d10)}
+.panel--traffic::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,rgba(230,200,115,.07),transparent 32%,rgba(241,176,187,.05) 100%)}
+.panel--traffic>*{position:relative}
+.traffic-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem}
+.traffic-hero>div>span,.traffic-card__head>div>span{display:block;color:var(--gold-2);font-size:.66rem;text-transform:uppercase;letter-spacing:.24em;margin-bottom:.3rem}
+.traffic-hero h2{font-size:1.55rem;margin:0 0 .3rem}
+.traffic-hero p{max-width:540px;color:var(--muted);font-size:.88rem}
+.traffic-statuses{display:flex;gap:.62rem;align-items:stretch;flex-wrap:wrap;justify-content:flex-end}
+.pixel-status{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:.32rem .48rem;min-width:168px;
+  padding:.72rem .82rem;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+.pixel-status__dot{width:9px;height:9px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 4px rgba(155,147,164,.08)}
+.pixel-status b{font-size:.82rem}
+.pixel-status small{grid-column:2;color:var(--muted);font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pixel-status.is-active{border-color:rgba(37,211,102,.25);background:rgba(37,211,102,.075)}
+.pixel-status.is-active .pixel-status__dot{background:var(--green);box-shadow:0 0 0 4px rgba(37,211,102,.12)}
+.traffic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.traffic-card{padding:1rem;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.036),rgba(255,255,255,.012));box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.traffic-card--main{background:linear-gradient(160deg,rgba(38,28,18,.56),rgba(15,13,18,.98))}
+.traffic-card--events{grid-column:1 / -1}
+.traffic-card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.8rem}
+.traffic-card__head h3{margin:0;color:#fff;font-size:1rem}
+.traffic-switch{display:inline-flex;align-items:center;cursor:pointer}
+.traffic-switch input{position:absolute;opacity:0;pointer-events:none}
+.traffic-switch span{width:54px;height:30px;border-radius:999px;border:1px solid var(--line);background:#0e0d11;position:relative;transition:.18s}
+.traffic-switch span::after{content:"";position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:.18s}
+.traffic-switch input:checked+span{background:rgba(37,211,102,.16);border-color:rgba(37,211,102,.34)}
+.traffic-switch input:checked+span::after{left:28px;background:var(--green);box-shadow:0 0 18px rgba(37,211,102,.45)}
+.btn--wide{width:100%}
+.traffic-save{margin-top:1rem}
+.event-list{display:grid;gap:.7rem}
+.event-card{padding:.78rem;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(0,0,0,.16)}
+.event-card b{display:block;font-size:.85rem;color:#fff;margin-bottom:.18rem}
+.event-card span{display:block;color:var(--muted);font-size:.76rem;line-height:1.42}
+.pixel-note{display:flex;justify-content:space-between;gap:1rem;margin-top:1rem;padding:.85rem 1rem;border-radius:16px;
+  border:1px solid rgba(230,200,115,.14);background:rgba(230,200,115,.06)}
+.pixel-note b{color:var(--gold-2);font-size:.82rem;text-transform:uppercase;letter-spacing:.16em}
+.pixel-note span{color:var(--muted);font-size:.8rem;text-align:right}
+
 /* ---------- Form footer fixo ---------- */
 .formbar{position:sticky;bottom:0;background:#100f14ee;backdrop-filter:blur(8px);
   border-top:1px solid var(--line);padding:.9rem 1.2rem;display:flex;gap:.7rem;justify-content:flex-end;z-index:15;margin:0 -1.2rem -4rem}
@@ -298,6 +340,21 @@ input,select,textarea{font-family:var(--sans)}
   .city-input{flex:1;min-width:140px}
   .bairro-row{align-items:stretch}
   .bairro-row .slug{display:none}
+  .traffic-hero{display:block;margin-bottom:.78rem}
+  .traffic-hero h2{font-size:1.24rem}
+  .traffic-hero p{font-size:.78rem;line-height:1.42}
+  .traffic-statuses{justify-content:stretch;margin-top:.72rem}
+  .pixel-status{min-width:0;flex:1 1 150px}
+  .traffic-grid{grid-template-columns:1fr;gap:.72rem}
+  .traffic-card{padding:.78rem;border-radius:15px}
+  .traffic-card__head{align-items:center;gap:.7rem}
+  .traffic-card__head h3{font-size:.94rem}
+  .traffic-card__head>div>span{font-size:.58rem;letter-spacing:.18em}
+  .traffic-switch span{width:48px;height:28px}
+  .traffic-switch span::after{width:18px;height:18px}
+  .traffic-switch input:checked+span::after{left:25px}
+  .pixel-note{display:block;padding:.76rem;border-radius:15px}
+  .pixel-note span{display:block;text-align:left;margin-top:.28rem;font-size:.76rem}
   .config-card{padding:.78rem;border-radius:15px}
   .config-card__copy{display:block}
   .config-card__copy span{display:block;text-align:left;margin-top:.22rem}

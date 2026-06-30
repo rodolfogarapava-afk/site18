@@ -194,6 +194,9 @@
       pixel: {
         metaPixelId: (cfgRes.data && cfgRes.data.meta_pixel_id) || "",
         metaPixelEnabled: !!(cfgRes.data && cfgRes.data.meta_pixel_enabled),
+        googleTagId: (cfgRes.data && cfgRes.data.google_tag_id) || "",
+        googleTagEnabled: !!(cfgRes.data && cfgRes.data.google_tag_enabled),
+        googleAdsConversionLabel: (cfgRes.data && cfgRes.data.google_ads_conversion_label) || "",
       },
       cidades: rowsToCidades(cidRes.data),
       perfis: (perRes.data || []).map(rowToPerfil),
@@ -220,6 +223,9 @@
       window.ADMIN_WHATSAPP = d.adminWhatsapp || (typeof SEED !== "undefined" ? SEED.adminWhatsapp : "");
       window.META_PIXEL_ID = d.pixel?.metaPixelId || "";
       window.META_PIXEL_ENABLED = !!d.pixel?.metaPixelEnabled;
+      window.GOOGLE_TAG_ID = d.pixel?.googleTagId || "";
+      window.GOOGLE_TAG_ENABLED = !!d.pixel?.googleTagEnabled;
+      window.GOOGLE_ADS_CONVERSION_LABEL = d.pixel?.googleAdsConversionLabel || "";
       window.CIDADES        = d.cidades;
       window.PERFIS         = d.perfis;
       window.STORIES        = storiesPublicas(d.stories);
@@ -231,6 +237,9 @@
       window.ADMIN_WHATSAPP = s.adminWhatsapp;
       window.META_PIXEL_ID = s.pixel?.metaPixelId || "";
       window.META_PIXEL_ENABLED = !!s.pixel?.metaPixelEnabled;
+      window.GOOGLE_TAG_ID = s.pixel?.googleTagId || "";
+      window.GOOGLE_TAG_ENABLED = !!s.pixel?.googleTagEnabled;
+      window.GOOGLE_ADS_CONVERSION_LABEL = s.pixel?.googleAdsConversionLabel || "";
       window.CIDADES        = s.cidades;
       window.PERFIS         = s.perfis;
       window.STORIES        = [];
@@ -254,6 +263,12 @@
     window.META_PIXEL_ID = (typeof SEED !== "undefined" && SEED.pixel) ? SEED.pixel.metaPixelId || "" : "";
   if (typeof window.META_PIXEL_ENABLED === "undefined")
     window.META_PIXEL_ENABLED = !!(typeof SEED !== "undefined" && SEED.pixel && SEED.pixel.metaPixelEnabled);
+  if (typeof window.GOOGLE_TAG_ID === "undefined")
+    window.GOOGLE_TAG_ID = (typeof SEED !== "undefined" && SEED.pixel) ? SEED.pixel.googleTagId || "" : "";
+  if (typeof window.GOOGLE_TAG_ENABLED === "undefined")
+    window.GOOGLE_TAG_ENABLED = !!(typeof SEED !== "undefined" && SEED.pixel && SEED.pixel.googleTagEnabled);
+  if (typeof window.GOOGLE_ADS_CONVERSION_LABEL === "undefined")
+    window.GOOGLE_ADS_CONVERSION_LABEL = (typeof SEED !== "undefined" && SEED.pixel) ? SEED.pixel.googleAdsConversionLabel || "" : "";
   if (typeof window.STORIES === "undefined")
     window.STORIES = [];
 
@@ -371,13 +386,27 @@
       const cfg = typeof config === "object"
         ? config
         : { adminWhatsapp: config };
-      const { error } = await sb.from("config")
-        .upsert({
-          id: 1,
-          admin_whatsapp: cfg.adminWhatsapp || "",
-          meta_pixel_id: cfg.metaPixelId || "",
-          meta_pixel_enabled: !!cfg.metaPixelEnabled,
-        }, { onConflict: "id" });
+      const hasOwn = (key) => Object.prototype.hasOwnProperty.call(cfg, key);
+      const row = { id: 1 };
+      if (hasOwn("adminWhatsapp")) row.admin_whatsapp = cfg.adminWhatsapp || "";
+      if (hasOwn("metaPixelId")) row.meta_pixel_id = cfg.metaPixelId || "";
+      if (hasOwn("metaPixelEnabled")) row.meta_pixel_enabled = !!cfg.metaPixelEnabled;
+      if (hasOwn("googleTagId")) row.google_tag_id = cfg.googleTagId || "";
+      if (hasOwn("googleTagEnabled")) row.google_tag_enabled = !!cfg.googleTagEnabled;
+      if (hasOwn("googleAdsConversionLabel")) row.google_ads_conversion_label = cfg.googleAdsConversionLabel || "";
+
+      const { data: atual, error: readErr } = await sb.from("config")
+        .select("id")
+        .eq("id", 1)
+        .maybeSingle();
+      if (readErr) throw readErr;
+
+      const updateRow = { ...row };
+      delete updateRow.id;
+      const res = atual
+        ? await sb.from("config").update(updateRow).eq("id", 1)
+        : await sb.from("config").insert(row);
+      const { error } = res;
       if (error) throw error;
     },
 
@@ -427,6 +456,9 @@
         adminWhatsapp: d.adminWhatsapp,
         metaPixelId: d.pixel?.metaPixelId || "",
         metaPixelEnabled: !!d.pixel?.metaPixelEnabled,
+        googleTagId: d.pixel?.googleTagId || "",
+        googleTagEnabled: !!d.pixel?.googleTagEnabled,
+        googleAdsConversionLabel: d.pixel?.googleAdsConversionLabel || "",
       });
       await this.saveCidades(d.cidades);
 
