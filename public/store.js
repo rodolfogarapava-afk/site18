@@ -191,6 +191,9 @@
 
     return {
       adminWhatsapp: (cfgRes.data && cfgRes.data.admin_whatsapp) || "",
+      homeFeaturedSlugs: Array.isArray(cfgRes.data && cfgRes.data.home_featured_slugs)
+        ? cfgRes.data.home_featured_slugs.filter(Boolean).slice(0, 3)
+        : [],
       pixel: {
         metaPixelId: (cfgRes.data && cfgRes.data.meta_pixel_id) || "",
         metaPixelEnabled: !!(cfgRes.data && cfgRes.data.meta_pixel_enabled),
@@ -226,6 +229,7 @@
       window.GOOGLE_TAG_ID = d.pixel?.googleTagId || "";
       window.GOOGLE_TAG_ENABLED = !!d.pixel?.googleTagEnabled;
       window.GOOGLE_ADS_CONVERSION_LABEL = d.pixel?.googleAdsConversionLabel || "";
+      window.HOME_FEATURED_SLUGS = d.homeFeaturedSlugs || [];
       window.CIDADES        = d.cidades;
       window.PERFIS         = d.perfis;
       window.STORIES        = storiesPublicas(d.stories);
@@ -240,6 +244,7 @@
       window.GOOGLE_TAG_ID = s.pixel?.googleTagId || "";
       window.GOOGLE_TAG_ENABLED = !!s.pixel?.googleTagEnabled;
       window.GOOGLE_ADS_CONVERSION_LABEL = s.pixel?.googleAdsConversionLabel || "";
+      window.HOME_FEATURED_SLUGS = Array.isArray(s.homeFeaturedSlugs) ? clone(s.homeFeaturedSlugs) : [];
       window.CIDADES        = s.cidades;
       window.PERFIS         = s.perfis;
       window.STORIES        = [];
@@ -269,6 +274,8 @@
     window.GOOGLE_TAG_ENABLED = !!(typeof SEED !== "undefined" && SEED.pixel && SEED.pixel.googleTagEnabled);
   if (typeof window.GOOGLE_ADS_CONVERSION_LABEL === "undefined")
     window.GOOGLE_ADS_CONVERSION_LABEL = (typeof SEED !== "undefined" && SEED.pixel) ? SEED.pixel.googleAdsConversionLabel || "" : "";
+  if (typeof window.HOME_FEATURED_SLUGS === "undefined")
+    window.HOME_FEATURED_SLUGS = (typeof SEED !== "undefined" && Array.isArray(SEED.homeFeaturedSlugs)) ? clone(SEED.homeFeaturedSlugs) : [];
   if (typeof window.STORIES === "undefined")
     window.STORIES = [];
 
@@ -394,6 +401,8 @@
       if (hasOwn("googleTagId")) row.google_tag_id = cfg.googleTagId || "";
       if (hasOwn("googleTagEnabled")) row.google_tag_enabled = !!cfg.googleTagEnabled;
       if (hasOwn("googleAdsConversionLabel")) row.google_ads_conversion_label = cfg.googleAdsConversionLabel || "";
+      if (hasOwn("homeFeaturedSlugs")) row.home_featured_slugs = (Array.isArray(cfg.homeFeaturedSlugs) ? cfg.homeFeaturedSlugs : [])
+        .filter(Boolean).slice(0, 3);
 
       const { data: atual, error: readErr } = await sb.from("config")
         .select("id")
@@ -454,6 +463,7 @@
       if (!d || !d.cidades || !Array.isArray(d.perfis)) throw new Error("Formato de backup inválido.");
       await this.saveConfig({
         adminWhatsapp: d.adminWhatsapp,
+        homeFeaturedSlugs: Array.isArray(d.homeFeaturedSlugs) ? d.homeFeaturedSlugs : [],
         metaPixelId: d.pixel?.metaPixelId || "",
         metaPixelEnabled: !!d.pixel?.metaPixelEnabled,
         googleTagId: d.pixel?.googleTagId || "",

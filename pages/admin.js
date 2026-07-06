@@ -5,9 +5,9 @@ import { readLegacyBody } from "../lib/legacyHtml";
 const adminScripts = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
   "/supabase-config.js?v=20",
-  "/data.js?v=21",
-  "/store.js?v=22",
-  "/admin.js?v=23",
+  "/data.js?v=22",
+  "/store.js?v=23",
+  "/admin.js?v=24",
 ];
 
 export async function getStaticProps() {
@@ -32,7 +32,7 @@ export default function AdminPage({ bodyHtml }) {
           href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap"
           rel="stylesheet"
         />
-        <link rel="stylesheet" href="/admin.css?v=22" />
+        <link rel="stylesheet" href="/admin.css?v=23" />
       </Head>
       <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
       <LegacyScripts scripts={adminScripts} />

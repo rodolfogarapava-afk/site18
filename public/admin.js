@@ -11,6 +11,7 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 /* Estado de trabalho (cópia editável carregada do banco) */
 let DATA = {
   adminWhatsapp: "",
+  homeFeaturedSlugs: [],
   pixel: {
     metaPixelId: "",
     metaPixelEnabled: false,
@@ -873,16 +874,31 @@ $("#salvar-cidades").addEventListener("click", async () => {
    ============================================================ */
 function fillConfig() {
   $("#cfg-admin-wa").value = DATA.adminWhatsapp || "";
+  const options = `<option value="">Automático</option>` + DATA.perfis
+    .map(p => `<option value="${p.slug}">${p.nome} — ${DATA.cidades[p.cidade]?.nome || p.cidade || ""}</option>`)
+    .join("");
+  const featured = Array.isArray(DATA.homeFeaturedSlugs) ? DATA.homeFeaturedSlugs : [];
+  ["#cfg-featured-1", "#cfg-featured-2", "#cfg-featured-3"].forEach((selector, i) => {
+    const select = $(selector);
+    if (!select) return;
+    select.innerHTML = options;
+    select.value = featured[i] || "";
+  });
   $("#cfg-pass").value = "";
 }
 $("#salvar-config").addEventListener("click", async () => {
   const wa = $("#cfg-admin-wa").value.replace(/\D/g, "") || DATA.adminWhatsapp;
+  const homeFeaturedSlugs = ["#cfg-featured-1", "#cfg-featured-2", "#cfg-featured-3"]
+    .map(selector => $(selector)?.value || "")
+    .filter((slug, index, arr) => slug && arr.indexOf(slug) === index)
+    .slice(0, 3);
   const np = $("#cfg-pass").value.trim();
   const btn = $("#salvar-config");
   btn.disabled = true;
   try {
-    await VIPStore.saveConfig({ adminWhatsapp: wa });
+    await VIPStore.saveConfig({ adminWhatsapp: wa, homeFeaturedSlugs });
     DATA.adminWhatsapp = wa;
+    DATA.homeFeaturedSlugs = homeFeaturedSlugs;
     if (np) {
       if (np.length < 6) throw new Error("a nova senha precisa de ao menos 6 caracteres.");
       await VIPStore.auth.updatePassword(np);
@@ -1037,6 +1053,7 @@ async function boot() {
     toast("Erro ao carregar dados: " + (e.message || e), true);
     DATA = {
       adminWhatsapp: "",
+      homeFeaturedSlugs: [],
       pixel: {
         metaPixelId: "",
         metaPixelEnabled: false,

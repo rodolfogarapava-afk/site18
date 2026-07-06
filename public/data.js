@@ -22,6 +22,7 @@ const SEED = {
     googleTagEnabled: false,
     googleAdsConversionLabel: "",
   },
+  homeFeaturedSlugs: [],
 
   /* ---------- CIDADES E BAIRROS ----------
      As 27 capitais do Brasil (26 estados + DF). Rio de Janeiro e Cuiabá

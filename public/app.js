@@ -337,11 +337,119 @@ function cidadesOrdenadas() {
     (cont(b) - cont(a)) || CIDADES[a].nome.localeCompare(CIDADES[b].nome, "pt-BR"));
 }
 
+function homeFeaturedPerfis() {
+  const selected = (window.HOME_FEATURED_SLUGS || [])
+    .map(slug => PERFIS.find(p => p.slug === slug))
+    .filter(Boolean);
+  const fallback = ordena(PERFIS)
+    .filter(p => !selected.some(s => s.slug === p.slug));
+  return [...selected, ...fallback].slice(0, 3);
+}
+
+function heroFeaturedCardHtml(p, index) {
+  return `
+    <a class="hero-feature-card" href="#/perfil/${p.slug}" style="--i:${index}">
+      <img src="${foto(p)}" alt="${p.nome}" loading="lazy" />
+      <span>
+        <b>${p.nome}</b>
+        <small>${heroFeaturedLocal(p)}</small>
+      </span>
+    </a>`;
+}
+
+function heroFeaturedLocal(p) {
+  const cidade = CIDADES[p.cidade];
+  return [bairroNome(p.cidade, p.bairro), cidade?.nome].filter(Boolean).join(" • ");
+}
+
+let heroFeaturedCtaTimer = null;
+
+function stopHeroFeaturedCta() {
+  if (heroFeaturedCtaTimer) {
+    clearInterval(heroFeaturedCtaTimer);
+    heroFeaturedCtaTimer = null;
+  }
+}
+
+function applyHeroFeaturedCta(card, p, index) {
+  card.href = `#/perfil/${p.slug}`;
+  const img = $(".hero-feature-banner__img", card);
+  if (img) {
+    img.src = foto(p);
+    img.alt = p.nome;
+  }
+  $(".hero-feature-banner__name", card).textContent = p.nome;
+  $(".hero-feature-banner__meta", card).textContent = heroFeaturedLocal(p);
+  $$(".hero-feature-banner__dot", card).forEach((dot, i) => dot.classList.toggle("is-active", i === index));
+  card.dataset.featureIndex = String(index);
+}
+
+function setHeroFeaturedCta(list, index, animate = false) {
+  const card = $("#hero-feature-cta");
+  if (!card || !list.length) return;
+  const safeIndex = index % list.length;
+  const p = list[safeIndex];
+  if (!animate) {
+    applyHeroFeaturedCta(card, p, safeIndex);
+    return;
+  }
+  card.classList.add("is-switching");
+  setTimeout(() => {
+    if (!card.isConnected) return;
+    applyHeroFeaturedCta(card, p, safeIndex);
+    card.classList.remove("is-switching");
+  }, 160);
+}
+
+function initHeroFeaturedCta(list) {
+  stopHeroFeaturedCta();
+  if (!list.length) return;
+  let index = 0;
+  setHeroFeaturedCta(list, index);
+  if (list.length < 2) return;
+  heroFeaturedCtaTimer = setInterval(() => {
+    index = (index + 1) % list.length;
+    setHeroFeaturedCta(list, index, true);
+  }, 3600);
+}
+
+function heroFeaturedStreamHtml(list) {
+  if (!list.length) return "";
+  const group = list.map(heroFeaturedCardHtml).join("");
+  return `
+    <div class="hero-feature-stream" aria-hidden="true">
+      <div class="hero-feature-stream__track">
+        <div class="hero-feature-stream__group">${group}</div>
+        <div class="hero-feature-stream__group">${group}</div>
+      </div>
+    </div>`;
+}
+
+function heroFeaturedBannerHtml(list) {
+  if (!list.length) return "";
+  const first = list[0];
+  const dots = list.map((_, i) => `<span class="hero-feature-banner__dot${i === 0 ? " is-active" : ""}"></span>`).join("");
+  return `
+    <a class="hero-feature-banner" id="hero-feature-cta" href="#/perfil/${first.slug}" data-feature-index="0">
+      <span class="hero-feature-banner__media">
+        <img class="hero-feature-banner__img" src="${foto(first)}" alt="${first.nome}" loading="lazy" />
+      </span>
+      <span class="hero-feature-banner__copy">
+        <span class="hero-feature-banner__label">Acompanhante em destaque</span>
+        <strong class="hero-feature-banner__name">${first.nome}</strong>
+        <small class="hero-feature-banner__meta">${heroFeaturedLocal(first)}</small>
+        <span class="hero-feature-banner__dots">${dots}</span>
+      </span>
+      <span class="hero-feature-banner__cta">Ver perfil</span>
+    </a>`;
+}
+
 function viewHome() {
   // Home: apenas Rio de Janeiro e Cuiabá (como era no começo)
   const HOME_CIDADES = ["rio-de-janeiro", "cuiaba"];
   const cidadesAtivas = HOME_CIDADES.length;
   const perfisAtivos = PERFIS.filter(p => HOME_CIDADES.includes(p.cidade)).length;
+  const featured = homeFeaturedPerfis();
   const cardsCidades = cidadesOrdenadas()
     .filter(key => HOME_CIDADES.includes(key))
     .map(cidadeCard).join("");
@@ -352,9 +460,11 @@ function viewHome() {
     <div class="hero__layout">
       <div class="hero__content">
         <div class="hero__panel">
+          ${heroFeaturedStreamHtml(featured)}
           <h1>Acompanhantes de alto padrão<br/>no Brasil</h1>
           <p>Perfis selecionados, fotos reais e atendimento exclusivo. Encontre na
              sua cidade e fale direto pelo WhatsApp, com total sigilo.</p>
+          ${heroFeaturedBannerHtml(featured)}
           <div class="hero__proofs" aria-label="Destaques da plataforma">
             <span class="hero__proof">Fotos reais</span>
             <span class="hero__proof">Sigilo total</span>
@@ -402,6 +512,7 @@ function viewHome() {
   `;
 
   initStoriesStrip();
+  initHeroFeaturedCta(featured);
   $("#hero-explore-cities")?.addEventListener("click", () => scrollToSection("sec-cidades"));
 }
 
@@ -1163,6 +1274,7 @@ function router() {
   window.scrollTo(0, 0);
   fecharNav();
   closeCityPicker();
+  stopHeroFeaturedCta();
   setTimeout(() => trackTraffic("PageView", {
     page_path: location.pathname + location.hash,
   }), 0);
