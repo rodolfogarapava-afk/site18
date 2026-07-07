@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Painel Admin • ALIANÇA</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css?v=21" />
+</head>
+<body>
+
+  <!-- ===== LOGIN ===== -->
+  <div id="login" class="login">
+    <form class="login__box" id="login-form">
+      <img class="login__logo" src="logo.png" alt="Aliança" />
+      <div class="login__brand">ALIANÇA</div>
+      <div class="login__sub">Painel Administrativo</div>
+      <input type="email" id="login-email" placeholder="E-mail" autocomplete="username" />
+      <input type="password" id="login-pass" placeholder="Senha de acesso" autocomplete="current-password" />
+      <div class="login__err" id="login-err"></div>
+      <button class="btn btn--gold btn--block" type="submit">Entrar</button>
+      <p class="login__hint">Acesso restrito ao administrador (Supabase Auth).</p>
+    </form>
+  </div>
+
+  <!-- ===== APP ADMIN ===== -->
+  <div id="admin" hidden>
+    <div class="topbar">
+      <div class="topbar__brand"><img class="topbar__ring" src="logo.png" alt="" />ALI<b>ANÇA</b></div>
+      <span class="badge" id="count-badge">0 perfis</span>
+      <div class="topbar__spacer"></div>
+      <div class="topbar__actions">
+        <a class="btn btn--ghost btn--sm" href="index.html" target="_blank">Ver site ↗</a>
+        <button class="btn btn--ghost btn--sm" id="logout">Sair</button>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <section class="admin-hero">
+        <div class="admin-hero__copy">
+          <div class="admin-hero__eyebrow">Operação</div>
+          <h1>Painel admin</h1>
+          <p>Perfis, stories e cidades prontos para publicação.</p>
+        </div>
+        <div class="admin-hero__stats">
+          <div class="stat">
+            <span class="stat__value" id="stat-perfis">0</span>
+            <span class="stat__label">Perfis</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value" id="stat-stories">0</span>
+            <span class="stat__label">Stories</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value" id="stat-cidades">0</span>
+            <span class="stat__label">Cidades</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value" id="stat-bairros">0</span>
+            <span class="stat__label">Bairros</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="perfis">Perfis</button>
+        <button class="tab" data-tab="stories">Stories</button>
+        <button class="tab" data-tab="banner">Banner destaque</button>
+        <button class="tab" data-tab="cidades">Cidades &amp; Bairros</button>
+        <button class="tab" data-tab="config">Configurações</button>
+        <button class="tab" data-tab="backup">Publicar / Backup</button>
+      </div>
+
+      <!-- LISTA DE PERFIS -->
+      <section id="tab-perfis" class="tabpane">
+        <div class="tab-head">
+          <div>
+            <span>Catálogo</span>
+            <h2>Perfis do site</h2>
+          </div>
+          <p>Veja como cada perfil aparece nos cards: foto, tags, dados, áudio e ações.</p>
+        </div>
+        <div class="toolbar">
+          <div class="search"><span class="search__icon" aria-hidden="true"></span><input id="busca" placeholder="Buscar por nome..." /></div>
+          <select id="filtro-cidade" class="btn btn--ghost"><option value="">Todas as cidades</option></select>
+          <button class="btn btn--gold" id="novo-perfil">+ Novo perfil</button>
+        </div>
+        <div id="lista-perfis" class="adm-grid"></div>
+      </section>
+
+      <!-- FORM DE PERFIL -->
+      <section id="tab-form" class="tabpane" hidden>
+        <div class="panel panel--editor">
+          <div class="form-intro">
+            <div>
+              <span>Cadastro de perfil</span>
+              <h2 id="form-titulo">Novo perfil</h2>
+            </div>
+            <p>Construa um perfil completo: dados, apresentação, voz real, galeria e destaques.</p>
+          </div>
+
+          <div class="form-progress" aria-label="Etapas do cadastro">
+            <span>Dados</span>
+            <span>Apresentação</span>
+            <span>Mídia</span>
+            <span>Publicação</span>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__head">
+              <span>01</span>
+              <div>
+                <h3>Dados principais</h3>
+                <p>Informações usadas nos cards, filtros e página do perfil.</p>
+              </div>
+            </div>
+            <div class="grid2">
+              <div class="field">
+                <label>Nome artístico *</label>
+                <input id="f-nome" placeholder="Ex.: Luna Sophie" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label>WhatsApp (com DDD) *</label>
+                <input id="f-whats" placeholder="Ex.: 5521999990001" inputmode="numeric" autocomplete="tel" />
+                <small>Só números: 55 + DDD + número.</small>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label>Cidade *</label>
+                <select id="f-cidade"></select>
+              </div>
+              <div class="field">
+                <label>Bairro *</label>
+                <select id="f-bairro"></select>
+              </div>
+            </div>
+
+            <div class="grid3">
+              <div class="field"><label>Idade</label><input id="f-idade" type="number" min="18" placeholder="24" inputmode="numeric" /></div>
+              <div class="field"><label>Altura</label><input id="f-altura" placeholder="1,72m" /></div>
+              <div class="field"><label>Manequim</label><input id="f-manequim" placeholder="38" /></div>
+            </div>
+            <div class="grid3">
+              <div class="field"><label>Medidas</label><input id="f-medidas" placeholder="90-60-90" /></div>
+              <div class="field"><label>Valor (referência)</label><input id="f-valor" placeholder="Sob consulta" /></div>
+              <div class="field"><label>Cor do placeholder (0-360)</label><input id="f-hue" type="number" min="0" max="360" placeholder="300" inputmode="numeric" /></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__head">
+              <span>02</span>
+              <div>
+                <h3>Apresentação</h3>
+                <p>Texto, voz e preferências que vendem melhor o perfil.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label>Descrição / apresentação</label>
+              <textarea id="f-descricao" placeholder="Texto elegante de apresentação..."></textarea>
+            </div>
+
+            <div class="upload-card">
+              <div class="upload-card__copy">
+                <h4>Voz da acompanhante</h4>
+                <p>Envie uma gravação real. Ela aparece no card público e na página do perfil.</p>
+              </div>
+              <div>
+                <div class="drop drop--audio" id="audio-drop">
+                  Clique ou arraste um áudio aqui<br><small>MP3 / M4A / WAV / OGG</small>
+                  <input type="file" id="audio-file" accept="audio/*" hidden />
+                </div>
+                <div class="audio-preview" id="audio-preview"></div>
+              </div>
+            </div>
+
+            <div class="grid3">
+              <div class="field"><label>Serviços (separe por vírgula)</label><input id="f-servicos" placeholder="Jantar, Eventos, Viagens" /></div>
+              <div class="field"><label>Atendimento (vírgula)</label><input id="f-atendimento" placeholder="Com local, Hotéis, Motéis" /></div>
+              <div class="field"><label>Idiomas (vírgula)</label><input id="f-idiomas" placeholder="Português, Inglês" /></div>
+            </div>
+            <div class="field"><label>Horário</label><input id="f-horario" placeholder="10h às 23h - Segunda a Sábado" /></div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__head">
+              <span>03</span>
+              <div>
+                <h3>Destaques e mídia</h3>
+                <p>Controle os selos do card e a galeria do perfil.</p>
+              </div>
+            </div>
+            <div class="checks">
+              <label class="check"><input type="checkbox" id="f-nova" /> Nova</label>
+              <label class="check"><input type="checkbox" id="f-exclusiva" /> Exclusiva</label>
+              <label class="check"><input type="checkbox" id="f-temVideo" /> Tem vídeo</label>
+              <label class="check"><input type="checkbox" id="f-possuiLocal" /> Possui local</label>
+              <label class="check"><input type="checkbox" id="f-destaque" /> Destaque na home</label>
+            </div>
+
+            <div class="upload-card upload-card--photos">
+              <div class="upload-card__copy">
+                <h4>Fotos do perfil</h4>
+                <p>A primeira foto vira capa. As imagens são otimizadas automaticamente.</p>
+              </div>
+              <div>
+                <div class="drop" id="drop">
+                  Clique ou arraste imagens aqui<br><small>JPG / PNG - várias de uma vez</small>
+                  <input type="file" id="file-input" accept="image/*" multiple hidden />
+                </div>
+                <div class="thumbs" id="thumbs"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="formbar">
+          <button class="btn btn--ghost" id="form-cancelar">Cancelar</button>
+          <button class="btn btn--danger" id="form-excluir" hidden>Excluir</button>
+          <button class="btn btn--gold" id="form-salvar">Salvar perfil</button>
+        </div>
+      </section>
+
+      <!-- LISTA DE STORIES -->
+      <section id="tab-stories" class="tabpane" hidden>
+        <div class="toolbar">
+          <div class="desc" style="flex:1">Destaques que aparecem em círculos no topo do site. Arraste a ordem pelas setas. Tocar abre o visualizador.</div>
+          <button class="btn btn--gold" id="novo-story">+ Novo story</button>
+        </div>
+        <div id="lista-stories" class="adm-grid"></div>
+      </section>
+
+      <!-- FORM DE STORY -->
+      <section id="tab-story-form" class="tabpane" hidden>
+        <div class="panel panel--editor">
+          <div class="form-intro">
+            <div>
+              <span>Cadastro de story</span>
+              <h2 id="story-form-titulo">Novo story</h2>
+            </div>
+            <p>Monte uma sequência com capa, vínculo de perfil e mídias para destaque no site.</p>
+          </div>
+
+          <div class="form-progress" aria-label="Etapas do story">
+            <span>Dados</span>
+            <span>Vínculo</span>
+            <span>Mídia</span>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__head">
+              <span>01</span>
+              <div>
+                <h3>Identificação</h3>
+                <p>Defina como o story aparece nos círculos e para onde ele direciona.</p>
+              </div>
+            </div>
+            <div class="grid2">
+              <div class="field">
+                <label>Título (aparece sob o círculo)</label>
+                <input id="s-titulo" placeholder="Ex.: Jade • Copacabana" />
+                <small>Se vincular a uma acompanhante e deixar vazio, usa o nome dela.</small>
+              </div>
+              <div class="field">
+                <label>Vincular à acompanhante (opcional)</label>
+                <select id="s-perfil"></select>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label>WhatsApp do botão (opcional)</label>
+                <input id="s-whats" placeholder="Ex.: 5521999990001" inputmode="numeric" />
+                <small>Vazio = usa o da acompanhante vinculada, ou o da central.</small>
+              </div>
+              <div class="field">
+                <label>Expira em (horas, opcional)</label>
+                <input id="s-expira" type="number" min="1" placeholder="Ex.: 24 (vazio = nunca)" inputmode="numeric" />
+                <small>Depois desse tempo, some do site automaticamente.</small>
+              </div>
+            </div>
+
+            <div class="checks">
+              <label class="check"><input type="checkbox" id="s-ativo" checked /> Ativo (visível no site)</label>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__head">
+              <span>02</span>
+              <div>
+                <h3>Mídias do story</h3>
+                <p>Capa quadrada para o círculo e sequência de fotos/vídeos para o visualizador.</p>
+              </div>
+            </div>
+
+            <div class="upload-card">
+              <div class="upload-card__copy">
+                <h4>Capa do círculo</h4>
+                <p>Opcional. Se vazio, usa a foto da acompanhante vinculada ou a primeira mídia.</p>
+              </div>
+              <div>
+                <div class="drop drop--sm" id="s-drop-capa">
+                  Clique para enviar a capa<br><small>Imagem quadrada fica melhor</small>
+                  <input type="file" id="s-file-capa" accept="image/*" hidden />
+                </div>
+                <div class="thumbs" id="s-capa-thumb"></div>
+              </div>
+            </div>
+
+            <div class="upload-card upload-card--photos">
+              <div class="upload-card__copy">
+                <h4>Sequência</h4>
+                <p>Fotos duram 5s; vídeos tocam por inteiro, na ordem cadastrada.</p>
+              </div>
+              <div>
+                <div class="drop" id="s-drop-midia">
+                  Clique ou arraste fotos/vídeos aqui<br><small>JPG / PNG / MP4 - várias de uma vez</small>
+                  <input type="file" id="s-file-midia" accept="image/*,video/*" multiple hidden />
+                </div>
+                <div class="thumbs" id="s-midias"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="formbar">
+          <button class="btn btn--ghost" id="story-cancelar">Cancelar</button>
+          <button class="btn btn--danger" id="story-excluir" hidden>Excluir</button>
+          <button class="btn btn--gold" id="story-salvar">Salvar story</button>
+        </div>
+      </section>
+
+      <!-- BANNER DESTAQUE -->
+      <section id="tab-banner" class="tabpane" hidden>
+        <div class="panel panel--editor">
+          <div class="form-intro">
+            <div>
+              <span>Vitrine da home</span>
+              <h2>Banner de 3 garotas em destaque</h2>
+            </div>
+            <p>Um banner sofisticado no topo da home com 3 acompanhantes selecionadas. Escolha um perfil existente ou personalize foto, nome e WhatsApp.</p>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__head">
+              <span>01</span>
+              <div>
+                <h3>Textos e visibilidade</h3>
+                <p>Controle geral do banner na página inicial.</p>
+              </div>
+            </div>
+            <div class="checks">
+              <label class="check"><input type="checkbox" id="bn-enabled" /> Exibir banner na home</label>
+            </div>
+            <div class="grid2">
+              <div class="field">
+                <label>Título</label>
+                <input id="bn-titulo" placeholder="Ex.: Destaques da semana" />
+              </div>
+              <div class="field">
+                <label>Subtítulo</label>
+                <input id="bn-subtitulo" placeholder="Ex.: As três mais procuradas do momento" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Texto do botão (todos os slots)</label>
+              <input id="bn-cta" placeholder="Ex.: Falar no WhatsApp" />
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__head">
+              <span>02</span>
+              <div>
+                <h3>As 3 garotas em destaque</h3>
+                <p>Para cada slot, escolha um perfil já cadastrado ou personalize. Se um campo estiver vazio, usamos os dados do perfil selecionado.</p>
+              </div>
+            </div>
+            <div id="banner-slots"></div>
+          </div>
+        </div>
+
+        <div class="formbar">
+          <button class="btn btn--ghost" id="banner-preview" type="button">Ver no site ↗</button>
+          <button class="btn btn--gold" id="salvar-banner">Salvar banner</button>
+        </div>
+      </section>
+
+      <!-- CIDADES -->
+      <section id="tab-cidades" class="tabpane" hidden>
+        <div class="panel panel--editor">
+          <div class="form-intro">
+            <div>
+              <span>Cadastro territorial</span>
+              <h2>Cidades &amp; Bairros</h2>
+            </div>
+            <p>Organize as regiões que alimentam filtros, cards, busca e páginas de cidade.</p>
+          </div>
+          <div id="cidades-lista"></div>
+          <button class="btn btn--ghost" id="add-cidade">+ Adicionar cidade</button>
+        </div>
+        <div class="formbar">
+          <button class="btn btn--gold" id="salvar-cidades">Salvar cidades</button>
+        </div>
+      </section>
+
+      <!-- CONFIG -->
+      <section id="tab-config" class="tabpane" hidden>
+        <div class="panel">
+          <h2>Configurações</h2>
+          <div class="field">
+            <label>WhatsApp da central (admin)</label>
+            <input id="cfg-admin-wa" placeholder="5565999999999" />
+            <small>Recebe os contatos da home e os cadastros de "Anuncie aqui".</small>
+          </div>
+          <h3>Pixel / Rastreamento</h3>
+          <div class="config-card">
+            <div class="config-card__copy">
+              <b>Meta Pixel</b>
+              <span>Cole o ID do Pixel para ativar rastreamento de PageView no site público.</span>
+            </div>
+            <div class="grid2">
+              <div class="field">
+                <label>ID do Meta Pixel</label>
+                <input id="cfg-meta-pixel-id" placeholder="Ex.: 123456789012345" inputmode="numeric" />
+                <small>Pode colar o ID ou o script completo; o painel tenta extrair o ID.</small>
+              </div>
+              <label class="check check--config"><input type="checkbox" id="cfg-meta-pixel-enabled" /> Ativar Pixel no site</label>
+            </div>
+          </div>
+          <h3>Segurança</h3>
+          <div class="grid2">
+            <div class="field">
+              <label>Nova senha de acesso</label>
+              <input id="cfg-pass" type="password" placeholder="Deixe em branco para não alterar" autocomplete="new-password" />
+              <small>Altera a senha do seu login (Supabase Auth). Mínimo de 6 caracteres.</small>
+            </div>
+          </div>
+          <button class="btn btn--gold" id="salvar-config">Salvar configurações</button>
+        </div>
+      </section>
+
+      <!-- BACKUP / PUBLICAR -->
+      <section id="tab-backup" class="tabpane" hidden>
+        <div class="panel">
+          <h2>Publicação automática</h2>
+          <p class="desc">Tudo o que você salva já vai <b>direto para o banco de dados (Supabase)</b> e
+            aparece para todos no site na hora — <b>não precisa</b> mais baixar ou substituir arquivos.</p>
+          <div class="storage" id="storage-info"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Backup &amp; Restauração</h2>
+          <p class="desc">Guarde uma cópia de segurança (.json) ou restaure de um arquivo. A importação e o
+            "restaurar padrão" <b>substituem os dados do site</b>.</p>
+          <div class="toolbar">
+            <button class="btn btn--ghost" id="exportar-json">⬇ Exportar backup (.json)</button>
+            <button class="btn btn--ghost" id="importar-btn">⬆ Importar backup (.json)</button>
+            <input type="file" id="importar-file" accept="application/json,.json" hidden />
+            <button class="btn btn--danger" id="reset-tudo">↺ Restaurar padrão de fábrica</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js?v=20"></script>
+  <script src="data.js?v=20"></script>
+  <script src="store.js?v=21"></script>
+  <script src="admin.js?v=21"></script>
+</body>
+</html>

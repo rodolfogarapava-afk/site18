@@ -1,13 +1,32 @@
-.DS_Store
-Thumbs.db
+# Logs
+logs
 *.log
-node_modules/
-.next/
-.yarn/install-state.gz
-vip-backup.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Segredos / variáveis de ambiente (NÃO versionar)
-.env
-.env.local
-.env.*.local
-.vercel
+node_modules
+dist
+dist-ssr
+.output
+.vinxi
+.tanstack/**
+.nitro
+*.local
+
+# Wrangler / Cloudflare
+.wrangler/
+.dev.vars
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
