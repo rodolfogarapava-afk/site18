@@ -8,6 +8,134 @@ const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const app = $("#app");
 
+/* ============================================================
+   ROTAS COM URLs REAIS (History API)
+   BASE_PATH é detectado a partir de onde o app.js foi carregado,
+   assim o site funciona tanto em /site18/ (preview) quanto em /
+   (domínio final aliancamodels.com).
+   ============================================================ */
+const BASE_PATH = "";
+
+/** Constrói URL absoluta (path-only) respeitando BASE_PATH */
+const pathTo = (path) => {
+  if (!path) return BASE_PATH || "/";
+  const clean = path.startsWith("/") ? path : "/" + path;
+  return (BASE_PATH || "") + clean + (clean === "/" ? "" : "");
+};
+
+/** Extrai a rota lógica (sem BASE_PATH) do pathname atual */
+function currentRoute() {
+  let path = location.pathname || "/";
+  if (BASE_PATH && path.startsWith(BASE_PATH)) path = path.slice(BASE_PATH.length);
+  if (path.endsWith("/index.html")) path = path.slice(0, -"/index.html".length) || "/";
+  if (!path) path = "/";
+  return path;
+}
+
+/** Navega para uma rota interna (com pushState) */
+function navigate(path, { replace = false } = {}) {
+  const url = pathTo(path);
+  if (replace) history.replaceState({}, "", url);
+  else history.pushState({}, "", url);
+  router();
+}
+
+/** Redireciona hash antigos (#/cidade/xxx) para a URL nova, uma vez */
+(function migrateLegacyHash() {
+  const h = location.hash || "";
+  if (h.startsWith("#/") || h === "#") {
+    const target = h.replace(/^#\/?/, "/") || "/";
+    history.replaceState({}, "", pathTo(target));
+  }
+})();
+
+/** Delegação de cliques em <a> internos para SPA sem reload */
+document.addEventListener("click", (ev) => {
+  const a = ev.target.closest("a[href]");
+  if (!a) return;
+  if (a.target === "_blank" || a.hasAttribute("download")) return;
+  if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) return;
+  const href = a.getAttribute("href");
+  if (!href) return;
+  // externos, mailto, tel, wa.me, âncoras puras: deixa o browser cuidar
+  if (/^(https?:|mailto:|tel:|wa\.me|#)/i.test(href) && !href.startsWith(location.origin)) return;
+  // URLs absolutas do mesmo host
+  let url;
+  try { url = new URL(href, location.href); } catch { return; }
+  if (url.origin !== location.origin) return;
+  // ignora arquivos estáticos (admin.html, .png, .xml, etc.)
+  if (/\.(html|xml|txt|png|jpg|jpeg|gif|webp|svg|pdf|mp4|mp3)$/i.test(url.pathname)) return;
+  ev.preventDefault();
+  if (url.pathname + url.search === location.pathname + location.search) return;
+  history.pushState({}, "", url.pathname + url.search);
+  router();
+});
+
+/* ============================================================
+   META TAGS DINÂMICAS POR ROTA (SEO)
+   ============================================================ */
+const SITE_ORIGIN = "https://aliancamodels.com";
+
+function ensureMeta(selector, create) {
+  let el = document.head.querySelector(selector);
+  if (!el && create) {
+    el = create();
+    document.head.appendChild(el);
+  }
+  return el;
+}
+
+function updateHead({ title, description, image, path: routePath, type = "website" }) {
+  const url = SITE_ORIGIN + (routePath || "/");
+  if (title) document.title = title;
+
+  const set = (sel, attr, val) => {
+    const el = ensureMeta(sel, () => {
+      const [tag, ...rest] = sel.replace(/[[\]"]/g, "").split(/[.#]/);
+      const m = sel.match(/\[([^=]+)="([^"]+)"\]/);
+      const n = document.createElement(tag || "meta");
+      if (m) n.setAttribute(m[1], m[2]);
+      return n;
+    });
+    if (el && val != null) el.setAttribute(attr, val);
+  };
+
+  if (description) set('meta[name="description"]', "content", description);
+  set('meta[property="og:title"]', "content", title || document.title);
+  if (description) set('meta[property="og:description"]', "content", description);
+  set('meta[property="og:url"]', "content", url);
+  set('meta[property="og:type"]', "content", type);
+  if (image) set('meta[property="og:image"]', "content", image);
+  set('meta[name="twitter:title"]', "content", title || document.title);
+  if (description) set('meta[name="twitter:description"]', "content", description);
+  if (image) set('meta[name="twitter:image"]', "content", image);
+
+  let canonical = document.head.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    document.head.appendChild(canonical);
+  }
+  canonical.href = url;
+
+  // Reseta robots para index,follow em rotas válidas (view404 sobrescreve)
+  const robots = document.head.querySelector('meta[name="robots"]');
+  if (robots) robots.setAttribute("content", "index,follow");
+}
+
+function setJsonLd(data) {
+  let el = document.getElementById("route-jsonld");
+  if (!el) {
+    el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.id = "route-jsonld";
+    document.head.appendChild(el);
+  }
+  el.textContent = data ? JSON.stringify(data) : "";
+}
+
+
+
 const bairroNome = (cidade, slug) =>
   (CIDADES[cidade]?.bairros.find(b => b.slug === slug)?.nome) || slug;
 
@@ -105,13 +233,13 @@ function cardHtml(p, opts = {}) {
   const audio = perfilAudioUrl(p);
   return `
   <article class="card">
-    <a class="card__media" href="#/perfil/${p.slug}">
+    <a class="card__media" href="${pathTo('/perfil/' + p.slug)}">
       <div class="card__tags">${tagsHtml(p)}</div>
       <img src="${foto(p)}" alt="${p.nome}" loading="lazy" />
       <div class="card__local">${bairroNome(p.cidade, p.bairro)} • ${CIDADES[p.cidade].uf}</div>
     </a>
     <div class="card__body">
-      <a href="#/perfil/${p.slug}"><h3 class="card__name">${p.nome}</h3></a>
+      <a href="${pathTo('/perfil/' + p.slug)}"><h3 class="card__name">${p.nome}</h3></a>
       ${showAudio && audio ? `
       <div class="card__audio" data-card-audio="${p.slug}" data-audio-src="${audio}">
         <button class="card__audio-btn" type="button" aria-pressed="false" aria-label="Ouvir áudio do perfil ${p.nome}">
@@ -136,7 +264,7 @@ function cardHtml(p, opts = {}) {
       </div>
       ${showCta ? `
       <div class="card__actions">
-        <a class="btn btn--ghost btn--card" href="#/perfil/${p.slug}">
+        <a class="btn btn--ghost btn--card" href="${pathTo('/perfil/' + p.slug)}">
           ${ICON_ARROW}<span>Abrir perfil</span>
         </a>
         <a class="btn btn--gold btn--card" href="${waPerfil(p)}" target="_blank" rel="noopener">
@@ -219,7 +347,7 @@ document.addEventListener("click", e => {
   toggleCardAudio(wrap.dataset.cardAudio, btn);
 });
 
-window.addEventListener("hashchange", resetCardAudio);
+window.addEventListener("popstate", resetCardAudio);
 
 let metaPixelInitialized = false;
 
@@ -267,7 +395,7 @@ function cidadeCard(key) {
   if (!c) return "";
   const n = PERFIS.filter(p => p.cidade === key).length;
   const info = n ? `${c.uf} • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
-  return `<a class="city-card${n ? "" : " city-card--soon"}" href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
+  return `<a class="city-card${n ? "" : " city-card--soon"}" href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
     <span class="city-card__kicker">Cidade</span>
     <b>${c.nome}</b>
     <span class="city-card__info">${info}</span>
@@ -303,7 +431,7 @@ function bannerDestaqueHtml() {
     if (!nome && !foto_) return "";
     const msg = `Olá ${nome || "!"}. Vi seu destaque na Aliança e gostaria de saber mais.`;
     const waHref = wa ? `https://wa.me/${wa}?text=${encodeURIComponent(msg)}` : "#";
-    const perfilHref = perfil ? `#/perfil/${perfil.slug}` : "";
+    const perfilHref = perfil ? pathTo(`/perfil/${perfil.slug}`) : "";
     const cidade = perfil ? (CIDADES[perfil.cidade]?.nome || "") : "";
     return `
       <article class="bnr__card bnr__card--pos${i + 1}">
@@ -335,17 +463,38 @@ function bannerDestaqueHtml() {
 function heroCarouselSlides() {
   const b = window.BANNER;
   if (!b || !b.enabled || !Array.isArray(b.slots)) return [];
+  const isMobile = typeof window !== "undefined"
+    && window.matchMedia && window.matchMedia("(max-width: 720px)").matches;
   return b.slots.map(s => {
     const perfil = s.perfilSlug ? perfilBySlug(s.perfilSlug) : null;
     const nome = s.nome || (perfil && perfil.nome) || "";
-    const foto_ = s.foto || (perfil ? foto(perfil, 0) : "");
+    const fotoDesktop = s.foto || (perfil ? foto(perfil, 0) : "");
+    const fotoMobile  = s.fotoMobile || fotoDesktop;
+    const foto_ = isMobile ? fotoMobile : fotoDesktop;
     const cidade = perfil ? (CIDADES[perfil.cidade]?.nome || "") : "";
-    const href = perfil ? `#/perfil/${perfil.slug}` : "";
+    const href = perfil ? pathTo(`/perfil/${perfil.slug}`) : "";
     return { nome, foto: foto_, cidade, tag: s.tag || "", href };
   }).filter(s => s.foto && s.nome);
 }
 
+
 function viewHome() {
+  updateHead({
+    title: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá",
+    description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados, total discrição. Somente maiores de 18 anos.",
+    image: SITE_ORIGIN + "/logo.png",
+    path: "/",
+    type: "website",
+  });
+  setJsonLd({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Aliança",
+    url: SITE_ORIGIN + "/",
+    inLanguage: "pt-BR",
+    description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá.",
+    audience: { "@type": "PeopleAudience", suggestedMinAge: 18 },
+  });
   // Home: apenas Rio de Janeiro e Cuiabá (como era no começo)
   const HOME_CIDADES = ["rio-de-janeiro", "cuiaba"];
   const cidadesAtivas = HOME_CIDADES.length;
@@ -463,6 +612,38 @@ function viewCidade(cidade, filtro) {
   const c = CIDADES[cidade];
   if (!c) return view404();
 
+  const cidadeTotal = PERFIS.filter(x => x.cidade === cidade).length;
+  const routePathCidade = filtro?.tipo === "bairro"
+    ? `/cidade/${cidade}/bairro/${filtro.valor}`
+    : filtro?.tipo
+      ? `/cidade/${cidade}/${filtro.tipo}`
+      : `/cidade/${cidade}`;
+  const filtroLabel = filtro?.tipo === "bairro"
+    ? bairroNome(cidade, filtro.valor)
+    : filtro?.tipo === "novidades" ? "Novidades"
+    : filtro?.tipo === "exclusivas" ? "Exclusivas"
+    : filtro?.tipo === "videos" ? "Vídeos" : "";
+  const tituloHead = filtroLabel
+    ? `${filtroLabel} em ${c.nome} — Acompanhantes • Aliança`
+    : `Acompanhantes em ${c.nome} (${c.uf}) — Aliança`;
+  updateHead({
+    title: tituloHead,
+    description: `${cidadeTotal} perfis verificados em ${c.nome} (${c.uf}). Encontre acompanhantes por bairro, novidades e exclusivas com total discrição.`,
+    image: SITE_ORIGIN + "/logo.png",
+    path: routePathCidade,
+    type: "website",
+  });
+  setJsonLd({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: tituloHead,
+    url: SITE_ORIGIN + routePathCidade,
+    inLanguage: "pt-BR",
+    about: { "@type": "City", name: c.nome, addressRegion: c.uf, addressCountry: "BR" },
+    numberOfItems: cidadeTotal,
+  });
+
+
   let list = PERFIS.filter(p => p.cidade === cidade);
   let titulo = c.nome, sub = `${list.length} acompanhantes em ${c.nome} (${c.uf})`;
   const total = list.length;
@@ -489,20 +670,20 @@ function viewCidade(cidade, filtro) {
   }
 
   const chips = c.bairros.map(b =>
-    `<a class="chip${filtro?.valor === b.slug ? " active" : ""}" href="#/cidade/${cidade}/bairro/${b.slug}">${b.nome}</a>`
+    `<a class="chip${filtro?.valor === b.slug ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/bairro/' + b.slug)}">${b.nome}</a>`
   ).join("");
   const resultados = ordena(list);
   const filterChips = [
-    `<a class="chip${!filtro ? " active" : ""}" href="#/cidade/${cidade}">Todos</a>`,
-    `<a class="chip${filtro?.tipo === "novidades" ? " active" : ""}" href="#/cidade/${cidade}/novidades">${ICON_SPARKLES}<span>Novidades</span></a>`,
-    `<a class="chip${filtro?.tipo === "exclusivas" ? " active" : ""}" href="#/cidade/${cidade}/exclusivas">${ICON_DIAMOND}<span>Exclusivas</span></a>`,
-    `<a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="#/cidade/${cidade}/videos">${ICON_PLAY}<span>Vídeos</span></a>`,
+    `<a class="chip${!filtro ? " active" : ""}" href="${pathTo('/cidade/' + cidade)}">Todos</a>`,
+    `<a class="chip${filtro?.tipo === "novidades" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/novidades')}">${ICON_SPARKLES}<span>Novidades</span></a>`,
+    `<a class="chip${filtro?.tipo === "exclusivas" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/exclusivas')}">${ICON_DIAMOND}<span>Exclusivas</span></a>`,
+    `<a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/videos')}">${ICON_PLAY}<span>Vídeos</span></a>`,
   ].join("");
 
   app.innerHTML = `
   <section class="page page--cidade">
     <div class="container">
-      <a class="back-link" href="#/">‹ Início</a>
+      <a class="back-link" href="${pathTo('/')}">‹ Início</a>
       ${storiesStripHtml({ cidade })}
       <div class="page-divider" aria-hidden="true"></div>
       <header class="cidade-hero">
@@ -555,6 +736,27 @@ function viewPerfil(slug) {
   if (!p) return view404();
   const c = CIDADES[p.cidade];
 
+  const perfilFoto = (Array.isArray(p.fotos) && p.fotos[0]) ? p.fotos[0] : (SITE_ORIGIN + "/logo.png");
+  const perfilDesc = (p.descricao || "").trim().replace(/\s+/g, " ").slice(0, 155)
+    || `${p.nome}, acompanhante em ${c?.nome || p.cidade}. Total discrição. Contato direto pelo WhatsApp.`;
+  updateHead({
+    title: `${p.nome} — Acompanhante em ${c?.nome || p.cidade} • Aliança`,
+    description: perfilDesc,
+    image: perfilFoto.startsWith("http") ? perfilFoto : SITE_ORIGIN + perfilFoto,
+    path: `/perfil/${p.slug}`,
+    type: "profile",
+  });
+  setJsonLd({
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: p.nome,
+    url: SITE_ORIGIN + `/perfil/${p.slug}`,
+    image: perfilFoto.startsWith("http") ? perfilFoto : SITE_ORIGIN + perfilFoto,
+    address: c ? { "@type": "PostalAddress", addressLocality: c.nome, addressRegion: c.uf, addressCountry: "BR" } : undefined,
+    description: perfilDesc,
+  });
+
+
   const fotos = [0, 1, 2, 3].map(i => foto(p, i));
   const galeria = `
     <button class="profile__photo profile__photo--hero lb-trigger" type="button" data-i="0" aria-label="Abrir foto principal de ${p.nome}">
@@ -589,7 +791,7 @@ function viewPerfil(slug) {
 
   app.innerHTML = `
   <section class="profile container">
-    <a class="back-link" href="#/cidade/${p.cidade}">‹ Voltar para ${c.nome}</a>
+    <a class="back-link" href="${pathTo('/cidade/' + p.cidade)}">‹ Voltar para ${c.nome}</a>
 
     <div class="profile__top">
       <div class="profile__gallery">${galeria}</div>
@@ -662,10 +864,17 @@ function viewPerfil(slug) {
 }
 
 function viewAnuncie() {
+  updateHead({
+    title: "Anuncie na Aliança — Cadastro de Acompanhantes",
+    description: "Cadastre-se para anunciar como acompanhante na Aliança. Sigilo total, análise manual, resposta direta pela central.",
+    path: "/anuncie",
+    type: "website",
+  });
+  setJsonLd(null);
   app.innerHTML = `
   <section class="page page--signup">
     <div class="container signup">
-      <a class="back-link" href="#/">‹ Início</a>
+      <a class="back-link" href="${pathTo('/')}">‹ Início</a>
       <div class="signup__hero">
         <span>Cadastro de anunciante</span>
         <h1>Anuncie com discrição</h1>
@@ -793,10 +1002,17 @@ Descrição: ${f.desc.value || "-"}`;
 }
 
 function viewInformacoes() {
+  updateHead({
+    title: "Informações & Privacidade — Aliança",
+    description: "Política de privacidade (LGPD), natureza do serviço e informações legais da Aliança. Conteúdo destinado a maiores de 18 anos.",
+    path: "/informacoes",
+    type: "website",
+  });
+  setJsonLd(null);
   app.innerHTML = `
   <section class="page">
     <div class="container">
-      <a class="back-link" href="#/">‹ Início</a>
+      <a class="back-link" href="${pathTo('/')}">‹ Início</a>
       <h1>Informações &amp; Política</h1>
 
       <h2>Conteúdo adulto (+18)</h2>
@@ -824,10 +1040,25 @@ function viewInformacoes() {
 }
 
 function view404() {
+  updateHead({
+    title: "Página não encontrada — Aliança",
+    description: "A página que você procura não existe ou foi removida.",
+    path: currentRoute(),
+    type: "website",
+  });
+  // sinaliza aos crawlers que essa rota não deve ser indexada
+  let robots = document.head.querySelector('meta[name="robots"]');
+  if (!robots) {
+    robots = document.createElement("meta");
+    robots.setAttribute("name", "robots");
+    document.head.appendChild(robots);
+  }
+  robots.setAttribute("content", "noindex,follow");
+  setJsonLd(null);
   app.innerHTML = `<section class="page"><div class="container" style="text-align:center">
     <h1>Página não encontrada</h1>
     <p>O perfil ou a página que você procura não existe.</p>
-    <a class="btn btn--gold btn--lg" href="#/">Voltar ao início</a>
+    <a class="btn btn--gold btn--lg" href="${pathTo('/')}">Voltar ao início</a>
   </div></section>`;
 }
 
@@ -988,7 +1219,7 @@ cityPickerGrid?.addEventListener("click", e => {
   const btn = e.target.closest("[data-city-key]");
   if (!btn) return;
   closeCityPicker();
-  location.hash = `#/cidade/${btn.dataset.cityKey}`;
+  navigate(`/cidade/${btn.dataset.cityKey}`);
 });
 cityPickerClose?.addEventListener("click", closeCityPicker);
 cityPicker?.addEventListener("click", e => {
@@ -1121,7 +1352,7 @@ function renderSvCta(s) {
   const p = storyPerfil(s);
   const wa = (s.whatsapp || (p && p.whatsapp) || ADMIN_WHATSAPP || "").replace(/\D/g, "");
   let html = "";
-  if (p) html += `<a class="sv__btn sv__btn--ghost" href="#/perfil/${p.slug}" data-sv-link>Ver perfil</a>`;
+  if (p) html += `<a class="sv__btn sv__btn--ghost" href="${pathTo('/perfil/' + p.slug)}" data-sv-link>Ver perfil</a>`;
   if (wa) {
     const msg = p
       ? `Olá ${p.nome}! Vi seu story na Aliança.`
@@ -1212,13 +1443,13 @@ function fecharNav() {
 }
 
 function router() {
-  const hash = location.hash.replace(/^#\/?/, "");
-  const parts = hash.split("/").filter(Boolean);
+  const route = currentRoute();
+  const parts = route.split("/").filter(Boolean);
   window.scrollTo(0, 0);
   fecharNav();
   closeCityPicker();
   setTimeout(() => trackMetaPixel("PageView", {
-    page_path: location.pathname + location.hash,
+    page_path: location.pathname,
   }), 0);
 
   if (parts.length === 0)                 return viewHome();
@@ -1235,7 +1466,7 @@ function router() {
   }
   return view404();
 }
-window.addEventListener("hashchange", router);
+window.addEventListener("popstate", router);
 
 /* ============================================================
    INICIALIZAÇÃO (age gate, header, menus)
@@ -1255,7 +1486,7 @@ function montarMenus() {
   const links = cidadesOrdenadas().map(key => {
     const c = CIDADES[key];
     const total = PERFIS.filter(p => p.cidade === key).length;
-    return `<a href="#/cidade/${key}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
+    return `<a href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
       <span class="nav__city-main"><b>${c.nome}</b>${total ? `<em>${total} ${total === 1 ? "perfil" : "perfis"}</em>` : ""}</span>
       <small>${c.uf}</small>
     </a>`;
@@ -1312,7 +1543,6 @@ function initAgeGate() {
   $("#age-yes").addEventListener("click", () => {
     try { localStorage.setItem("vip_maior18_v2", "1"); } catch (e) {}
     gate.hidden = true;
-    if (!location.hash || location.hash === "#") location.hash = "#/";
   });
 
   $("#age-no").addEventListener("click", () => { location.href = "https://www.google.com"; });
@@ -1359,8 +1589,17 @@ function initHeader() {
 
 }
 
+/** Reescreve hrefs estáticos "#/..." no HTML fixo (header, footer, age gate) */
+function rewriteStaticHashLinks() {
+  document.querySelectorAll('a[href^="#/"]').forEach(a => {
+    const raw = a.getAttribute("href").replace(/^#\/?/, "/") || "/";
+    a.setAttribute("href", pathTo(raw));
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   $("#year").textContent = new Date().getFullYear();
+  rewriteStaticHashLinks();
   initAgeGate();
   initHeader();
 
@@ -1375,5 +1614,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initMetaPixel();
   montarMenus();
+  rewriteStaticHashLinks(); // repete após montar o menu de cidades
   router();
 });

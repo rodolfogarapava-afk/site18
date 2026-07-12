@@ -2,17 +2,52 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="rating" content="adult" />
-  <meta name="description" content="Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados, total discrição. Conteúdo destinado a maiores de 18 anos." />
-  <title>Aliança • Acompanhantes de Luxo — Rio de Janeiro & Cuiabá</title>
+  <meta name="robots" content="index,follow" />
+  <meta name="description" content="Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. Somente maiores de 18 anos." />
+  <title>Aliança • Acompanhantes de Luxo — Rio & Cuiabá</title>
+  <link rel="canonical" href="https://aliancamodels.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Aliança" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:title" content="Aliança • Acompanhantes de Luxo — Rio & Cuiabá" />
+  <meta property="og:description" content="Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. Somente maiores de 18 anos." />
+  <meta property="og:url" content="https://aliancamodels.com/" />
+  <meta property="og:image" content="https://aliancamodels.com/logo.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Aliança • Acompanhantes de Luxo — Rio & Cuiabá" />
+  <meta name="twitter:description" content="Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. +18." />
+  <meta name="twitter:image" content="https://aliancamodels.com/logo.png" />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Aliança",
+    "url": "https://aliancamodels.com/",
+    "inLanguage": "pt-BR",
+    "description": "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá.",
+    "audience": { "@type": "PeopleAudience", "suggestedMinAge": 18 },
+    "areaServed": [
+      { "@type": "City", "name": "Rio de Janeiro" },
+      { "@type": "City", "name": "Cuiabá" }
+    ]
+  }
+  </script>
 
   <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="styles.css?v=69" />
+  <link rel="stylesheet" href="styles.css?v=76" />
 </head>
 <body>
 
@@ -25,23 +60,12 @@
       <div class="age-gate__divider"><span></span>⚠<span></span></div>
       <p class="age-gate__subtitle">Conteúdo Exclusivo · Maiores de 18 anos</p>
 
-      <p class="age-gate__intro">Um ambiente íntimo, sensual e discreto — desenhado para
-        quem aprecia <em>momentos memoráveis</em> em companhia refinada.</p>
-
-      <p class="age-gate__confirm">Ao entrar, você declara que:</p>
-      <ul class="age-gate__list">
-        <li>tem 18 anos completos ou mais;</li>
-        <li>aceita os <a href="#/informacoes">Termos de Uso e a Política de Privacidade</a> da plataforma;</li>
-        <li>concorda com o tratamento dos seus dados conforme a LGPD (Lei nº 13.709/18);</li>
-        <li>entende que este é um site de <strong>publicidade</strong> e não intermedeia negociações.</li>
-      </ul>
-
       <div class="age-gate__actions">
         <button class="age-btn age-btn--enter" id="age-yes">
-          <b>TENHO 18 ANOS OU MAIS</b><span>Entrar no site</span>
+          <b>SOU MAIOR DE 18</b>
         </button>
         <button class="age-btn age-btn--exit" id="age-no">
-          <b>SOU MENOR DE 18 ANOS</b><span>Sair</span>
+          <b>SOU MENOR</b>
         </button>
       </div>
 
@@ -92,11 +116,6 @@
       <div class="footer__brand">
         <div class="logo logo--sm"><img class="logo__ring" src="logo.png" alt="" /><span class="logo__name">ALIANÇA</span></div>
         <p class="footer__tag">Acompanhantes de luxo • Rio de Janeiro &amp; Cuiabá</p>
-        <div class="footer__chips" aria-label="Contexto da plataforma">
-          <span>18+</span>
-          <span>Discrição</span>
-          <span>Contato direto</span>
-        </div>
       </div>
       <div class="footer__cols">
         <div class="footer__col">
@@ -172,7 +191,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20"></script>
   <script src="data.js?v=20"></script>
-  <script src="store.js?v=21"></script>
-  <script src="app.js?v=41"></script>
+  <script src="store.js?v=22"></script>
+  <script src="app.js?v=43"></script>
 </body>
 </html>

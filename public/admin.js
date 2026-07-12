@@ -871,9 +871,9 @@ function defaultBannerAdmin() {
     subtitulo: "Três acompanhantes selecionadas para você",
     ctaLabel: "Falar no WhatsApp",
     slots: [
-      { perfilSlug: "", nome: "", foto: "", whatsapp: "", tag: "TOP 1" },
-      { perfilSlug: "", nome: "", foto: "", whatsapp: "", tag: "EXCLUSIVA" },
-      { perfilSlug: "", nome: "", foto: "", whatsapp: "", tag: "NOVA" },
+      { perfilSlug: "", nome: "", foto: "", fotoMobile: "", whatsapp: "", tag: "TOP 1" },
+      { perfilSlug: "", nome: "", foto: "", fotoMobile: "", whatsapp: "", tag: "EXCLUSIVA" },
+      { perfilSlug: "", nome: "", foto: "", fotoMobile: "", whatsapp: "", tag: "NOVA" },
     ],
   };
 }
@@ -895,6 +895,7 @@ function ensureBannerData() {
       perfilSlug: (s && s.perfilSlug) || "",
       nome:       (s && s.nome) || "",
       foto:       (s && s.foto) || "",
+      fotoMobile: (s && s.fotoMobile) || "",
       whatsapp:   ((s && s.whatsapp) || "").replace(/\D/g, ""),
       tag:        (s && s.tag) || base.slots[i].tag,
     })),
@@ -956,12 +957,12 @@ function renderBannerSlots() {
       </div>
       <div class="upload-card upload-card--photos">
         <div class="upload-card__copy">
-          <h4>Foto do banner</h4>
-          <p>Vertical (3:4) fica melhor. Se vazio, usamos a foto do perfil vinculado.</p>
+          <h4>Foto do banner — Desktop</h4>
+          <p>Horizontal / paisagem funciona melhor no desktop. Se vazio, usamos a foto do perfil vinculado.</p>
         </div>
         <div>
           <div class="drop drop--sm" data-bn-drop="${i}">
-            Clique para enviar uma foto<br><small>JPG / PNG</small>
+            Clique para enviar a foto de <b>desktop</b><br><small>JPG / PNG</small>
             <input type="file" accept="image/*" data-bn-file="${i}" hidden />
           </div>
           <div class="thumbs">
@@ -970,7 +971,28 @@ function renderBannerSlots() {
                 <div class="thumb__bar">
                   <button class="thumb__btn thumb__btn--del" data-bn-clear="${i}" type="button" title="Remover">✕</button>
                 </div>
-                <img src="${s.foto}" alt="foto slot ${i + 1}" />
+                <img src="${s.foto}" alt="foto desktop slot ${i + 1}" />
+              </div>` : ""}
+          </div>
+        </div>
+      </div>
+      <div class="upload-card upload-card--photos">
+        <div class="upload-card__copy">
+          <h4>Foto do banner — Celular</h4>
+          <p>Vertical (3:4 ou 4:5) fica melhor no celular. Se vazio, usamos a foto de desktop.</p>
+        </div>
+        <div>
+          <div class="drop drop--sm" data-bn-drop-m="${i}">
+            Clique para enviar a foto de <b>celular</b><br><small>JPG / PNG</small>
+            <input type="file" accept="image/*" data-bn-file-m="${i}" hidden />
+          </div>
+          <div class="thumbs">
+            ${s.fotoMobile ? `
+              <div class="thumb">
+                <div class="thumb__bar">
+                  <button class="thumb__btn thumb__btn--del" data-bn-clear-m="${i}" type="button" title="Remover">✕</button>
+                </div>
+                <img src="${s.fotoMobile}" alt="foto celular slot ${i + 1}" />
               </div>` : ""}
           </div>
         </div>
@@ -1015,6 +1037,34 @@ function renderBannerSlots() {
     b.addEventListener("click", () => {
       const i = +b.dataset.bnClear;
       BANNER_EDIT.slots[i].foto = "";
+      renderBannerSlots();
+    });
+  });
+  // upload mobile
+  $$("[data-bn-drop-m]", box).forEach(drop => {
+    const i = +drop.dataset.bnDropM;
+    const input = $(`[data-bn-file-m="${i}"]`, box);
+    drop.addEventListener("click", () => input.click());
+    input.addEventListener("change", async () => {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      try {
+        toast("Enviando foto de celular...");
+        const blob = await fileToBlob(f);
+        const url = await VIPStore.uploadFoto(blob, "jpg");
+        BANNER_EDIT.slots[i].fotoMobile = url;
+        renderBannerSlots();
+        toast("Foto de celular enviada.");
+      } catch (e) {
+        console.error(e);
+        toast("Falha ao enviar foto: " + (e.message || e), true);
+      }
+    });
+  });
+  $$("[data-bn-clear-m]", box).forEach(b => {
+    b.addEventListener("click", () => {
+      const i = +b.dataset.bnClearM;
+      BANNER_EDIT.slots[i].fotoMobile = "";
       renderBannerSlots();
     });
   });

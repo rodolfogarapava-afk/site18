@@ -230,6 +230,7 @@
         perfilSlug: (s && s.perfilSlug) || "",
         nome:       (s && s.nome) || "",
         foto:       (s && s.foto) || "",
+        fotoMobile: (s && s.fotoMobile) || "",
         whatsapp:   ((s && s.whatsapp) || "").replace(/\D/g, ""),
         tag:        (s && s.tag) || "",
       })),

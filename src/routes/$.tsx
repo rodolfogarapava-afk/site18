@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import shellHtml from "../../public/app.html?raw";
 
-export const Route = createFileRoute("/")({
+/**
+ * Splat global: qualquer URL que não seja arquivo estático ou rota
+ * declarada devolve o shell SPA. Permite deep-links (/cidade/xxx) via
+ * History API.
+ */
+export const Route = createFileRoute("/$")({
   server: {
     handlers: {
       GET: async () =>
