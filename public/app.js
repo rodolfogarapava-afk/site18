@@ -1117,15 +1117,7 @@ function storiesStripHtml(opts = {}) {
   } = opts;
   const list = window.STORIES || [];
   const filtered = cidade ? list.filter(s => storyCidadeSlug(s) === cidade) : list;
-  const homeFeature = {
-    titulo: "Noite Privé",
-    capa: "instagram_post.webp?v=2",
-    midias: [{ tipo: "image", url: "instagram_post.webp?v=2", dur: 6 }],
-    whatsapp: ADMIN_WHATSAPP || "",
-  };
-  const curated = (!cidade && extraClass.includes("stories--home"))
-    ? [...filtered.slice(0, 2), homeFeature, ...filtered.slice(2)]
-    : filtered;
+  const curated = filtered;
   const shown = Number.isFinite(limit) ? curated.slice(0, limit) : curated;
   if (!shown.length) return "";
   const items = shown.map((s, i) => `
