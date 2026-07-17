@@ -112,6 +112,20 @@
     );
   }
 
+  async function supportsPerfilAudioColumn() {
+    if (perfilAudioColumnAvailable !== null) return perfilAudioColumnAvailable;
+    if (!sb) throw new Error("Supabase indisponível.");
+
+    const { error } = await sb.from("perfis").select("audio_url").limit(1);
+    if (error && isMissingPerfilAudioColumn(error)) {
+      perfilAudioColumnAvailable = false;
+      return false;
+    }
+    if (error) throw error;
+    perfilAudioColumnAvailable = true;
+    return true;
+  }
+
   /* ----- Stories (destaques) ----- */
   function rowToStory(r) {
     return {
@@ -358,6 +372,10 @@
     async loadAll() { return fetchAll(); },
 
     /* ----- Perfis ----- */
+    async supportsPerfilAudio() {
+      requireSb();
+      return supportsPerfilAudioColumn();
+    },
     async savePerfil(perfil, ordem) {
       requireSb();
       let includeAudio = perfilAudioColumnAvailable !== false;
@@ -508,6 +526,10 @@
     async importAll(d) {
       requireSb();
       if (!d || !d.cidades || !Array.isArray(d.perfis)) throw new Error("Formato de backup inválido.");
+      const backupHasAudio = d.perfis.some(p => p.audioUrl || p.audio || p.audio_url);
+      if (backupHasAudio && !(await supportsPerfilAudioColumn())) {
+        throw new Error("O backup contém áudios, mas o banco ainda não aceita esse campo. Atualize o banco e recarregue a página antes de restaurar.");
+      }
       await this.saveConfig({
         adminWhatsapp: d.adminWhatsapp,
         metaPixelId: d.pixel?.metaPixelId || "",

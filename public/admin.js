@@ -405,7 +405,7 @@ $("#form-salvar").addEventListener("click", async () => {
       return;
     }
     if (saved.audioSkipped) {
-      toast("Perfil salvo. O áudio ficará disponível após a atualização do banco.", true);
+      toast("Perfil salvo sem o áudio. Atualize o banco e envie o áudio novamente.", true);
     } else {
       toast("Perfil salvo com sucesso!");
     }
@@ -509,6 +509,14 @@ function renderPerfilAudio() {
 
 async function uploadPerfilAudio(file) {
   if (!file || !file.type.startsWith("audio/")) return toast("Envie um arquivo de áudio válido.", true);
+  try {
+    if (!(await VIPStore.supportsPerfilAudio())) {
+      return toast("O áudio é opcional e ainda não está habilitado no banco. Salve o perfil sem ele.", true);
+    }
+  } catch (e) {
+    console.error(e);
+    return toast("Não foi possível verificar o suporte a áudio. Tente novamente.", true);
+  }
   profileUploadsInProgress++;
   toast("Enviando áudio...");
   try {
