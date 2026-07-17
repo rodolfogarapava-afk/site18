@@ -195,6 +195,7 @@ function renderLista() {
     const c = DATA.cidades[p.cidade];
     const cidadeLabel = c ? `${c.nome} • ${c.uf}` : (p.cidade || "Cidade");
     const bairroLabel = adminBairroNome(p.cidade, p.bairro);
+    const audio = perfilAudioUrl(p);
     return `
     <div class="adm-card">
       <div class="adm-card__img">
@@ -215,14 +216,14 @@ function renderLista() {
           </div>
           <span class="adm-card__status">No site</span>
         </div>
-        <div class="adm-audio ${perfilAudioUrl(p) ? "" : "adm-audio--empty"}" aria-label="${perfilAudioUrl(p) ? "Áudio real enviado" : "Perfil sem áudio enviado"}">
-          <span class="adm-audio__play" aria-hidden="true">${perfilAudioUrl(p) ? "▶" : "—"}</span>
+        ${audio ? `<div class="adm-audio" aria-label="Áudio real enviado">
+          <span class="adm-audio__play" aria-hidden="true">▶</span>
           <span class="adm-audio__copy">
-            <b>${perfilAudioUrl(p) ? "Voz da acompanhante" : "Sem áudio"}</b>
-            <small>${perfilAudioUrl(p) ? "arquivo real enviado" : "envie no editor do perfil"}</small>
+            <b>Voz da acompanhante</b>
+            <small>arquivo real enviado</small>
           </span>
           <span class="adm-audio__bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-        </div>
+        </div>` : ""}
         <p class="adm-card__desc">${adminResumo(p)}</p>
         <div class="adm-card__stats">
           ${p.altura ? `<span><b>${p.altura}</b> altura</span>` : ""}
