@@ -21,6 +21,9 @@
 
   /* ---------- Client Supabase ---------- */
   let sb = null;
+  // O banco antigo pode ainda não ter a migration de áudio. O valor é
+  // detectado na leitura e também corrigido de forma defensiva no upsert.
+  let perfilAudioColumnAvailable = null;
   try {
     if (typeof supabase !== "undefined" && window.SB_URL && window.SB_ANON) {
       sb = supabase.createClient(window.SB_URL, window.SB_ANON);
@@ -65,7 +68,7 @@
 
   /* Converte um perfil (JS) numa linha para upsert no banco.
      `ordem` é opcional (usado ao reordenar a lista). */
-  function perfilToRow(p, ordem) {
+  function perfilToRow(p, ordem, includeAudio = perfilAudioColumnAvailable !== false) {
     const row = {
       slug:         p.slug,
       nome:         p.nome,
@@ -89,11 +92,24 @@
       idiomas:      p.idiomas     || [],
       horario:      p.horario || "",
       fotos:        p.fotos       || [],
-      audio_url:    p.audioUrl || null,
     };
+    if (includeAudio) row.audio_url = p.audioUrl || null;
     if (p.id) row.id = p.id;
     if (typeof ordem === "number") row.ordem = ordem;
     return row;
+  }
+
+  function isMissingPerfilAudioColumn(error) {
+    if (!error) return false;
+    const text = [error.message, error.details, error.hint]
+      .filter(Boolean).join(" ").toLowerCase();
+    return text.includes("audio_url") && (
+      error.code === "PGRST204" ||
+      error.code === "42703" ||
+      text.includes("does not exist") ||
+      text.includes("could not find") ||
+      text.includes("schema cache")
+    );
   }
 
   /* ----- Stories (destaques) ----- */
@@ -185,6 +201,10 @@
 
     if (cidRes.error) throw cidRes.error;
     if (perRes.error) throw perRes.error;
+
+    if (perfilAudioColumnAvailable === null && perRes.data?.length) {
+      perfilAudioColumnAvailable = Object.prototype.hasOwnProperty.call(perRes.data[0], "audio_url");
+    }
 
     const stories = (stoRes && !stoRes.error && Array.isArray(stoRes.data))
       ? stoRes.data.map(rowToStory) : [];
@@ -340,12 +360,28 @@
     /* ----- Perfis ----- */
     async savePerfil(perfil, ordem) {
       requireSb();
-      const { data, error } = await sb.from("perfis")
-        .upsert(perfilToRow(perfil, ordem), { onConflict: "slug" })
+      let includeAudio = perfilAudioColumnAvailable !== false;
+      let result = await sb.from("perfis")
+        .upsert(perfilToRow(perfil, ordem, includeAudio), { onConflict: "slug" })
         .select()
         .single();
-      if (error) throw error;
-      return rowToPerfil(data);
+
+      let audioSkipped = false;
+      if (result.error && includeAudio && isMissingPerfilAudioColumn(result.error)) {
+        perfilAudioColumnAvailable = false;
+        includeAudio = false;
+        audioSkipped = !!perfil.audioUrl;
+        result = await sb.from("perfis")
+          .upsert(perfilToRow(perfil, ordem, false), { onConflict: "slug" })
+          .select()
+          .single();
+      }
+
+      if (result.error) throw result.error;
+      if (includeAudio) perfilAudioColumnAvailable = true;
+      const saved = rowToPerfil(result.data);
+      saved.audioSkipped = audioSkipped;
+      return saved;
     },
     async deletePerfil(perfil) {
       requireSb();
@@ -480,10 +516,18 @@
       await this.saveCidades(d.cidades);
 
       // perfis: upsert de todos e remoção dos que não vieram no backup
-      const rows = d.perfis.map((p, i) => perfilToRow(p, i));
+      let includeAudio = perfilAudioColumnAvailable !== false;
+      let rows = d.perfis.map((p, i) => perfilToRow(p, i, includeAudio));
       if (rows.length) {
-        const { error } = await sb.from("perfis").upsert(rows, { onConflict: "slug" });
-        if (error) throw error;
+        let result = await sb.from("perfis").upsert(rows, { onConflict: "slug" });
+        if (result.error && includeAudio && isMissingPerfilAudioColumn(result.error)) {
+          perfilAudioColumnAvailable = false;
+          includeAudio = false;
+          rows = d.perfis.map((p, i) => perfilToRow(p, i, false));
+          result = await sb.from("perfis").upsert(rows, { onConflict: "slug" });
+        }
+        if (result.error) throw result.error;
+        if (includeAudio) perfilAudioColumnAvailable = true;
       }
       const slugs = rows.map(r => r.slug);
       const { data: existentes, error: selErr } = await sb.from("perfis").select("slug");

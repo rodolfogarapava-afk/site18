@@ -13,6 +13,7 @@ let DATA = { adminWhatsapp: "", pixel: { metaPixelId: "", metaPixelEnabled: fals
 let fotos = [];                  // fotos (URLs) do perfil em edição
 let audioUrl = "";               // áudio real da acompanhante (URL pública)
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
+let profileUploadsInProgress = 0; // impede salvar enquanto uma mídia ainda sobe
 
 /* Estado do story em edição */
 let storyMidias = [];            // [{url, tipo, dur}]
@@ -27,9 +28,10 @@ function slugify(s) {
     .replace(/^-|-$/g, "");
 }
 function uniqueSlug(base, ignoreIndex) {
-  let slug = base || "perfil", i = 2;
+  const root = base || "perfil";
+  let slug = root, i = 2;
   const exists = s => DATA.perfis.some((p, idx) => p.slug === s && idx !== ignoreIndex);
-  while (exists(slug)) slug = `${base}-${i++}`;
+  while (exists(slug)) slug = `${root}-${i++}`;
   return slug;
 }
 const splitList = v => (v || "").split(",").map(s => s.trim()).filter(Boolean);
@@ -48,7 +50,8 @@ function setFieldInvalid(selector, invalid = true) {
 }
 
 function clearCadastroErrors() {
-  ["#f-nome", "#f-whats"].forEach(selector => setFieldInvalid(selector, false));
+  ["#f-nome", "#f-whats", "#f-cidade", "#f-idade", "#f-hue"]
+    .forEach(selector => setFieldInvalid(selector, false));
 }
 
 function extractMetaPixelId(value) {
@@ -266,7 +269,7 @@ function preencherSelectCidades(selectEl, selecionada) {
 }
 function preencherSelectBairros(cidadeKey, selecionado) {
   const c = DATA.cidades[cidadeKey];
-  $("#f-bairro").innerHTML = (c ? c.bairros : []).map(b =>
+  $("#f-bairro").innerHTML = `<option value="">Não informado</option>` + (c ? c.bairros : []).map(b =>
     `<option value="${b.slug}" ${b.slug === selecionado ? "selected" : ""}>${b.nome}</option>`
   ).join("");
 }
@@ -309,8 +312,11 @@ function abrirForm(idx) {
   window.scrollTo(0, 0);
 }
 
-$("#f-cidade").addEventListener("change", () => preencherSelectBairros($("#f-cidade").value));
-["#f-nome", "#f-whats"].forEach(selector => {
+$("#f-cidade").addEventListener("change", () => {
+  preencherSelectBairros($("#f-cidade").value);
+  setFieldInvalid("#f-cidade", false);
+});
+["#f-nome", "#f-whats", "#f-idade", "#f-hue"].forEach(selector => {
   const input = $(selector);
   if (input) input.addEventListener("input", () => setFieldInvalid(selector, false));
 });
@@ -321,6 +327,10 @@ $("#form-excluir").addEventListener("click", async () => {
 });
 
 $("#form-salvar").addEventListener("click", async () => {
+  if (profileUploadsInProgress > 0) {
+    return toast("Aguarde o envio das mídias terminar antes de salvar.", true);
+  }
+
   clearCadastroErrors();
   const nome = $("#f-nome").value.trim();
   if (!nome) {
@@ -334,21 +344,41 @@ $("#form-salvar").addEventListener("click", async () => {
     $("#f-whats").focus();
     return toast("Informe o WhatsApp (só números).", true);
   }
+  const cidade = $("#f-cidade").value;
+  if (!cidade || !DATA.cidades[cidade]) {
+    setFieldInvalid("#f-cidade", true);
+    $("#f-cidade").focus();
+    return toast("Selecione uma cidade válida.", true);
+  }
+  const idadeRaw = $("#f-idade").value.trim();
+  const idade = idadeRaw ? Number(idadeRaw) : 0;
+  if (idadeRaw && (!Number.isInteger(idade) || idade < 18)) {
+    setFieldInvalid("#f-idade", true);
+    $("#f-idade").focus();
+    return toast("A idade é opcional, mas deve ser 18 ou mais quando informada.", true);
+  }
+  const hueRaw = $("#f-hue").value.trim();
+  const hue = hueRaw ? Number(hueRaw) : 300;
+  if (hueRaw && (!Number.isInteger(hue) || hue < 0 || hue > 360)) {
+    setFieldInvalid("#f-hue", true);
+    $("#f-hue").focus();
+    return toast("A cor é opcional, mas deve ficar entre 0 e 360.", true);
+  }
 
   const editando = editIndex >= 0;
   const perfil = {
     id:   editando ? DATA.perfis[editIndex].id : undefined,
     slug: editando ? DATA.perfis[editIndex].slug : uniqueSlug(slugify(nome), editIndex),
     nome,
-    cidade: $("#f-cidade").value,
+    cidade,
     bairro: $("#f-bairro").value,
     whatsapp: whats,
-    idade: +$("#f-idade").value || 0,
+    idade,
     altura: $("#f-altura").value.trim(),
     manequim: $("#f-manequim").value.trim(),
     medidas: $("#f-medidas").value.trim(),
     valorHora: $("#f-valor").value.trim() || "Sob consulta",
-    hue: +$("#f-hue").value || 300,
+    hue,
     descricao: $("#f-descricao").value.trim(),
     servicos: splitList($("#f-servicos").value),
     atendimento: splitList($("#f-atendimento").value),
@@ -366,9 +396,19 @@ $("#form-salvar").addEventListener("click", async () => {
   const btn = $("#form-salvar");
   btn.disabled = true;
   try {
-    await VIPStore.savePerfil(perfil);
-    await reload();
-    toast("Perfil salvo com sucesso!");
+    const saved = await VIPStore.savePerfil(perfil);
+    try {
+      await reload();
+    } catch (reloadError) {
+      console.error(reloadError);
+      toast("Perfil salvo, mas a lista não pôde ser atualizada. Recarregue a página.", true);
+      return;
+    }
+    if (saved.audioSkipped) {
+      toast("Perfil salvo. O áudio ficará disponível após a atualização do banco.", true);
+    } else {
+      toast("Perfil salvo com sucesso!");
+    }
     showTab("perfis");
   } catch (e) {
     toast("Erro ao salvar: " + (e.message || e), true);
@@ -405,21 +445,26 @@ function fileToBlob(file, maxW = 1000, quality = 0.82) {
 async function addFiles(fileList) {
   const files = [...fileList].filter(f => f.type.startsWith("image/"));
   if (!files.length) return;
+  profileUploadsInProgress++;
   toast("Enviando imagens...");
   let ok = 0;
-  for (const f of files) {
-    try {
-      const blob = await fileToBlob(f);
-      const url = await VIPStore.uploadFoto(blob, "jpg");
-      fotos.push(url);
-      ok++;
-      renderThumbs();
-    } catch (e) {
-      console.error(e);
-      toast("Falha ao enviar uma imagem.", true);
+  try {
+    for (const f of files) {
+      try {
+        const blob = await fileToBlob(f);
+        const url = await VIPStore.uploadFoto(blob, "jpg");
+        fotos.push(url);
+        ok++;
+        renderThumbs();
+      } catch (e) {
+        console.error(e);
+        toast("Falha ao enviar uma imagem.", true);
+      }
     }
+    if (ok) toast(ok + " imagem(ns) enviada(s).");
+  } finally {
+    profileUploadsInProgress--;
   }
-  if (ok) toast(ok + " imagem(ns) enviada(s).");
 }
 
 function renderThumbs() {
@@ -464,6 +509,7 @@ function renderPerfilAudio() {
 
 async function uploadPerfilAudio(file) {
   if (!file || !file.type.startsWith("audio/")) return toast("Envie um arquivo de áudio válido.", true);
+  profileUploadsInProgress++;
   toast("Enviando áudio...");
   try {
     const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
@@ -473,6 +519,8 @@ async function uploadPerfilAudio(file) {
   } catch (e) {
     console.error(e);
     toast("Falha ao enviar o áudio: " + (e.message || e), true);
+  } finally {
+    profileUploadsInProgress--;
   }
 }
 

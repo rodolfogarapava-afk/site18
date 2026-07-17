@@ -137,7 +137,10 @@ function setJsonLd(data) {
 
 
 const bairroNome = (cidade, slug) =>
-  (CIDADES[cidade]?.bairros.find(b => b.slug === slug)?.nome) || slug;
+  (CIDADES[cidade]?.bairros?.find(b => b.slug === slug)?.nome) || slug || "";
+
+const localCurtoPerfil = p =>
+  [bairroNome(p.cidade, p.bairro), CIDADES[p.cidade]?.uf].filter(Boolean).join(" • ");
 
 const perfilBySlug = slug => PERFIS.find(p => p.slug === slug);
 
@@ -236,7 +239,7 @@ function cardHtml(p, opts = {}) {
     <a class="card__media" href="${pathTo('/perfil/' + p.slug)}">
       <div class="card__tags">${tagsHtml(p)}</div>
       <img src="${foto(p)}" alt="${p.nome}" loading="lazy" />
-      <div class="card__local">${bairroNome(p.cidade, p.bairro)} • ${CIDADES[p.cidade].uf}</div>
+      <div class="card__local">${localCurtoPerfil(p)}</div>
     </a>
     <div class="card__body">
       <a href="${pathTo('/perfil/' + p.slug)}"><h3 class="card__name">${p.nome}</h3></a>
@@ -798,7 +801,7 @@ function viewPerfil(slug) {
 
       <div class="profile__info">
         <h1>${p.nome}</h1>
-        <div class="profile__loc">${bairroNome(p.cidade, p.bairro)} • ${c.nome} ${c.uf}</div>
+        <div class="profile__loc">${[bairroNome(p.cidade, p.bairro), `${c.nome} ${c.uf}`].filter(Boolean).join(" • ")}</div>
         <div class="profile__badges">${tagsHtml(p) || ""}${p.possuiLocal ? `<span class="tag tag--excl">Possui Local</span>` : ""}</div>
 
         <div class="profile__actions profile__actions--top">
@@ -1269,7 +1272,7 @@ function renderStory() {
   svAuthorName.textContent = storyTitulo(s);
   const p = storyPerfil(s);
   svAuthorSub.textContent = p && CIDADES[p.cidade]
-    ? `${bairroNome(p.cidade, p.bairro)} • ${CIDADES[p.cidade].uf}` : "";
+    ? localCurtoPerfil(p) : "";
 
   // Barras de progresso (uma por slide)
   svProgress.innerHTML = media.map((_, i) =>
