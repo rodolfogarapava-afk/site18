@@ -48,6 +48,9 @@
       altura:      r.altura,
       manequim:    r.manequim,
       medidas:     r.medidas,
+      corOlhos:    r.cor_olhos || "",
+      corPele:      r.cor_pele || "",
+      corCabelo:   r.cor_cabelo || "",
       valorHora:   r.valor_hora,
       possuiLocal: !!r.possui_local,
       nova:        !!r.nova,
@@ -79,6 +82,9 @@
       altura:       p.altura || null,
       manequim:     p.manequim || null,
       medidas:      p.medidas || null,
+      cor_olhos:    p.corOlhos || null,
+      cor_pele:     p.corPele || null,
+      cor_cabelo:   p.corCabelo || null,
       valor_hora:   p.valorHora || "Sob consulta",
       possui_local: !!p.possuiLocal,
       nova:         !!p.nova,
@@ -225,6 +231,7 @@
 
     return {
       adminWhatsapp: (cfgRes.data && cfgRes.data.admin_whatsapp) || "",
+      modelSupportWhatsapp: (cfgRes.data && cfgRes.data.model_support_whatsapp) || "5511996425680",
       pixel: {
         metaPixelId: (cfgRes.data && cfgRes.data.meta_pixel_id) || "",
         metaPixelEnabled: !!(cfgRes.data && cfgRes.data.meta_pixel_enabled),
@@ -288,6 +295,7 @@
     try {
       const d = await withTimeout(fetchAll(), 7000);
       window.ADMIN_WHATSAPP = d.adminWhatsapp || (typeof SEED !== "undefined" ? SEED.adminWhatsapp : "");
+      window.MODEL_SUPPORT_WHATSAPP = d.modelSupportWhatsapp || "5511996425680";
       window.META_PIXEL_ID = d.pixel?.metaPixelId || "";
       window.META_PIXEL_ENABLED = !!d.pixel?.metaPixelEnabled;
       window.CIDADES        = d.cidades;
@@ -300,6 +308,7 @@
       console.warn("Usando dados de fallback (SEED). Motivo:", e && e.message);
       const s = (typeof SEED !== "undefined") ? clone(SEED) : { adminWhatsapp: "", cidades: {}, perfis: [] };
       window.ADMIN_WHATSAPP = s.adminWhatsapp;
+      window.MODEL_SUPPORT_WHATSAPP = s.modelSupportWhatsapp || "5511996425680";
       window.META_PIXEL_ID = s.pixel?.metaPixelId || "";
       window.META_PIXEL_ENABLED = !!s.pixel?.metaPixelEnabled;
       window.CIDADES        = s.cidades;
@@ -322,6 +331,8 @@
     window.PERFIS = (typeof SEED !== "undefined") ? clone(SEED.perfis) : [];
   if (typeof window.ADMIN_WHATSAPP === "undefined")
     window.ADMIN_WHATSAPP = (typeof SEED !== "undefined") ? SEED.adminWhatsapp : "";
+  if (typeof window.MODEL_SUPPORT_WHATSAPP === "undefined")
+    window.MODEL_SUPPORT_WHATSAPP = (typeof SEED !== "undefined" && SEED.modelSupportWhatsapp) ? SEED.modelSupportWhatsapp : "5511996425680";
   if (typeof window.META_PIXEL_ID === "undefined")
     window.META_PIXEL_ID = (typeof SEED !== "undefined" && SEED.pixel) ? SEED.pixel.metaPixelId || "" : "";
   if (typeof window.META_PIXEL_ENABLED === "undefined")
@@ -370,6 +381,16 @@
 
     /* ----- Leitura completa (para o admin) ----- */
     async loadAll() { return fetchAll(); },
+
+    async listAuditLogs(limit = 100) {
+      requireSb();
+      const { data, error } = await sb.from("audit_logs")
+        .select("id,created_at,actor_email,action,entity,entity_id,summary")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data || [];
+    },
 
     /* ----- Perfis ----- */
     async supportsPerfilAudio() {
@@ -468,6 +489,7 @@
       const row = {
         id: 1,
         admin_whatsapp: cfg.adminWhatsapp || "",
+        model_support_whatsapp: cfg.modelSupportWhatsapp || "5511996425680",
         meta_pixel_id: cfg.metaPixelId || "",
         meta_pixel_enabled: !!cfg.metaPixelEnabled,
       };
@@ -532,6 +554,7 @@
       }
       await this.saveConfig({
         adminWhatsapp: d.adminWhatsapp,
+        modelSupportWhatsapp: d.modelSupportWhatsapp || "5511996425680",
         metaPixelId: d.pixel?.metaPixelId || "",
         metaPixelEnabled: !!d.pixel?.metaPixelEnabled,
       });

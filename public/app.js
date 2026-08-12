@@ -483,7 +483,7 @@ function heroCarouselSlides() {
 
 function viewHome() {
   updateHead({
-    title: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá",
+    title: "Aliança Models • Acompanhantes de Luxo — Rio & Cuiabá",
     description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados, total discrição. Somente maiores de 18 anos.",
     image: SITE_ORIGIN + "/logo.png",
     path: "/",
@@ -834,6 +834,9 @@ function viewPerfil(slug) {
           <div><span>Altura</span><b>${p.altura}</b></div>
           <div><span>Manequim</span><b>${p.manequim}</b></div>
           <div><span>Medidas</span><b>${p.medidas}</b></div>
+          ${p.corOlhos ? `<div><span>Olhos</span><b>${p.corOlhos}</b></div>` : ""}
+          ${p.corPele ? `<div><span>Pele</span><b>${p.corPele}</b></div>` : ""}
+          ${p.corCabelo ? `<div><span>Cabelo</span><b>${p.corCabelo}</b></div>` : ""}
           <div><span>Idiomas</span><b>${(p.idiomas || ["Português"]).join(", ")}</b></div>
           <div><span>Horário</span><b>${p.horario}</b></div>
           <div><span>Local p/ atendimento</span><b>${p.possuiLocal ? "Sim" : "Não"}</b></div>
@@ -1037,9 +1040,269 @@ function viewInformacoes() {
          Os contatos são tratados com sigilo.</p>
 
       <h2>Contato</h2>
-      <p><a class="section__link" href="${waAdmin()}" target="_blank" rel="noopener">Falar com a central pelo WhatsApp</a></p>
+      <p><a class="section__link" href="${waAdmin()}" target="_blank" rel="noopener">Suporte a visitantes e clientes</a></p>
+      <p><a class="section__link" href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">Suporte às modelos: (11) 99642-5680</a></p>
     </div>
   </section>`;
+}
+
+function renderLegalPage({ title, eyebrow, description, path, content }) {
+  updateHead({ title: `${title} — Aliança Models`, description, path, type: "article" });
+  setJsonLd(null);
+  app.innerHTML = `
+  <section class="page legal-page">
+    <div class="container legal-page__container">
+      <a class="back-link" href="${pathTo('/')}">‹ Início</a>
+      <article class="legal-card">
+        <header class="legal-card__header">
+          <span class="legal-card__eyebrow">${eyebrow}</span>
+          <h1>${title}</h1>
+          <p class="legal-card__updated">Última atualização: 12 de agosto de 2026</p>
+        </header>
+        <div class="legal-card__content">${content}</div>
+      </article>
+    </div>
+  </section>`;
+}
+
+function viewTermosDeUso() {
+  renderLegalPage({
+    title: "Termos de Uso",
+    eyebrow: "Aliança Models",
+    description: "Termos de Uso da plataforma Aliança Models.",
+    path: "/termos-de-uso",
+    content: `
+      <p>Bem-vindo à <strong>Aliança Models</strong>. Estes Termos de Uso regulam o acesso, a navegação e a utilização da plataforma Aliança Models por visitantes, usuários, clientes e modelos cadastradas.</p>
+      <p>Ao acessar ou utilizar a plataforma, você declara que leu, compreendeu e concorda integralmente com estes Termos de Uso e com a <a href="${pathTo('/politicas-privacidade')}">Política de Privacidade da Aliança Models</a>.</p>
+
+      <h2>1. Identificação da Plataforma</h2>
+      <p>A plataforma <strong>Aliança Models</strong>, inscrita no CNPJ nº 68.528.057/0001-00, tem sede no CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</p>
+      <p>Para dúvidas relacionadas ao funcionamento da plataforma, entre em contato pelo e-mail: <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a>.</p>
+
+      <h2>2. Objeto da Plataforma</h2>
+      <p>A Aliança Models é uma plataforma digital destinada à divulgação de perfis de modelos acompanhantes e à facilitação do contato entre usuários interessados e modelos cadastradas.</p>
+      <p>A plataforma <strong>não presta serviços de acompanhamento, não intermedeia negociações privadas, não define valores cobrados pelas modelos e não participa de encontros, pagamentos ou contratos celebrados entre usuários e modelos.</strong></p>
+
+      <h2>3. Requisitos para Utilização</h2>
+      <p>O acesso e a utilização da plataforma são permitidos apenas para pessoas com <strong>18 (dezoito) anos ou mais</strong>.</p>
+      <p>Ao utilizar o site, o usuário declara possuir capacidade civil para celebrar contratos e utilizar os serviços disponibilizados.</p>
+      <p>É expressamente proibido:</p>
+      <ul><li>Cadastrar menores de idade;</li><li>Utilizar dados falsos ou de terceiros;</li><li>Utilizar imagens sem autorização;</li><li>Criar perfis fraudulentos;</li><li>Praticar qualquer atividade ilícita por meio da plataforma.</li></ul>
+
+      <h2>4. Cadastro e Verificação de Modelos</h2>
+      <p>Para criar um perfil na Aliança Models, a modelo deverá fornecer informações verdadeiras, completas e atualizadas.</p>
+      <p>A plataforma poderá solicitar, a qualquer momento, documentos e procedimentos de verificação, incluindo:</p>
+      <ul><li>Documento oficial com foto;</li><li>Fotografia segurando o documento;</li><li>Vídeo de verificação;</li><li>Confirmação de maioridade;</li><li>Outros elementos necessários para validação da identidade.</li></ul>
+      <p>A Aliança Models poderá recusar, suspender ou remover cadastros que apresentem inconsistências, indícios de fraude ou violação destes Termos.</p>
+
+      <h2>5. Categorias de Perfis</h2>
+      <h3>Perfil Exclusivo</h3>
+      <p>Destinado a modelos que optarem por manter divulgação exclusivamente na Aliança Models, observadas as condições específicas eventualmente contratadas.</p>
+      <h3>Perfil Aliança</h3>
+      <p>Destinado a modelos que poderão anunciar também em outras plataformas, conforme as regras vigentes da Aliança Models.</p>
+      <p>Os benefícios, critérios, posicionamento e condições comerciais de cada categoria poderão ser alterados mediante atualização destes Termos ou dos planos disponibilizados.</p>
+
+      <h2>6. Responsabilidades das Modelos</h2>
+      <p>Ao utilizar a plataforma, a modelo declara e garante que:</p>
+      <ul><li>Possui 18 anos ou mais;</li><li>É a legítima titular das imagens, vídeos e conteúdos publicados;</li><li>Possui autorização para utilização de todo o material enviado;</li><li>Manterá suas informações atualizadas;</li><li>Responderá integralmente pelas informações divulgadas em seu perfil;</li><li>Cumprirá a legislação brasileira aplicável.</li></ul>
+      <p>É proibido utilizar imagens de terceiros, documentos falsificados, informações enganosas ou qualquer conteúdo que viole direitos de terceiros.</p>
+
+      <h2>7. Responsabilidades dos Usuários</h2>
+      <p>Os usuários comprometem-se a utilizar a plataforma de forma ética, respeitosa e em conformidade com a legislação vigente.</p>
+      <p>É proibido:</p>
+      <ul><li>Praticar assédio, ameaças ou perseguição;</li><li>Divulgar dados pessoais de terceiros;</li><li>Tentar obter acesso indevido a contas ou sistemas;</li><li>Utilizar a plataforma para atividades ilegais;</li><li>Copiar, reproduzir ou distribuir conteúdo das modelos sem autorização.</li></ul>
+
+      <h2>8. Conteúdo Publicado</h2>
+      <p>A modelo permanece titular dos direitos sobre as fotografias, vídeos, descrições e demais conteúdos enviados.</p>
+      <p>Ao publicar conteúdo na plataforma, a modelo concede à Aliança Models autorização para hospedar, reproduzir, exibir, organizar e disponibilizar esse conteúdo dentro das funcionalidades do site enquanto o perfil permanecer ativo.</p>
+      <p>A plataforma poderá remover conteúdos que violem estes Termos, direitos de terceiros, normas legais ou políticas internas.</p>
+
+      <h2>9. Planos, Anúncios e Pagamentos</h2>
+      <p>A Aliança Models poderá oferecer serviços pagos, incluindo:</p>
+      <ul><li>Anúncios;</li><li>Planos de assinatura;</li><li>Destaque de perfis;</li><li>Funcionalidades premium;</li><li>Serviços adicionais.</li></ul>
+      <p>Os valores, prazos e condições de cada plano serão informados previamente na plataforma. Os pagamentos poderão ser processados por empresas terceirizadas especializadas em meios de pagamento.</p>
+
+      <h2>10. Cancelamento e Remoção de Perfis</h2>
+      <p>A modelo poderá solicitar a exclusão de seu perfil a qualquer momento, observadas eventuais obrigações contratuais vigentes.</p>
+      <p>A Aliança Models poderá remover ou suspender perfis, temporária ou permanentemente, quando houver:</p>
+      <ul><li>Violação destes Termos;</li><li>Uso de documentos falsos;</li><li>Utilização de imagens sem autorização;</li><li>Tentativa de cadastro de menor de idade;</li><li>Fraude;</li><li>Atividade ilícita;</li><li>Comportamento que coloque em risco a plataforma, usuários ou modelos.</li></ul>
+
+      <h2>11. Limitação de Responsabilidade</h2>
+      <p>A Aliança Models atua exclusivamente como plataforma de divulgação e contato.</p>
+      <p>A plataforma <strong>não garante</strong>:</p>
+      <ul><li>A realização de encontros;</li><li>A disponibilidade das modelos;</li><li>A veracidade de todas as informações fornecidas por usuários;</li><li>A conclusão de negociações;</li><li>A qualidade de serviços eventualmente prestados entre as partes.</li></ul>
+      <p>A Aliança Models não se responsabiliza por pagamentos realizados entre usuários e modelos, encontros presenciais, perdas financeiras, danos decorrentes de negociações privadas ou comportamentos praticados fora da plataforma.</p>
+
+      <h2>12. Segurança da Plataforma</h2>
+      <p>A Aliança Models adota medidas de segurança compatíveis com padrões de mercado para proteção da plataforma e dos dados dos usuários. Entretanto, nenhum sistema é absolutamente imune a falhas, ataques ou interrupções, motivo pelo qual a plataforma não garante disponibilidade contínua e ininterrupta.</p>
+
+      <h2>13. Propriedade Intelectual</h2>
+      <p>A marca <strong>Aliança Models</strong>, logotipo, identidade visual, layout, software, textos institucionais, banco de dados e demais elementos da plataforma são protegidos pela legislação de propriedade intelectual.</p>
+      <p>É proibida a reprodução, distribuição, modificação ou utilização sem autorização prévia e expressa da empresa.</p>
+
+      <h2>14. Privacidade e Proteção de Dados</h2>
+      <p>O tratamento de dados pessoais é realizado conforme a <a href="${pathTo('/politicas-privacidade')}">Política de Privacidade da Aliança Models</a>, que integra estes Termos de Uso para todos os fins.</p>
+
+      <h2>15. Alterações dos Termos</h2>
+      <p>A Aliança Models poderá alterar estes Termos de Uso a qualquer momento. A versão atualizada será disponibilizada no site com indicação da data de revisão.</p>
+      <p>A continuidade da utilização da plataforma após alterações constitui aceitação dos novos Termos.</p>
+
+      <h2>16. Legislação Aplicável e Foro</h2>
+      <p>Estes Termos de Uso são regidos pelas leis da República Federativa do Brasil.</p>
+      <p>Fica eleito o foro da comarca da cidade onde estiver sediada a empresa responsável pela Aliança Models para resolver quaisquer conflitos ou controvérsias relacionados à utilização da plataforma, observadas as disposições legais aplicáveis.</p>
+      <p>Essa cláusula não limita os direitos garantidos por lei aos usuários e consumidores, quando aplicável, mas estabelece que eventuais disputas relacionadas ao funcionamento da plataforma serão tratadas de acordo com a legislação brasileira e, preferencialmente, na comarca da sede da empresa.</p>
+
+      <h2>17. Contato</h2>
+      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">(11) 99642-5680</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
+    `,
+  });
+}
+
+function viewPoliticaPrivacidade() {
+  renderLegalPage({
+    title: "Política de Privacidade",
+    eyebrow: "Aliança Models · LGPD",
+    description: "Política de Privacidade e proteção de dados da Aliança Models.",
+    path: "/politicas-privacidade",
+    content: `
+      <p>A Aliança Models respeita a sua privacidade e está comprometida com a proteção dos dados pessoais de todos os usuários, visitantes, clientes e modelos cadastradas na plataforma. Esta Política de Privacidade explica como coletamos, utilizamos, armazenamos, compartilhamos e protegemos suas informações, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).</p>
+      <p>Ao acessar ou utilizar o site da Aliança Models, você declara estar ciente desta Política de Privacidade.</p>
+
+      <h2>1. Quem somos</h2>
+      <p>A plataforma <strong>Aliança Models</strong>, inscrita no CNPJ sob o nº 68.528.057/0001-00, com sede no CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ, é responsável pelo tratamento dos dados pessoais coletados por meio deste site.</p>
+      <p>Em caso de dúvidas, solicitações ou exercício de direitos relacionados aos seus dados pessoais, entre em contato pelo e-mail: <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a>.</p>
+
+      <h2>2. Dados que coletamos</h2>
+      <p>Podemos coletar diferentes categorias de dados pessoais, conforme a forma de utilização da plataforma.</p>
+      <h3>2.1 Dados fornecidos pelo usuário</h3>
+      <p>Quando você cria uma conta, entra em contato conosco ou utiliza nossos serviços, podemos coletar:</p>
+      <ul><li>Nome ou nome de exibição;</li><li>Endereço de e-mail;</li><li>Número de telefone;</li><li>Cidade e estado;</li><li>Informações de perfil;</li><li>Fotografias, vídeos e demais conteúdos enviados para publicação;</li><li>Documentos de identificação enviados para verificação de cadastro, quando aplicável;</li><li>Dados necessários para pagamentos, assinaturas ou contratação de serviços.</li></ul>
+      <h3>2.2 Dados coletados automaticamente</h3>
+      <p>Durante a navegação, poderemos coletar automaticamente:</p>
+      <ul><li>Endereço IP;</li><li>Data e hora de acesso;</li><li>Tipo de navegador e dispositivo;</li><li>Sistema operacional;</li><li>Páginas acessadas;</li><li>Tempo de permanência;</li><li>Cookies e tecnologias semelhantes.</li></ul>
+
+      <h2>3. Finalidade do tratamento dos dados</h2>
+      <p>Os dados pessoais são utilizados para:</p>
+      <ul><li>Criar e gerenciar contas de usuários e modelos;</li><li>Realizar verificação de identidade e segurança da plataforma;</li><li>Disponibilizar perfis e funcionalidades do site;</li><li>Processar pagamentos e assinaturas;</li><li>Entrar em contato com usuários e modelos;</li><li>Prestar suporte ao cliente;</li><li>Prevenir fraudes, abusos e atividades ilícitas;</li><li>Cumprir obrigações legais e regulatórias;</li><li>Melhorar a experiência de navegação e os serviços oferecidos.</li></ul>
+
+      <h2>4. Base legal para o tratamento</h2>
+      <p>Tratamos dados pessoais com fundamento nas hipóteses previstas na LGPD, incluindo:</p>
+      <ul><li>Execução de contrato;</li><li>Cumprimento de obrigação legal;</li><li>Exercício regular de direitos;</li><li>Legítimo interesse da plataforma;</li><li>Consentimento do titular, quando necessário.</li></ul>
+
+      <h2>5. Compartilhamento de dados</h2>
+      <p>A Aliança Models poderá compartilhar dados pessoais apenas quando necessário, incluindo:</p>
+      <ul><li>Prestadores de serviços de hospedagem, tecnologia, armazenamento e segurança;</li><li>Processadores de pagamento;</li><li>Ferramentas de análise de desempenho e marketing;</li><li>Autoridades públicas, quando exigido por lei ou ordem judicial.</li></ul>
+      <p><strong>Não comercializamos dados pessoais dos usuários ou modelos.</strong></p>
+
+      <h2>6. Conteúdo publicado por modelos</h2>
+      <p>As modelos cadastradas autorizam a publicação das informações, fotografias, vídeos e demais conteúdos disponibilizados em seus perfis, conforme os termos da plataforma.</p>
+      <p>Os documentos enviados para verificação de identidade são utilizados exclusivamente para validação do cadastro, prevenção de fraudes e cumprimento de obrigações legais, não sendo exibidos publicamente.</p>
+
+      <h2>7. Cookies e tecnologias semelhantes</h2>
+      <p>Utilizamos cookies para:</p>
+      <ul><li>Manter a sessão do usuário ativa;</li><li>Lembrar preferências de navegação;</li><li>Medir audiência e desempenho da plataforma;</li><li>Melhorar funcionalidades e segurança.</li></ul>
+      <p>O usuário pode configurar seu navegador para bloquear ou remover cookies, embora algumas funcionalidades do site possam ser afetadas.</p>
+
+      <h2>8. Armazenamento e segurança</h2>
+      <p>Adotamos medidas técnicas e administrativas adequadas para proteger os dados pessoais contra acesso não autorizado, destruição, perda, alteração, divulgação ou qualquer forma de tratamento inadequado.</p>
+      <p>Os dados são armazenados em servidores e serviços de terceiros que seguem padrões de segurança compatíveis com o mercado.</p>
+
+      <h2>9. Tempo de retenção</h2>
+      <p>Os dados pessoais serão mantidos pelo período necessário para cumprir as finalidades descritas nesta Política, respeitando obrigações legais, regulatórias, fiscais, de segurança e de prevenção a fraudes.</p>
+      <p>Quando não houver mais necessidade de tratamento, os dados poderão ser eliminados ou anonimizados, salvo quando a legislação permitir ou exigir sua conservação.</p>
+
+      <h2>10. Direitos do titular</h2>
+      <p>Nos termos da LGPD, o titular dos dados pode solicitar, a qualquer momento:</p>
+      <ul><li>Confirmação da existência de tratamento;</li><li>Acesso aos dados pessoais;</li><li>Correção de dados incompletos, inexatos ou desatualizados;</li><li>Anonimização, bloqueio ou eliminação de dados desnecessários;</li><li>Portabilidade dos dados, quando aplicável;</li><li>Eliminação de dados tratados mediante consentimento;</li><li>Informações sobre compartilhamento de dados;</li><li>Revogação do consentimento, quando aplicável.</li></ul>
+      <p>As solicitações podem ser enviadas para <a href="mailto:aliancadmin@admin.com">aliancadmin@admin.com</a>.</p>
+
+      <h2>11. Privacidade de menores de idade</h2>
+      <p>A plataforma é destinada exclusivamente a pessoas <strong>maiores de 18 anos</strong>.</p>
+      <p>Não coletamos intencionalmente dados pessoais de menores de idade. Caso seja identificado cadastro de pessoa menor de 18 anos, o conteúdo e os dados poderão ser removidos imediatamente.</p>
+
+      <h2>12. Links para sites de terceiros</h2>
+      <p>O site pode conter links para plataformas ou serviços de terceiros. A presente Política não se aplica a esses sites, sendo recomendável que o usuário consulte as respectivas políticas de privacidade.</p>
+
+      <h2>13. Alterações desta Política</h2>
+      <p>Esta Política de Privacidade poderá ser atualizada a qualquer momento para refletir alterações legais, regulatórias ou operacionais da plataforma.</p>
+      <p>A versão mais recente estará sempre disponível nesta página, com indicação da data de atualização.</p>
+
+      <h2>14. Contato</h2>
+      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">(11) 99642-5680</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
+    `,
+  });
+}
+
+function viewPoliticaCookies() {
+  renderLegalPage({
+    title: "Política de Cookies",
+    eyebrow: "Aliança Models · Transparência",
+    description: "Saiba como a Aliança Models utiliza cookies e tecnologias semelhantes.",
+    path: "/politica-de-cookies",
+    content: `
+      <p>Esta Política explica como a <strong>Aliança Models</strong> utiliza cookies e tecnologias semelhantes para operar, proteger e melhorar a plataforma.</p>
+      <h2>1. O que são cookies</h2>
+      <p>Cookies são pequenos arquivos armazenados no navegador durante a visita a um site. Eles permitem reconhecer preferências, manter sessões e compreender como a plataforma é utilizada.</p>
+      <h2>2. Cookies utilizados</h2>
+      <ul><li><strong>Essenciais:</strong> necessários para segurança, navegação e confirmação de maioridade;</li><li><strong>Funcionais:</strong> guardam preferências, como cidade selecionada;</li><li><strong>Desempenho:</strong> ajudam a identificar erros e melhorar velocidade e usabilidade;</li><li><strong>Marketing:</strong> medem campanhas quando ferramentas de rastreamento estiverem habilitadas.</li></ul>
+      <h2>3. Tecnologias de terceiros</h2>
+      <p>Serviços de hospedagem, análise e publicidade podem utilizar suas próprias tecnologias, conforme suas políticas. A Aliança Models configura essas ferramentas apenas quando necessárias às finalidades informadas.</p>
+      <h2>4. Como gerenciar cookies</h2>
+      <p>Você pode bloquear ou apagar cookies nas configurações do navegador. A desativação de cookies essenciais pode impedir o funcionamento correto de partes do site.</p>
+      <h2>5. Atualizações e contato</h2>
+      <p>Esta Política poderá ser atualizada para refletir mudanças técnicas ou legais. Dúvidas podem ser enviadas para <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a>.</p>
+    `,
+  });
+}
+
+function viewDiretrizesComunidade() {
+  renderLegalPage({
+    title: "Diretrizes da Comunidade",
+    eyebrow: "Aliança Models · Regras da Plataforma",
+    description: "Regras de segurança, respeito e integridade da comunidade Aliança Models.",
+    path: "/diretrizes-da-comunidade",
+    content: `
+      <p>Estas diretrizes existem para preservar uma experiência segura, respeitosa e confiável para modelos, visitantes e equipe da <strong>Aliança Models</strong>.</p>
+      <h2>1. Somente maiores de 18 anos</h2>
+      <p>É proibido cadastrar, representar, divulgar ou tentar acessar conteúdo em nome de pessoa menor de 18 anos. Suspeitas serão removidas e poderão ser comunicadas às autoridades.</p>
+      <h2>2. Identidade e consentimento</h2>
+      <ul><li>Use somente informações verdadeiras e atualizadas;</li><li>Publique apenas imagens e conteúdos próprios ou devidamente autorizados;</li><li>Não se passe por terceiros;</li><li>Respeite pedidos de retirada e direitos de imagem.</li></ul>
+      <h2>3. Respeito e segurança</h2>
+      <p>Não toleramos assédio, ameaça, perseguição, discriminação, chantagem, exposição de dados pessoais, violência ou tentativa de coerção. Interações devem ocorrer entre adultos capazes e mediante consentimento.</p>
+      <h2>4. Conteúdo e condutas proibidas</h2>
+      <ul><li>Exploração, tráfico de pessoas ou qualquer atividade ilegal;</li><li>Fraude, documentos falsos e informações enganosas;</li><li>Spam, golpes, malware ou tentativa de acesso indevido;</li><li>Conteúdo que viole direitos autorais, privacidade ou dignidade de terceiros.</li></ul>
+      <h2>5. Aplicação das regras</h2>
+      <p>Conteúdos e perfis podem ser revisados, limitados, suspensos ou removidos. Violações graves podem resultar em bloqueio permanente e comunicação às autoridades competentes.</p>
+      <h2>6. Denúncias</h2>
+      <p>Encontrou uma violação? Utilize a página de <a href="${pathTo('/denuncias-e-suporte')}">Denúncias e Suporte</a> e envie o link do perfil, uma descrição objetiva e, quando possível, evidências.</p>
+    `,
+  });
+}
+
+function viewDenunciasSuporte() {
+  const clienteWa = waAdmin("Olá! Preciso de suporte sobre o site Aliança Models.");
+  const modeloWa = `https://wa.me/${MODEL_SUPPORT_WHATSAPP}?text=${encodeURIComponent("Olá! Sou modelo e preciso de suporte na Aliança Models.")}`;
+  renderLegalPage({
+    title: "Denúncias e Suporte",
+    eyebrow: "Aliança Models · Atendimento",
+    description: "Canais oficiais para denúncias, suporte a visitantes e suporte às modelos.",
+    path: "/denuncias-e-suporte",
+    content: `
+      <p>Use os canais abaixo para solicitar ajuda ou comunicar conteúdo e condutas que violem os Termos de Uso e as Diretrizes da Comunidade.</p>
+      <div class="legal-contact-grid">
+        <article class="legal-contact"><span>Visitantes e clientes</span><h3>Suporte ao usuário</h3><p>Dúvidas de navegação, funcionamento do site ou atendimento geral.</p><a class="btn btn--gold" href="${clienteWa}" target="_blank" rel="noopener">Falar com o suporte</a></article>
+        <article class="legal-contact"><span>Canal exclusivo</span><h3>Suporte às modelos</h3><p>Cadastro, perfil, mídia, publicação e suporte para anunciantes.</p><strong>(11) 99642-5680</strong><a class="btn btn--gold" href="${modeloWa}" target="_blank" rel="noopener">Suporte às modelos</a></article>
+      </div>
+      <h2>Como fazer uma denúncia</h2>
+      <p>Informe o link do perfil ou conteúdo, descreva o ocorrido objetivamente e envie evidências disponíveis. Não compartilhe documentos ou dados sensíveis desnecessários.</p>
+      <h2>O que pode ser denunciado</h2>
+      <ul><li>Suspeita de menor de idade;</li><li>Uso indevido de imagens ou identidade;</li><li>Perfil falso, fraude ou golpe;</li><li>Assédio, ameaça, exploração ou atividade ilegal;</li><li>Exposição de dados pessoais;</li><li>Violação dos Termos ou das Diretrizes da Comunidade.</li></ul>
+      <h2>Análise e providências</h2>
+      <p>As denúncias são analisadas com discrição. A plataforma poderá solicitar informações adicionais, restringir preventivamente um conteúdo, remover perfis e colaborar com autoridades quando necessário. O envio de denúncia não garante resposta pública ou divulgação das medidas internas adotadas.</p>
+      <h2>Contato por e-mail</h2>
+      <p>Você também pode escrever para <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a>.</p>
+    `,
+  });
 }
 
 function view404() {
@@ -1450,6 +1713,11 @@ function router() {
   if (parts.length === 0)                 return viewHome();
   if (parts[0] === "anuncie")             return viewAnuncie();
   if (parts[0] === "informacoes")         return viewInformacoes();
+  if (parts[0] === "termos-de-uso")       return viewTermosDeUso();
+  if (parts[0] === "politicas-privacidade") return viewPoliticaPrivacidade();
+  if (parts[0] === "politica-de-cookies") return viewPoliticaCookies();
+  if (parts[0] === "diretrizes-da-comunidade") return viewDiretrizesComunidade();
+  if (parts[0] === "denuncias-e-suporte") return viewDenunciasSuporte();
   if (parts[0] === "perfil" && parts[1])  return viewPerfil(parts[1]);
 
   if (parts[0] === "cidade" && parts[1]) {

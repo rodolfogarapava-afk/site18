@@ -77,21 +77,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá" },
+      { title: "Aliança Models • Acompanhantes de Luxo — Rio & Cuiabá" },
       {
         name: "description",
         content:
           "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. Somente maiores de 18 anos.",
       },
-      { name: "author", content: "Aliança" },
-      { property: "og:title", content: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá" },
+      { name: "author", content: "Aliança Models" },
+      { property: "og:title", content: "Aliança Models • Acompanhantes de Luxo — Rio & Cuiabá" },
       {
         property: "og:description",
         content:
           "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. Somente maiores de 18 anos.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Aliança" },
+      { property: "og:site_name", content: "Aliança Models" },
       { property: "og:locale", content: "pt_BR" },
       { property: "og:url", content: "https://aliancamodels.com/" },
       { property: "og:image", content: "https://aliancamodels.com/social-preview.png?v=1" },
@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Aliança — Acompanhantes de Luxo no Rio de Janeiro e em Cuiabá",
       },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá" },
+      { name: "twitter:title", content: "Aliança Models • Acompanhantes de Luxo — Rio & Cuiabá" },
       {
         name: "twitter:description",
         content:
@@ -121,7 +121,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/logo.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/logo.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,

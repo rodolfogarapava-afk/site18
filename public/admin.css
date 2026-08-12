@@ -218,6 +218,15 @@ input,select,textarea{font-family:var(--sans)}
   background:var(--panel-2);border:1px solid var(--line);border-left:4px solid var(--green);
   padding:.8rem 1.2rem;border-radius:10px;box-shadow:0 12px 40px #000a;opacity:0;transition:.3s;z-index:100;font-size:.9rem}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ---------- Logs de auditoria ---------- */
+.audit-list{display:grid;gap:.7rem;margin-top:1rem}
+.audit-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.8rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:#0d0c10}
+.audit-item__dot{width:9px;height:9px;margin-top:.38rem;border-radius:50%;background:var(--gold);box-shadow:0 0 0 5px rgba(230,200,115,.08)}
+.audit-item__title{font-size:.9rem;color:#efe8df}
+.audit-item__title strong{color:var(--gold-2)}
+.audit-item p{margin:.25rem 0;color:var(--muted);font-size:.8rem;line-height:1.45}
+.audit-item small{color:#746c76;font-size:.7rem}
 .toast.err{border-left-color:var(--red)}
 
 /* ---------- Barra de armazenamento ---------- */

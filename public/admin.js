@@ -9,7 +9,7 @@ const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 /* Estado de trabalho (cópia editável carregada do banco) */
-let DATA = { adminWhatsapp: "", pixel: { metaPixelId: "", metaPixelEnabled: false }, banner: null, cidades: {}, perfis: [], stories: [] };
+let DATA = { adminWhatsapp: "", modelSupportWhatsapp: "5511996425680", pixel: { metaPixelId: "", metaPixelEnabled: false }, banner: null, cidades: {}, perfis: [], stories: [] };
 let fotos = [];                  // fotos (URLs) do perfil em edição
 let audioUrl = "";               // áudio real da acompanhante (URL pública)
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
@@ -172,6 +172,7 @@ function showTab(name) {
   if (name === "banner") fillBanner();
   if (name === "cidades") renderCidades();
   if (name === "config") fillConfig();
+  if (name === "logs") renderAuditLogs();
   if (name === "backup") renderStorage();
 }
 $$(".tab").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
@@ -293,6 +294,9 @@ function abrirForm(idx) {
   $("#f-altura").value = p.altura || "";
   $("#f-manequim").value = p.manequim || "";
   $("#f-medidas").value = p.medidas || "";
+  $("#f-cor-olhos").value = p.corOlhos || "";
+  $("#f-cor-pele").value = p.corPele || "";
+  $("#f-cor-cabelo").value = p.corCabelo || "";
   $("#f-valor").value = p.valorHora || "";
   $("#f-hue").value = p.hue ?? "";
   $("#f-descricao").value = p.descricao || "";
@@ -378,6 +382,9 @@ $("#form-salvar").addEventListener("click", async () => {
     altura: $("#f-altura").value.trim(),
     manequim: $("#f-manequim").value.trim(),
     medidas: $("#f-medidas").value.trim(),
+    corOlhos: $("#f-cor-olhos").value.trim(),
+    corPele: $("#f-cor-pele").value.trim(),
+    corCabelo: $("#f-cor-cabelo").value.trim(),
     valorHora: $("#f-valor").value.trim() || "Sob consulta",
     hue,
     descricao: $("#f-descricao").value.trim(),
@@ -884,12 +891,14 @@ $("#salvar-cidades").addEventListener("click", async () => {
    ============================================================ */
 function fillConfig() {
   $("#cfg-admin-wa").value = DATA.adminWhatsapp || "";
+  $("#cfg-model-support-wa").value = DATA.modelSupportWhatsapp || "5511996425680";
   $("#cfg-meta-pixel-id").value = DATA.pixel?.metaPixelId || "";
   $("#cfg-meta-pixel-enabled").checked = !!DATA.pixel?.metaPixelEnabled;
   $("#cfg-pass").value = "";
 }
 $("#salvar-config").addEventListener("click", async () => {
   const wa = $("#cfg-admin-wa").value.replace(/\D/g, "") || DATA.adminWhatsapp;
+  const modelSupportWhatsapp = $("#cfg-model-support-wa").value.replace(/\D/g, "") || "5511996425680";
   const metaPixelId = extractMetaPixelId($("#cfg-meta-pixel-id").value);
   const metaPixelEnabled = $("#cfg-meta-pixel-enabled").checked && !!metaPixelId;
   const np = $("#cfg-pass").value.trim();
@@ -898,10 +907,12 @@ $("#salvar-config").addEventListener("click", async () => {
   try {
     await VIPStore.saveConfig({
       adminWhatsapp: wa,
+      modelSupportWhatsapp,
       metaPixelId,
       metaPixelEnabled,
     });
     DATA.adminWhatsapp = wa;
+    DATA.modelSupportWhatsapp = modelSupportWhatsapp;
     DATA.pixel = { metaPixelId, metaPixelEnabled };
     $("#cfg-meta-pixel-id").value = metaPixelId;
     $("#cfg-meta-pixel-enabled").checked = metaPixelEnabled;
@@ -917,6 +928,49 @@ $("#salvar-config").addEventListener("click", async () => {
     btn.disabled = false;
   }
 });
+
+/* ============================================================
+   LOGS DE AUDITORIA
+   ============================================================ */
+function auditActionLabel(action) {
+  return ({ INSERT: "Criou", UPDATE: "Atualizou", DELETE: "Excluiu" })[action] || action || "Alterou";
+}
+
+function auditEntityLabel(entity) {
+  return ({ perfis: "perfil", stories: "story", cidades: "cidade", config: "configurações" })[entity] || entity || "registro";
+}
+
+function auditDate(value) {
+  if (!value) return "Data indisponível";
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "medium" }).format(new Date(value));
+}
+
+async function renderAuditLogs() {
+  const box = $("#logs-lista");
+  if (!box) return;
+  box.innerHTML = `<div class="empty">Carregando logs…</div>`;
+  try {
+    const logs = await VIPStore.listAuditLogs(150);
+    if (!logs.length) {
+      box.innerHTML = `<div class="empty">Nenhuma alteração registrada ainda.</div>`;
+      return;
+    }
+    box.innerHTML = logs.map(log => `
+      <article class="audit-item">
+        <span class="audit-item__dot" aria-hidden="true"></span>
+        <div class="audit-item__body">
+          <div class="audit-item__title"><strong>${auditActionLabel(log.action)}</strong> ${auditEntityLabel(log.entity)}</div>
+          <p>${log.summary || log.entity_id || "Alteração administrativa"}</p>
+          <small>${auditDate(log.created_at)} · ${log.actor_email || "Administrador"}</small>
+        </div>
+      </article>`).join("");
+  } catch (error) {
+    box.innerHTML = `<div class="empty">Os logs ficarão disponíveis após aplicar a migration de auditoria no Supabase.</div>`;
+    console.warn("Falha ao carregar logs:", error);
+  }
+}
+
+$("#recarregar-logs")?.addEventListener("click", renderAuditLogs);
 
 /* ============================================================
    BANNER DESTAQUE (3 garotas)

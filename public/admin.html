@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex,nofollow" />
-  <title>Painel Admin • ALIANÇA</title>
-  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <title>Painel Admin • Aliança Models</title>
+  <link rel="icon" href="/logo.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -16,8 +17,8 @@
   <!-- ===== LOGIN ===== -->
   <div id="login" class="login">
     <form class="login__box" id="login-form">
-      <img class="login__logo" src="logo.png" alt="Aliança" />
-      <div class="login__brand">ALIANÇA</div>
+      <img class="login__logo" src="logo.png" alt="Aliança Models" />
+      <div class="login__brand">ALIANÇA MODELS</div>
       <div class="login__sub">Painel Administrativo</div>
       <input type="email" id="login-email" placeholder="E-mail" autocomplete="username" />
       <input type="password" id="login-pass" placeholder="Senha de acesso" autocomplete="current-password" />
@@ -30,7 +31,7 @@
   <!-- ===== APP ADMIN ===== -->
   <div id="admin" hidden>
     <div class="topbar">
-      <div class="topbar__brand"><img class="topbar__ring" src="logo.png" alt="" />ALI<b>ANÇA</b></div>
+      <div class="topbar__brand"><img class="topbar__ring" src="logo.png" alt="" />ALIANÇA <b>MODELS</b></div>
       <span class="badge" id="count-badge">0 perfis</span>
       <div class="topbar__spacer"></div>
       <div class="topbar__actions">
@@ -72,6 +73,7 @@
         <button class="tab" data-tab="banner">Banner destaque</button>
         <button class="tab" data-tab="cidades">Cidades &amp; Bairros</button>
         <button class="tab" data-tab="config">Configurações</button>
+        <button class="tab" data-tab="logs">Logs</button>
         <button class="tab" data-tab="backup">Publicar / Backup</button>
       </div>
 
@@ -150,6 +152,11 @@
               <div class="field"><label>Medidas</label><input id="f-medidas" placeholder="90-60-90" /></div>
               <div class="field"><label>Valor (referência)</label><input id="f-valor" placeholder="Sob consulta" /></div>
               <div class="field"><label>Cor do placeholder (0-360)</label><input id="f-hue" type="number" min="0" max="360" placeholder="300" inputmode="numeric" /></div>
+            </div>
+            <div class="grid3">
+              <div class="field"><label>Cor dos olhos</label><input id="f-cor-olhos" placeholder="Ex.: Castanhos" /></div>
+              <div class="field"><label>Tom de pele</label><input id="f-cor-pele" placeholder="Ex.: Morena clara" /></div>
+              <div class="field"><label>Cor do cabelo</label><input id="f-cor-cabelo" placeholder="Ex.: Preto" /></div>
             </div>
           </div>
 
@@ -420,6 +427,11 @@
             <input id="cfg-admin-wa" placeholder="5565999999999" />
             <small>Recebe os contatos da home e os cadastros de "Anuncie aqui".</small>
           </div>
+          <div class="field">
+            <label>WhatsApp de suporte às modelos</label>
+            <input id="cfg-model-support-wa" placeholder="5511996425680" />
+            <small>Canal dedicado às modelos anunciantes. Padrão: (11) 99642-5680.</small>
+          </div>
           <h3>Pixel / Rastreamento</h3>
           <div class="config-card">
             <div class="config-card__copy">
@@ -444,6 +456,20 @@
             </div>
           </div>
           <button class="btn btn--gold" id="salvar-config">Salvar configurações</button>
+        </div>
+      </section>
+
+      <!-- LOGS DE AUDITORIA -->
+      <section id="tab-logs" class="tabpane" hidden>
+        <div class="tab-head">
+          <div><span>Auditoria</span><h2>Histórico de alterações</h2></div>
+          <p>Registro automático das ações realizadas no painel administrativo.</p>
+        </div>
+        <div class="panel">
+          <div class="toolbar">
+            <button class="btn btn--ghost" id="recarregar-logs" type="button">Atualizar logs</button>
+          </div>
+          <div id="logs-lista" class="audit-list"><div class="empty">Carregando logs…</div></div>
         </div>
       </section>
 
