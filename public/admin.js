@@ -1293,7 +1293,12 @@ $("#importar-file").addEventListener("change", e => {
 });
 
 $("#reset-tudo").addEventListener("click", async () => {
-  if (!confirm("Restaurar tudo para o padrão de fábrica? Os dados atuais do site serão substituídos.")) return;
+  const confirmed = confirm(
+    "Tem certeza que deseja restaurar o padrão de fábrica?\n\n" +
+    "Os perfis, stories, cidades e configurações atuais serão substituídos. " +
+    "Esta ação não pode ser desfeita. Recomendamos exportar um backup antes de continuar."
+  );
+  if (!confirmed) return;
   try {
     await VIPStore.resetToSeed();
     await reload();
