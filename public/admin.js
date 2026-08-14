@@ -141,6 +141,7 @@ async function initLogin() {
     btn.disabled = true;
     try {
       await VIPStore.auth.signIn(email, pass);
+      VIPStore.logAccess("admin_login_success", location.pathname).catch(() => {});
       await showAdmin();
     } catch (err) {
       $("#login-err").textContent = "E-mail ou senha incorretos.";
@@ -945,23 +946,44 @@ function auditDate(value) {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "medium" }).format(new Date(value));
 }
 
+function auditText(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
+  })[char]);
+}
+
 async function renderAuditLogs() {
   const box = $("#logs-lista");
   if (!box) return;
   box.innerHTML = `<div class="empty">Carregando logs…</div>`;
   try {
-    const logs = await VIPStore.listAuditLogs(150);
+    const [auditLogs, accessLogs] = await Promise.all([
+      VIPStore.listAuditLogs(150),
+      VIPStore.listAccessLogs(150),
+    ]);
+    const logs = [
+      ...auditLogs.map(log => ({ ...log, log_kind: "audit" })),
+      ...accessLogs.map(log => ({ ...log, log_kind: "access" })),
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 250);
     if (!logs.length) {
       box.innerHTML = `<div class="empty">Nenhuma alteração registrada ainda.</div>`;
       return;
     }
-    box.innerHTML = logs.map(log => `
+    box.innerHTML = logs.map(log => log.log_kind === "access" ? `
+      <article class="audit-item">
+        <span class="audit-item__dot" aria-hidden="true"></span>
+        <div class="audit-item__body">
+          <div class="audit-item__title"><strong>${log.event_type === "admin_login_success" ? "Login administrativo" : log.event_type === "admin_page_view" ? "Acesso ao painel" : "Acesso ao site"}</strong></div>
+          <p>${auditText(log.path || "/")} · IP: ${auditText(log.ip_address || "indisponível")}${log.country_code ? ` · ${auditText(log.country_code)}` : ""}</p>
+          <small>${auditDate(log.created_at)}${log.admin_email ? ` · ${auditText(log.admin_email)}` : ""}${log.user_agent ? ` · ${auditText(log.user_agent)}` : ""}</small>
+        </div>
+      </article>` : `
       <article class="audit-item">
         <span class="audit-item__dot" aria-hidden="true"></span>
         <div class="audit-item__body">
           <div class="audit-item__title"><strong>${auditActionLabel(log.action)}</strong> ${auditEntityLabel(log.entity)}</div>
-          <p>${log.summary || log.entity_id || "Alteração administrativa"}</p>
-          <small>${auditDate(log.created_at)} · ${log.actor_email || "Administrador"}</small>
+          <p>${auditText(log.summary || log.entity_id || "Alteração administrativa")}</p>
+          <small>${auditDate(log.created_at)} · ${auditText(log.actor_email || "Administrador")}</small>
         </div>
       </article>`).join("");
   } catch (error) {

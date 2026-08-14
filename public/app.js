@@ -1031,9 +1031,10 @@ function viewInformacoes() {
          partes. Cada anunciante é responsável pelo conteúdo do seu próprio perfil.</p>
 
       <h2>Privacidade (LGPD)</h2>
-      <p>Seguimos a Lei Geral de Proteção de Dados (LGPD). Não exigimos cadastro e não
-         armazenamos dados pessoais de quem navega. A confirmação de idade fica salva
-         apenas no seu navegador. O contato é feito diretamente pelo WhatsApp.</p>
+      <p>Seguimos a Lei Geral de Proteção de Dados (LGPD). Não exigimos cadastro de visitantes.
+         Para segurança, prevenção a fraudes e auditoria, registramos IP, data, dispositivo e
+         páginas acessadas por até 90 dias. A confirmação de idade fica salva apenas no seu
+         navegador. O contato é feito diretamente pelo WhatsApp.</p>
 
       <h2>Discrição</h2>
       <p>Não divulgamos endereços exatos, apenas cidade e bairro.
@@ -1209,6 +1210,7 @@ function viewPoliticaPrivacidade() {
 
       <h2>9. Tempo de retenção</h2>
       <p>Os dados pessoais serão mantidos pelo período necessário para cumprir as finalidades descritas nesta Política, respeitando obrigações legais, regulatórias, fiscais, de segurança e de prevenção a fraudes.</p>
+      <p>Os registros técnicos de acesso, incluindo endereço IP, páginas acessadas, dispositivo e eventos de login administrativo, são mantidos por até 90 dias, salvo necessidade de preservação por incidente de segurança, exercício regular de direitos ou obrigação legal.</p>
       <p>Quando não houver mais necessidade de tratamento, os dados poderão ser eliminados ou anonimizados, salvo quando a legislação permitir ou exigir sua conservação.</p>
 
       <h2>10. Direitos do titular</h2>
@@ -1709,6 +1711,7 @@ function router() {
   setTimeout(() => trackMetaPixel("PageView", {
     page_path: location.pathname,
   }), 0);
+  window.VIPStore?.logAccess("page_view", location.pathname).catch(() => {});
 
   if (parts.length === 0)                 return viewHome();
   if (parts[0] === "anuncie")             return viewAnuncie();

@@ -113,6 +113,13 @@ Passos no painel do Supabase (uma vez só):
      (e-mail + senha) que fará login no painel.
   3) Storage: o bucket público "perfis" já é criado pela migration.
 
+LOGS DE ACESSO E IP
+-------------------
+Os logs são gravados por uma função protegida do Supabase. O endereço IP é
+obtido dos cabeçalhos da infraestrutura, nunca de um valor informado pelo
+navegador. Nenhuma chave secreta é exposta no site. Os registros técnicos têm
+retenção prevista de 90 dias.
+
 
 PUBLICAR NA INTERNET (Vercel)
 -----------------------------

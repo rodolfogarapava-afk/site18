@@ -392,6 +392,25 @@
       return data || [];
     },
 
+    async listAccessLogs(limit = 150) {
+      requireSb();
+      const { data, error } = await sb.from("access_logs")
+        .select("id,created_at,event_type,path,ip_address,user_agent,referrer,country_code,admin_email")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data || [];
+    },
+
+    async logAccess(eventType, path) {
+      requireSb();
+      const { error } = await sb.rpc("record_access_event", {
+        p_event_type: eventType,
+        p_path: path || "/",
+      });
+      if (error) throw error;
+    },
+
     /* ----- Perfis ----- */
     async supportsPerfilAudio() {
       requireSb();
