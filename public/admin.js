@@ -127,6 +127,7 @@ function perfilAudioUrl(p) {
    LOGIN  (Supabase Auth: e-mail + senha)
    ============================================================ */
 async function initLogin() {
+  VIPStore.logAccess("page_view", location.pathname).catch(() => {});
   try {
     const session = await VIPStore.auth.getSession();
     if (session) return showAdmin();
