@@ -1,7 +1,7 @@
 {
-  "name": "Aliança Models",
-  "short_name": "Aliança Models",
-  "description": "Plataforma Aliança Models",
+  "name": "Aliança",
+  "short_name": "Aliança",
+  "description": "Plataforma Aliança",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#080707",

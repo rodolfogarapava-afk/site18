@@ -483,7 +483,7 @@ function heroCarouselSlides() {
 
 function viewHome() {
   updateHead({
-    title: "Aliança Models • Acompanhantes de Luxo — Rio & Cuiabá",
+    title: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá",
     description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados, total discrição. Somente maiores de 18 anos.",
     image: SITE_ORIGIN + "/logo.png",
     path: "/",
@@ -1048,7 +1048,7 @@ function viewInformacoes() {
 }
 
 function renderLegalPage({ title, eyebrow, description, path, content }) {
-  updateHead({ title: `${title} — Aliança Models`, description, path, type: "article" });
+  updateHead({ title: `${title} — Aliança`, description, path, type: "article" });
   setJsonLd(null);
   app.innerHTML = `
   <section class="page legal-page">
@@ -1069,7 +1069,7 @@ function renderLegalPage({ title, eyebrow, description, path, content }) {
 function viewTermosDeUso() {
   renderLegalPage({
     title: "Termos de Uso",
-    eyebrow: "Aliança Models",
+    eyebrow: "Aliança",
     description: "Termos de Uso da plataforma Aliança Models.",
     path: "/termos-de-uso",
     content: `
@@ -1162,7 +1162,7 @@ function viewTermosDeUso() {
 function viewPoliticaPrivacidade() {
   renderLegalPage({
     title: "Política de Privacidade",
-    eyebrow: "Aliança Models · LGPD",
+    eyebrow: "Aliança · LGPD",
     description: "Política de Privacidade e proteção de dados da Aliança Models.",
     path: "/politicas-privacidade",
     content: `
@@ -1238,7 +1238,7 @@ function viewPoliticaPrivacidade() {
 function viewPoliticaCookies() {
   renderLegalPage({
     title: "Política de Cookies",
-    eyebrow: "Aliança Models · Transparência",
+    eyebrow: "Aliança · Transparência",
     description: "Saiba como a Aliança Models utiliza cookies e tecnologias semelhantes.",
     path: "/politica-de-cookies",
     content: `
@@ -1260,7 +1260,7 @@ function viewPoliticaCookies() {
 function viewDiretrizesComunidade() {
   renderLegalPage({
     title: "Diretrizes da Comunidade",
-    eyebrow: "Aliança Models · Regras da Plataforma",
+    eyebrow: "Aliança · Regras da Plataforma",
     description: "Regras de segurança, respeito e integridade da comunidade Aliança Models.",
     path: "/diretrizes-da-comunidade",
     content: `
@@ -1286,7 +1286,7 @@ function viewDenunciasSuporte() {
   const modeloWa = `https://wa.me/${MODEL_SUPPORT_WHATSAPP}?text=${encodeURIComponent("Olá! Sou modelo e preciso de suporte na Aliança Models.")}`;
   renderLegalPage({
     title: "Denúncias e Suporte",
-    eyebrow: "Aliança Models · Atendimento",
+    eyebrow: "Aliança · Atendimento",
     description: "Canais oficiais para denúncias, suporte a visitantes e suporte às modelos.",
     path: "/denuncias-e-suporte",
     content: `
