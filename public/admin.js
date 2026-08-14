@@ -130,8 +130,11 @@ async function initLogin() {
   VIPStore.logAccess("page_view", location.pathname).catch(() => {});
   try {
     const session = await VIPStore.auth.getSession();
-    if (session) return showAdmin();
-  } catch (e) {}
+    if (session && await VIPStore.auth.isAdmin()) return showAdmin();
+    if (session) await VIPStore.auth.signOut();
+  } catch (e) {
+    try { await VIPStore.auth.signOut(); } catch (_) {}
+  }
 
   $("#login-form").addEventListener("submit", async e => {
     e.preventDefault();
@@ -142,6 +145,10 @@ async function initLogin() {
     btn.disabled = true;
     try {
       await VIPStore.auth.signIn(email, pass);
+      if (!(await VIPStore.auth.isAdmin())) {
+        await VIPStore.auth.signOut();
+        throw new Error("unauthorized");
+      }
       VIPStore.logAccess("admin_login_success", location.pathname).catch(() => {});
       await showAdmin();
     } catch (err) {

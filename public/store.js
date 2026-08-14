@@ -367,6 +367,12 @@
         const { data } = await sb.auth.getSession();
         return data.session || null;
       },
+      async isAdmin() {
+        requireSb();
+        const { data, error } = await sb.rpc("is_current_user_admin");
+        if (error) throw error;
+        return data === true;
+      },
       onChange(cb) {
         if (!sb) return { unsubscribe() {} };
         const { data } = sb.auth.onAuthStateChange((_event, session) => cb(session));
