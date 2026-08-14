@@ -1078,7 +1078,7 @@ function viewTermosDeUso() {
 
       <h2>1. Identificação da Plataforma</h2>
       <p>A plataforma <strong>Aliança Models</strong>, inscrita no CNPJ nº 68.528.057/0001-00, tem sede no CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</p>
-      <p>Para dúvidas relacionadas ao funcionamento da plataforma, entre em contato pelo e-mail: <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a>.</p>
+      <p>Para dúvidas relacionadas ao funcionamento da plataforma, entre em contato pelo e-mail: <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a>.</p>
 
       <h2>2. Objeto da Plataforma</h2>
       <p>A Aliança Models é uma plataforma digital destinada à divulgação de perfis de modelos acompanhantes e à facilitação do contato entre usuários interessados e modelos cadastradas.</p>
@@ -1154,7 +1154,7 @@ function viewTermosDeUso() {
       <p>Essa cláusula não limita os direitos garantidos por lei aos usuários e consumidores, quando aplicável, mas estabelece que eventuais disputas relacionadas ao funcionamento da plataforma serão tratadas de acordo com a legislação brasileira e, preferencialmente, na comarca da sede da empresa.</p>
 
       <h2>17. Contato</h2>
-      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">(11) 99642-5680</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
+      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">(11) 99642-5680</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
     `,
   });
 }
@@ -1171,7 +1171,7 @@ function viewPoliticaPrivacidade() {
 
       <h2>1. Quem somos</h2>
       <p>A plataforma <strong>Aliança Models</strong>, inscrita no CNPJ sob o nº 68.528.057/0001-00, com sede no CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ, é responsável pelo tratamento dos dados pessoais coletados por meio deste site.</p>
-      <p>Em caso de dúvidas, solicitações ou exercício de direitos relacionados aos seus dados pessoais, entre em contato pelo e-mail: <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a>.</p>
+      <p>Em caso de dúvidas, solicitações ou exercício de direitos relacionados aos seus dados pessoais, entre em contato pelo e-mail: <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a>.</p>
 
       <h2>2. Dados que coletamos</h2>
       <p>Podemos coletar diferentes categorias de dados pessoais, conforme a forma de utilização da plataforma.</p>
@@ -1216,7 +1216,7 @@ function viewPoliticaPrivacidade() {
       <h2>10. Direitos do titular</h2>
       <p>Nos termos da LGPD, o titular dos dados pode solicitar, a qualquer momento:</p>
       <ul><li>Confirmação da existência de tratamento;</li><li>Acesso aos dados pessoais;</li><li>Correção de dados incompletos, inexatos ou desatualizados;</li><li>Anonimização, bloqueio ou eliminação de dados desnecessários;</li><li>Portabilidade dos dados, quando aplicável;</li><li>Eliminação de dados tratados mediante consentimento;</li><li>Informações sobre compartilhamento de dados;</li><li>Revogação do consentimento, quando aplicável.</li></ul>
-      <p>As solicitações podem ser enviadas para <a href="mailto:aliancadmin@admin.com">aliancadmin@admin.com</a>.</p>
+      <p>As solicitações podem ser enviadas para <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a>.</p>
 
       <h2>11. Privacidade de menores de idade</h2>
       <p>A plataforma é destinada exclusivamente a pessoas <strong>maiores de 18 anos</strong>.</p>
@@ -1230,7 +1230,7 @@ function viewPoliticaPrivacidade() {
       <p>A versão mais recente estará sempre disponível nesta página, com indicação da data de atualização.</p>
 
       <h2>14. Contato</h2>
-      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">(11) 99642-5680</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
+      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">(11) 99642-5680</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
     `,
   });
 }
@@ -1252,7 +1252,7 @@ function viewPoliticaCookies() {
       <h2>4. Como gerenciar cookies</h2>
       <p>Você pode bloquear ou apagar cookies nas configurações do navegador. A desativação de cookies essenciais pode impedir o funcionamento correto de partes do site.</p>
       <h2>5. Atualizações e contato</h2>
-      <p>Esta Política poderá ser atualizada para refletir mudanças técnicas ou legais. Dúvidas podem ser enviadas para <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a>.</p>
+      <p>Esta Política poderá ser atualizada para refletir mudanças técnicas ou legais. Dúvidas podem ser enviadas para <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a>.</p>
     `,
   });
 }
@@ -1302,7 +1302,7 @@ function viewDenunciasSuporte() {
       <h2>Análise e providências</h2>
       <p>As denúncias são analisadas com discrição. A plataforma poderá solicitar informações adicionais, restringir preventivamente um conteúdo, remover perfis e colaborar com autoridades quando necessário. O envio de denúncia não garante resposta pública ou divulgação das medidas internas adotadas.</p>
       <h2>Contato por e-mail</h2>
-      <p>Você também pode escrever para <a href="mailto:Sitealiancamodels@gmail.com">Sitealiancamodels@gmail.com</a>.</p>
+      <p>Você também pode escrever para <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a>.</p>
     `,
   });
 }
