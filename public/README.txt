@@ -33,8 +33,7 @@ O QUE JÁ FUNCIONA
 
 PAINEL ADMIN  (jeito fácil — recomendado)
 -----------------------------------------
-Abra "admin.html" (ou acesse /admin.html, ou o link "Painel Admin"
-no rodapé do site).
+Abra a rota "/admin" para acessar diretamente o painel administrativo.
 
   Login: E-MAIL + SENHA do administrador (Supabase Auth).
   O usuário admin é criado no painel do Supabase (veja "BACK-END").
@@ -141,13 +140,13 @@ supabase-config.js -> config PÚBLICA do Supabase (URL + chave anon)
 data.js            -> dados SEMENTE (SEED): fallback offline / restaurar
 store.js           -> camada de dados (lê/grava no Supabase; auth; Storage)
 app.js             -> lógica do site (rotas, render, WhatsApp, age gate)
-admin.html         -> PAINEL ADMIN (login + abas)
+src/templates/admin.html -> template interno do PAINEL ADMIN (login + abas)
 admin.css          -> visual do painel admin
 admin.js           -> lógica do painel (login, CRUD, upload, backup)
 vercel.json        -> config de deploy (headers de segurança)
 README.txt         -> este arquivo
 
-OBS.: a ordem dos scripts no index.html/admin.html importa:
+OBS.: a ordem dos scripts no app.html/template do admin importa:
       supabase-js (CDN) -> supabase-config.js -> data.js -> store.js
       -> app.js (ou admin.js)
 

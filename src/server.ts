@@ -80,6 +80,22 @@ function withSecurityHeaders(response: Response): Response {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      const cleanRoute = url.pathname === "/admin.html"
+        ? "/admin"
+        : url.pathname === "/index.html"
+          ? "/"
+          : null;
+      if (cleanRoute) {
+        url.pathname = cleanRoute;
+        return withSecurityHeaders(new Response(null, {
+          status: 308,
+          headers: {
+            location: url.toString(),
+            "cache-control": "no-store",
+          },
+        }));
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
