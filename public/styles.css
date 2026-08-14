@@ -2597,12 +2597,17 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
   .age-gate__box{max-width:460px}
   .age-gate__logo{height:72px}
 
-  /* Footer com 3 colunas quando cabe */
+  /* Footer desktop: três blocos equilibrados, sem vazio sob a marca */
   .footer__inner{
-    grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);
-    gap:2.4rem;
+    grid-template-columns:minmax(0,1.2fr) minmax(220px,.72fr) minmax(270px,.9fr);
+    gap:1rem;
     padding:2.4rem 0 2rem;
+    align-items:stretch;
   }
+  .footer__cols{display:contents}
+  .footer__brand,
+  .footer__col{height:100%}
+  .footer__brand{justify-content:center;padding:1.5rem}
 
   /* Menu superior com um pouco mais de espaçamento */
   .header__inner{gap:1.8rem;height:76px}
