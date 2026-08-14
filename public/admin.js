@@ -970,6 +970,48 @@ function auditText(value) {
   })[char]);
 }
 
+const AUDIT_PAGE_SIZE = 6;
+let auditLogItems = [];
+let auditVisibleCount = AUDIT_PAGE_SIZE;
+
+function drawAuditLogs() {
+  const box = $("#logs-lista");
+  if (!box) return;
+  const visibleLogs = auditLogItems.slice(0, auditVisibleCount);
+  const remaining = Math.max(0, auditLogItems.length - visibleLogs.length);
+
+  if (!visibleLogs.length) {
+    box.innerHTML = `<div class="empty">Nenhuma alteração registrada ainda.</div>`;
+    return;
+  }
+
+  box.innerHTML = visibleLogs.map(log => log.log_kind === "access" ? `
+    <article class="audit-item">
+      <span class="audit-item__dot" aria-hidden="true"></span>
+      <div class="audit-item__body">
+        <div class="audit-item__title"><strong>${log.event_type === "admin_login_success" ? "Login administrativo" : log.event_type === "admin_page_view" ? "Acesso ao painel" : "Acesso ao site"}</strong></div>
+        <p>${auditText(log.path || "/")} · IP: ${auditText(log.ip_address || "indisponível")}${log.country_code ? ` · ${auditText(log.country_code)}` : ""}</p>
+        <small>${auditTimestamp(log.created_at)}${log.admin_email ? ` · ${auditText(log.admin_email)}` : ""}${log.user_agent ? ` · ${auditText(log.user_agent)}` : ""}</small>
+      </div>
+    </article>` : `
+    <article class="audit-item">
+      <span class="audit-item__dot" aria-hidden="true"></span>
+      <div class="audit-item__body">
+        <div class="audit-item__title"><strong>${auditActionLabel(log.action)}</strong> ${auditEntityLabel(log.entity)}</div>
+        <p>${auditText(log.summary || log.entity_id || "Alteração administrativa")}</p>
+        <small>${auditTimestamp(log.created_at)} · ${auditText(log.actor_email || "Administrador")}</small>
+      </div>
+    </article>`).join("") + (remaining ? `
+      <div class="audit-more">
+        <button class="btn btn--ghost" id="ver-mais-logs" type="button">Ver mais (${remaining})</button>
+      </div>` : "");
+
+  $("#ver-mais-logs")?.addEventListener("click", () => {
+    auditVisibleCount += AUDIT_PAGE_SIZE;
+    drawAuditLogs();
+  });
+}
+
 async function renderAuditLogs() {
   const box = $("#logs-lista");
   if (!box) return;
@@ -979,31 +1021,12 @@ async function renderAuditLogs() {
       VIPStore.listAuditLogs(150),
       VIPStore.listAccessLogs(150),
     ]);
-    const logs = [
+    auditLogItems = [
       ...auditLogs.map(log => ({ ...log, log_kind: "audit" })),
       ...accessLogs.map(log => ({ ...log, log_kind: "access" })),
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 250);
-    if (!logs.length) {
-      box.innerHTML = `<div class="empty">Nenhuma alteração registrada ainda.</div>`;
-      return;
-    }
-    box.innerHTML = logs.map(log => log.log_kind === "access" ? `
-      <article class="audit-item">
-        <span class="audit-item__dot" aria-hidden="true"></span>
-        <div class="audit-item__body">
-          <div class="audit-item__title"><strong>${log.event_type === "admin_login_success" ? "Login administrativo" : log.event_type === "admin_page_view" ? "Acesso ao painel" : "Acesso ao site"}</strong></div>
-          <p>${auditText(log.path || "/")} · IP: ${auditText(log.ip_address || "indisponível")}${log.country_code ? ` · ${auditText(log.country_code)}` : ""}</p>
-          <small>${auditTimestamp(log.created_at)}${log.admin_email ? ` · ${auditText(log.admin_email)}` : ""}${log.user_agent ? ` · ${auditText(log.user_agent)}` : ""}</small>
-        </div>
-      </article>` : `
-      <article class="audit-item">
-        <span class="audit-item__dot" aria-hidden="true"></span>
-        <div class="audit-item__body">
-          <div class="audit-item__title"><strong>${auditActionLabel(log.action)}</strong> ${auditEntityLabel(log.entity)}</div>
-          <p>${auditText(log.summary || log.entity_id || "Alteração administrativa")}</p>
-          <small>${auditTimestamp(log.created_at)} · ${auditText(log.actor_email || "Administrador")}</small>
-        </div>
-      </article>`).join("");
+    auditVisibleCount = AUDIT_PAGE_SIZE;
+    drawAuditLogs();
   } catch (error) {
     box.innerHTML = `<div class="empty">Os logs ficarão disponíveis após aplicar a migration de auditoria no Supabase.</div>`;
     console.warn("Falha ao carregar logs:", error);
