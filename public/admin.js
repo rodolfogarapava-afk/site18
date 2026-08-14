@@ -943,8 +943,25 @@ function auditEntityLabel(entity) {
 }
 
 function auditDate(value) {
-  if (!value) return "Data indisponível";
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "medium" }).format(new Date(value));
+  if (!value) return { date: "indisponível", time: "indisponível" };
+  const instant = new Date(value);
+  return {
+    date: new Intl.DateTimeFormat("pt-BR", {
+      dateStyle: "short",
+      timeZone: "America/Sao_Paulo",
+    }).format(instant),
+    time: new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: "America/Sao_Paulo",
+    }).format(instant),
+  };
+}
+
+function auditTimestamp(value) {
+  const { date, time } = auditDate(value);
+  return `Data: ${date} · Horário: ${time} (Brasília)`;
 }
 
 function auditText(value) {
@@ -976,7 +993,7 @@ async function renderAuditLogs() {
         <div class="audit-item__body">
           <div class="audit-item__title"><strong>${log.event_type === "admin_login_success" ? "Login administrativo" : log.event_type === "admin_page_view" ? "Acesso ao painel" : "Acesso ao site"}</strong></div>
           <p>${auditText(log.path || "/")} · IP: ${auditText(log.ip_address || "indisponível")}${log.country_code ? ` · ${auditText(log.country_code)}` : ""}</p>
-          <small>${auditDate(log.created_at)}${log.admin_email ? ` · ${auditText(log.admin_email)}` : ""}${log.user_agent ? ` · ${auditText(log.user_agent)}` : ""}</small>
+          <small>${auditTimestamp(log.created_at)}${log.admin_email ? ` · ${auditText(log.admin_email)}` : ""}${log.user_agent ? ` · ${auditText(log.user_agent)}` : ""}</small>
         </div>
       </article>` : `
       <article class="audit-item">
@@ -984,7 +1001,7 @@ async function renderAuditLogs() {
         <div class="audit-item__body">
           <div class="audit-item__title"><strong>${auditActionLabel(log.action)}</strong> ${auditEntityLabel(log.entity)}</div>
           <p>${auditText(log.summary || log.entity_id || "Alteração administrativa")}</p>
-          <small>${auditDate(log.created_at)} · ${auditText(log.actor_email || "Administrador")}</small>
+          <small>${auditTimestamp(log.created_at)} · ${auditText(log.actor_email || "Administrador")}</small>
         </div>
       </article>`).join("");
   } catch (error) {
