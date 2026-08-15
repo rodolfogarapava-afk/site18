@@ -2672,3 +2672,49 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
   .grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.8rem}
 }
 
+/* ---------- Página Anuncie: layout fluido ---------- */
+.signup{max-width:780px}
+.signup>.form{width:100%;max-width:none}
+.signup .form,
+.signup .form .row,
+.signup .form__field{min-width:0}
+
+@media (min-width:1024px){
+  .signup{
+    max-width:1120px;
+    display:grid;
+    grid-template-columns:minmax(320px,.78fr) minmax(0,1.22fr);
+    grid-template-areas:
+      "back back"
+      "hero form";
+    column-gap:1.5rem;
+    row-gap:0;
+    align-items:start;
+  }
+  .signup>.back-link{grid-area:back}
+  .signup__hero{
+    grid-area:hero;
+    margin-bottom:0;
+    padding:clamp(1.45rem,2.4vw,2rem);
+  }
+  .signup__hero h1{
+    max-width:10ch;
+    font-size:clamp(2.25rem,3.6vw,3.35rem);
+    line-height:1;
+  }
+  .signup__hero p{font-size:.94rem;line-height:1.65}
+  .signup>.form{
+    grid-area:form;
+    margin-top:0;
+    padding:1.55rem;
+  }
+}
+
+@media (max-width:640px){
+  .page--signup .container{width:min(100% - 1.25rem,780px)}
+  .signup__hero h1{overflow-wrap:anywhere}
+  .signup__proofs span{flex:1 1 auto;justify-content:center;text-align:center}
+  .signup>.form{overflow:hidden}
+  .form__actions .btn{min-height:52px;padding-inline:1rem}
+}
+
