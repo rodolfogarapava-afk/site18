@@ -1050,7 +1050,7 @@ function viewInformacoes() {
 
       <h2>Contato</h2>
       <p><a class="section__link" href="${waAdmin()}" target="_blank" rel="noopener">Suporte a visitantes e clientes</a></p>
-      <p class="info-contact-row"><span>Suporte às modelos:</span><a class="wa-phone-link" href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener" aria-label="Abrir conversa com o suporte às modelos no WhatsApp">${WA_ICON}<span>${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</span></a></p>
+      <p class="info-contact-row"><span>Suporte às modelos:</span><a class="wa-phone-link" href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener" aria-label="Abrir conversa com o suporte às modelos no WhatsApp">${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</a></p>
     </div>
   </section>`;
 }
@@ -1301,7 +1301,7 @@ function viewDenunciasSuporte() {
       <p>Use os canais abaixo para solicitar ajuda ou comunicar conteúdo e condutas que violem os Termos de Uso e as Diretrizes da Comunidade.</p>
       <div class="legal-contact-grid">
         <article class="legal-contact"><span>Visitantes e clientes</span><h3>Suporte ao usuário</h3><p>Dúvidas de navegação, funcionamento do site ou atendimento geral.</p><a class="btn btn--gold" href="${clienteWa}" target="_blank" rel="noopener">Falar com o suporte</a></article>
-        <article class="legal-contact"><span>Canal exclusivo</span><h3>Suporte às modelos</h3><p>Cadastro, perfil, mídia, publicação e suporte para anunciantes.</p><a class="legal-contact__phone wa-phone-link" href="${modeloWa}" target="_blank" rel="noopener" aria-label="Abrir conversa com o suporte às modelos no WhatsApp">${WA_ICON}<span>${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</span></a><a class="btn btn--gold" href="${modeloWa}" target="_blank" rel="noopener">Suporte às modelos</a></article>
+        <article class="legal-contact"><span>Canal exclusivo</span><h3>Suporte às modelos</h3><p>Cadastro, perfil, mídia, publicação e suporte para anunciantes.</p><a class="legal-contact__phone wa-phone-link" href="${modeloWa}" target="_blank" rel="noopener" aria-label="Abrir conversa com o suporte às modelos no WhatsApp">${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</a><a class="btn btn--gold" href="${modeloWa}" target="_blank" rel="noopener">Suporte às modelos</a></article>
       </div>
       <h2>Como fazer uma denúncia</h2>
       <p>Informe o link do perfil ou conteúdo, descreva o ocorrido objetivamente e envie evidências disponíveis. Não compartilhe documentos ou dados sensíveis desnecessários.</p>
