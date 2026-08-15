@@ -168,6 +168,14 @@ function waAdmin(msg) {
   return `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(t)}`;
 }
 
+function formatWhatsappNumber(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (/^55\d{11}$/.test(digits)) {
+    return `+55 ${digits.slice(2, 4)} ${digits.slice(4, 9)}-${digits.slice(9)}`;
+  }
+  return digits ? `+${digits}` : "";
+}
+
 /* Placeholder de foto elegante (SVG data URI) — funciona offline */
 function foto(p, i = 0) {
   if (Array.isArray(p.fotos) && p.fotos[i]) return p.fotos[i];
@@ -1042,7 +1050,7 @@ function viewInformacoes() {
 
       <h2>Contato</h2>
       <p><a class="section__link" href="${waAdmin()}" target="_blank" rel="noopener">Suporte a visitantes e clientes</a></p>
-      <p><a class="section__link" href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">Suporte às modelos: (11) 99642-5680</a></p>
+      <p class="info-contact-row"><span>Suporte às modelos:</span><a class="wa-phone-link" href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener" aria-label="Abrir conversa com o suporte às modelos no WhatsApp">${WA_ICON}<span>${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</span></a></p>
     </div>
   </section>`;
 }
@@ -1154,7 +1162,7 @@ function viewTermosDeUso() {
       <p>Essa cláusula não limita os direitos garantidos por lei aos usuários e consumidores, quando aplicável, mas estabelece que eventuais disputas relacionadas ao funcionamento da plataforma serão tratadas de acordo com a legislação brasileira e, preferencialmente, na comarca da sede da empresa.</p>
 
       <h2>17. Contato</h2>
-      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">(11) 99642-5680</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
+      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
     `,
   });
 }
@@ -1230,7 +1238,7 @@ function viewPoliticaPrivacidade() {
       <p>A versão mais recente estará sempre disponível nesta página, com indicação da data de atualização.</p>
 
       <h2>14. Contato</h2>
-      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">(11) 99642-5680</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
+      <address><strong>Aliança Models</strong><br>CNPJ: 68.528.057/0001-00<br>E-mail: <a href="mailto:contato@aliancamodels.com">contato@aliancamodels.com</a><br>Suporte às modelos: <a href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener">${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</a><br>Endereço: CEP 22631-280, Avenida Gastão Senges, nº 395, Barra da Tijuca, Rio de Janeiro — RJ.</address>
     `,
   });
 }
@@ -1293,7 +1301,7 @@ function viewDenunciasSuporte() {
       <p>Use os canais abaixo para solicitar ajuda ou comunicar conteúdo e condutas que violem os Termos de Uso e as Diretrizes da Comunidade.</p>
       <div class="legal-contact-grid">
         <article class="legal-contact"><span>Visitantes e clientes</span><h3>Suporte ao usuário</h3><p>Dúvidas de navegação, funcionamento do site ou atendimento geral.</p><a class="btn btn--gold" href="${clienteWa}" target="_blank" rel="noopener">Falar com o suporte</a></article>
-        <article class="legal-contact"><span>Canal exclusivo</span><h3>Suporte às modelos</h3><p>Cadastro, perfil, mídia, publicação e suporte para anunciantes.</p><strong>(11) 99642-5680</strong><a class="btn btn--gold" href="${modeloWa}" target="_blank" rel="noopener">Suporte às modelos</a></article>
+        <article class="legal-contact"><span>Canal exclusivo</span><h3>Suporte às modelos</h3><p>Cadastro, perfil, mídia, publicação e suporte para anunciantes.</p><a class="legal-contact__phone wa-phone-link" href="${modeloWa}" target="_blank" rel="noopener" aria-label="Abrir conversa com o suporte às modelos no WhatsApp">${WA_ICON}<span>${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</span></a><a class="btn btn--gold" href="${modeloWa}" target="_blank" rel="noopener">Suporte às modelos</a></article>
       </div>
       <h2>Como fazer uma denúncia</h2>
       <p>Informe o link do perfil ou conteúdo, descreva o ocorrido objetivamente e envie evidências disponíveis. Não compartilhe documentos ou dados sensíveis desnecessários.</p>

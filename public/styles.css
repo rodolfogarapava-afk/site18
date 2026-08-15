@@ -1204,6 +1204,12 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 .legal-contact h3{margin:.45rem 0!important;font-size:1.12rem!important}
 .legal-contact p{font-size:.88rem!important;margin-bottom:1rem!important}
 .legal-contact strong{display:block;margin:-.25rem 0 .9rem;color:var(--gold-2)}
+.info-contact-row{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem}
+.wa-phone-link{display:inline-flex;align-items:center;gap:.55rem;padding:.58rem .85rem;border:1px solid rgba(100,183,255,.65);border-radius:999px;background:linear-gradient(135deg,#0c75db,#179bf3);box-shadow:0 8px 22px rgba(13,126,222,.24);color:#fff!important;font-size:.88rem;font-weight:800;line-height:1;text-decoration:none!important;transition:transform .2s ease,filter .2s ease,box-shadow .2s ease}
+.wa-phone-link:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 10px 26px rgba(13,126,222,.34)}
+.legal-contact__phone{margin:-.25rem 0 .95rem}
+.wa-phone-link .ico-wa{width:1.15rem;height:1.15rem;flex:0 0 auto}
+.wa-phone-link:focus-visible{outline:2px solid #8dccff;outline-offset:3px}
 .legal-contact .btn{margin-top:auto;text-decoration:none;color:#160f05}
 @media (max-width:600px){.legal-page{padding:78px 0 36px}.legal-card{border-radius:18px}.legal-card__header,.legal-card__content{padding:1.25rem}.legal-card__content h2{margin-top:1.8rem}.legal-card__content p,.legal-card__content li{font-size:.92rem}}
 @media (max-width:600px){.legal-contact-grid{grid-template-columns:1fr}}

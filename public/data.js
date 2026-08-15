@@ -15,7 +15,7 @@ const SEED = {
   /* WhatsApp central do administrador (home, botão flutuante na home,
      formulário "Anuncie aqui"). Formato: DDI + DDD + número, só dígitos. */
   adminWhatsapp: "5565999999999",
-  modelSupportWhatsapp: "5511996425680",
+  modelSupportWhatsapp: "5515991906606",
   pixel: {
     metaPixelId: "",
     metaPixelEnabled: false,

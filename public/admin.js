@@ -9,7 +9,7 @@ const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 /* Estado de trabalho (cópia editável carregada do banco) */
-let DATA = { adminWhatsapp: "", modelSupportWhatsapp: "5511996425680", pixel: { metaPixelId: "", metaPixelEnabled: false }, banner: null, cidades: {}, perfis: [], stories: [] };
+let DATA = { adminWhatsapp: "", modelSupportWhatsapp: "5515991906606", pixel: { metaPixelId: "", metaPixelEnabled: false }, banner: null, cidades: {}, perfis: [], stories: [] };
 let fotos = [];                  // fotos (URLs) do perfil em edição
 let audioUrl = "";               // áudio real da acompanhante (URL pública)
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
@@ -900,14 +900,14 @@ $("#salvar-cidades").addEventListener("click", async () => {
    ============================================================ */
 function fillConfig() {
   $("#cfg-admin-wa").value = DATA.adminWhatsapp || "";
-  $("#cfg-model-support-wa").value = DATA.modelSupportWhatsapp || "5511996425680";
+  $("#cfg-model-support-wa").value = DATA.modelSupportWhatsapp || "5515991906606";
   $("#cfg-meta-pixel-id").value = DATA.pixel?.metaPixelId || "";
   $("#cfg-meta-pixel-enabled").checked = !!DATA.pixel?.metaPixelEnabled;
   $("#cfg-pass").value = "";
 }
 $("#salvar-config").addEventListener("click", async () => {
   const wa = $("#cfg-admin-wa").value.replace(/\D/g, "") || DATA.adminWhatsapp;
-  const modelSupportWhatsapp = $("#cfg-model-support-wa").value.replace(/\D/g, "") || "5511996425680";
+  const modelSupportWhatsapp = $("#cfg-model-support-wa").value.replace(/\D/g, "") || "5515991906606";
   const metaPixelId = extractMetaPixelId($("#cfg-meta-pixel-id").value);
   const metaPixelEnabled = $("#cfg-meta-pixel-enabled").checked && !!metaPixelId;
   const np = $("#cfg-pass").value.trim();
