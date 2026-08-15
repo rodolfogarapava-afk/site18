@@ -2718,3 +2718,71 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
   .form__actions .btn{min-height:52px;padding-inline:1rem}
 }
 
+/* ---------- Rodapé legal em linha ---------- */
+.footer__legal{
+  border-top:0;
+  padding:0 0 1.35rem;
+  text-align:initial;
+}
+.footer__legal-top{
+  margin:0;
+  padding:.85rem 0;
+}
+.footer__legal-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:2rem;
+  padding:1.15rem 0 .15rem;
+  border-top:1px solid rgba(255,247,241,.1);
+}
+.footer__legal-row .footer__copyright{
+  flex:0 0 auto;
+  max-width:none;
+  margin:0;
+  color:#81766f;
+  font-size:.78rem;
+}
+.footer__legal-links{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:.6rem clamp(1.15rem,2.5vw,2.25rem);
+  margin-left:auto;
+}
+.footer__legal-links a{
+  color:#8f847d;
+  font-size:.78rem;
+  line-height:1.4;
+  white-space:nowrap;
+  transition:color .18s ease;
+}
+.footer__legal-links a:hover{color:var(--gold-2)}
+
+@media (max-width:900px){
+  .footer__legal-row{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:.9rem;
+  }
+  .footer__legal-links{
+    width:100%;
+    justify-content:flex-start;
+    margin-left:0;
+  }
+}
+
+@media (max-width:600px){
+  .footer__legal-top{padding:.75rem 0;text-align:center}
+  .footer__legal-row{padding:1rem 0 .1rem}
+  .footer__legal-row .footer__copyright{font-size:.7rem}
+  .footer__legal-links{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:.55rem 1rem;
+  }
+  .footer__legal-links a{font-size:.72rem;white-space:normal}
+  .footer__legal-links a:last-child{grid-column:1/-1}
+}
+
