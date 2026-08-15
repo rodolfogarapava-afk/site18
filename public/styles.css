@@ -2728,6 +2728,21 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
   margin:0;
   padding:.85rem 0;
 }
+.footer__legal-top p{display:flex;align-items:center;gap:.42rem}
+.footer__notice-badge{
+  display:inline-grid;
+  place-items:center;
+  min-width:24px;
+  height:20px;
+  padding:0 .3rem;
+  border:1px solid rgba(213,175,84,.24);
+  border-radius:999px;
+  color:var(--gold-2);
+  font-size:.58rem;
+  font-weight:800;
+  line-height:1;
+}
+.footer__notice-mark{color:var(--gold);font-size:.85rem;line-height:1}
 .footer__legal-row{
   display:flex;
   align-items:center;
@@ -2774,15 +2789,57 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
 }
 
 @media (max-width:600px){
-  .footer__legal-top{padding:.75rem 0;text-align:center}
-  .footer__legal-row{padding:1rem 0 .1rem}
-  .footer__legal-row .footer__copyright{font-size:.7rem}
+  .footer__legal{
+    width:calc(100% - 2rem);
+    padding:0 0 1.15rem;
+  }
+  .footer__legal-top{
+    display:grid;
+    gap:.55rem;
+    padding:.8rem;
+    border:1px solid rgba(255,247,241,.07);
+    border-radius:14px;
+    background:rgba(255,255,255,.018);
+    text-align:left;
+  }
+  .footer__legal-top p{
+    justify-content:flex-start;
+    gap:.55rem;
+    font-size:.7rem;
+    line-height:1.45;
+  }
+  .footer__notice-badge{min-width:29px;height:23px;font-size:.6rem}
+  .footer__notice-mark{display:grid;place-items:center;min-width:29px;height:23px}
+  .footer__legal-row{
+    align-items:stretch;
+    gap:.8rem;
+    margin-top:.75rem;
+    padding:.9rem 0 .1rem;
+  }
+  .footer__legal-row .footer__copyright{
+    width:100%;
+    font-size:.7rem;
+    line-height:1.5;
+    text-align:center;
+  }
   .footer__legal-links{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:.55rem 1rem;
+    gap:.5rem;
   }
-  .footer__legal-links a{font-size:.72rem;white-space:normal}
+  .footer__legal-links a{
+    display:flex;
+    align-items:center;
+    min-height:40px;
+    padding:.55rem .65rem;
+    border:1px solid rgba(255,247,241,.07);
+    border-radius:10px;
+    background:rgba(255,255,255,.018);
+    color:#a89d95;
+    font-size:.72rem;
+    line-height:1.25;
+    white-space:normal;
+  }
   .footer__legal-links a:last-child{grid-column:1/-1}
 }
 
