@@ -231,7 +231,7 @@
 
     return {
       adminWhatsapp: (cfgRes.data && cfgRes.data.admin_whatsapp) || "",
-      modelSupportWhatsapp: (cfgRes.data && cfgRes.data.model_support_whatsapp) || "5515991906606",
+      modelSupportWhatsapp: (cfgRes.data && cfgRes.data.model_support_whatsapp) || "5511996425680",
       pixel: {
         metaPixelId: (cfgRes.data && cfgRes.data.meta_pixel_id) || "",
         metaPixelEnabled: !!(cfgRes.data && cfgRes.data.meta_pixel_enabled),
@@ -295,7 +295,7 @@
     try {
       const d = await withTimeout(fetchAll(), 7000);
       window.ADMIN_WHATSAPP = d.adminWhatsapp || (typeof SEED !== "undefined" ? SEED.adminWhatsapp : "");
-      window.MODEL_SUPPORT_WHATSAPP = d.modelSupportWhatsapp || "5515991906606";
+      window.MODEL_SUPPORT_WHATSAPP = d.modelSupportWhatsapp || "5511996425680";
       window.META_PIXEL_ID = d.pixel?.metaPixelId || "";
       window.META_PIXEL_ENABLED = !!d.pixel?.metaPixelEnabled;
       window.CIDADES        = d.cidades;
@@ -308,7 +308,7 @@
       console.warn("Usando dados de fallback (SEED). Motivo:", e && e.message);
       const s = (typeof SEED !== "undefined") ? clone(SEED) : { adminWhatsapp: "", cidades: {}, perfis: [] };
       window.ADMIN_WHATSAPP = s.adminWhatsapp;
-      window.MODEL_SUPPORT_WHATSAPP = s.modelSupportWhatsapp || "5515991906606";
+      window.MODEL_SUPPORT_WHATSAPP = s.modelSupportWhatsapp || "5511996425680";
       window.META_PIXEL_ID = s.pixel?.metaPixelId || "";
       window.META_PIXEL_ENABLED = !!s.pixel?.metaPixelEnabled;
       window.CIDADES        = s.cidades;
@@ -332,7 +332,7 @@
   if (typeof window.ADMIN_WHATSAPP === "undefined")
     window.ADMIN_WHATSAPP = (typeof SEED !== "undefined") ? SEED.adminWhatsapp : "";
   if (typeof window.MODEL_SUPPORT_WHATSAPP === "undefined")
-    window.MODEL_SUPPORT_WHATSAPP = (typeof SEED !== "undefined" && SEED.modelSupportWhatsapp) ? SEED.modelSupportWhatsapp : "5515991906606";
+    window.MODEL_SUPPORT_WHATSAPP = (typeof SEED !== "undefined" && SEED.modelSupportWhatsapp) ? SEED.modelSupportWhatsapp : "5511996425680";
   if (typeof window.META_PIXEL_ID === "undefined")
     window.META_PIXEL_ID = (typeof SEED !== "undefined" && SEED.pixel) ? SEED.pixel.metaPixelId || "" : "";
   if (typeof window.META_PIXEL_ENABLED === "undefined")
@@ -514,7 +514,7 @@
       const row = {
         id: 1,
         admin_whatsapp: cfg.adminWhatsapp || "",
-        model_support_whatsapp: cfg.modelSupportWhatsapp || "5515991906606",
+        model_support_whatsapp: cfg.modelSupportWhatsapp || "5511996425680",
         meta_pixel_id: cfg.metaPixelId || "",
         meta_pixel_enabled: !!cfg.metaPixelEnabled,
       };
@@ -579,7 +579,7 @@
       }
       await this.saveConfig({
         adminWhatsapp: d.adminWhatsapp,
-        modelSupportWhatsapp: d.modelSupportWhatsapp || "5515991906606",
+        modelSupportWhatsapp: d.modelSupportWhatsapp || "5511996425680",
         metaPixelId: d.pixel?.metaPixelId || "",
         metaPixelEnabled: !!d.pixel?.metaPixelEnabled,
       });

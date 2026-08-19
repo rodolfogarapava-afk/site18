@@ -1204,7 +1204,9 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 .legal-contact h3{margin:.45rem 0!important;font-size:1.12rem!important}
 .legal-contact p{font-size:.88rem!important;margin-bottom:1rem!important}
 .legal-contact strong{display:block;margin:-.25rem 0 .9rem;color:var(--gold-2)}
-.info-contact-row{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem}
+.info-contacts{display:grid;gap:.62rem;max-width:680px}
+.info-contact-row{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;margin:0!important}
+.info-contact-row>span:first-child{min-width:145px}
 .wa-phone-link{color:#299cff!important;font-size:.9rem;font-weight:700;text-decoration:underline!important;text-decoration-thickness:1.5px!important;text-underline-offset:3px;transition:color .2s ease}
 .wa-phone-link:hover{color:#73bdff!important}
 .legal-contact__phone{margin:-.25rem 0 .95rem}
@@ -2841,5 +2843,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
     white-space:normal;
   }
   .footer__legal-links a:last-child{grid-column:1/-1}
+  .info-contacts{gap:.8rem}
+  .info-contact-row{align-items:flex-start;flex-direction:column;gap:.25rem}
+  .info-contact-row>span:first-child{min-width:0}
 }
 

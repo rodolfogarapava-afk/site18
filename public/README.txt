@@ -60,7 +60,7 @@ COMO PERSONALIZAR À MÃO  (alternativa ao painel — arquivo data.js)
 Abra "data.js". Tudo fica dentro do objeto SEED:
 
 1) NÚMERO DA CENTRAL:
-   adminWhatsapp: "5565999999999"
+   adminWhatsapp: "5515991906606"
    Formato: 55 + DDD + número (só dígitos).
 
 2) ADICIONAR / EDITAR ACOMPANHANTE (lista "perfis"):

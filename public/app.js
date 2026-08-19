@@ -75,6 +75,8 @@ document.addEventListener("click", (ev) => {
    META TAGS DINÂMICAS POR ROTA (SEO)
    ============================================================ */
 const SITE_ORIGIN = "https://aliancamodels.com";
+const INFO_MODEL_SUPPORT_WHATSAPP = "5511996425680";
+const INFO_CLIENT_CONTACT_WHATSAPP = "5515991906606";
 
 function ensureMeta(selector, create) {
   let el = document.head.querySelector(selector);
@@ -1049,8 +1051,10 @@ function viewInformacoes() {
          Os contatos são tratados com sigilo.</p>
 
       <h2>Contato</h2>
-      <p><a class="section__link" href="${waAdmin()}" target="_blank" rel="noopener">Suporte a visitantes e clientes</a></p>
-      <p class="info-contact-row"><span>Suporte às modelos:</span><a class="wa-phone-link" href="https://wa.me/${MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener" aria-label="Abrir conversa com o suporte às modelos no WhatsApp">${formatWhatsappNumber(MODEL_SUPPORT_WHATSAPP)}</a></p>
+      <div class="info-contacts" aria-label="Contatos oficiais da Aliança">
+        <p class="info-contact-row"><span>Suporte às modelos:</span><a class="wa-phone-link" href="https://wa.me/${INFO_MODEL_SUPPORT_WHATSAPP}" target="_blank" rel="noopener" aria-label="Abrir conversa com o suporte às modelos no WhatsApp">${formatWhatsappNumber(INFO_MODEL_SUPPORT_WHATSAPP)}</a></p>
+        <p class="info-contact-row"><span>Contato de clientes:</span><a class="wa-phone-link" href="https://wa.me/${INFO_CLIENT_CONTACT_WHATSAPP}?text=${encodeURIComponent("Olá! Gostaria de informações sobre a Aliança.")}" target="_blank" rel="noopener" aria-label="Abrir conversa com o atendimento a clientes no WhatsApp">${formatWhatsappNumber(INFO_CLIENT_CONTACT_WHATSAPP)}</a></p>
+      </div>
     </div>
   </section>`;
 }
