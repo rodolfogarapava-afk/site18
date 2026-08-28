@@ -520,7 +520,8 @@ function viewHome() {
     .map(cidadeCard).join("");
 
   const slides = heroCarouselSlides();
-  const hasCarousel = slides.length >= 2;
+  // Os destaques vivem apenas no hero; um único destaque também é válido.
+  const hasCarousel = slides.length >= 1;
   const firstImg = hasCarousel ? slides[0].foto : "instagram_post.webp?v=2";
 
   const slidesHtml = hasCarousel ? slides.map((s, i) => `
@@ -554,8 +555,6 @@ function viewHome() {
       </div>
     </div>
   </section>
-
-  ${hasCarousel ? "" : bannerDestaqueHtml()}
 
   ${storiesStripHtml({
     extraClass: "stories--home",
