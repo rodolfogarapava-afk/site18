@@ -128,9 +128,18 @@ function perfilAudioUrl(p) {
    ============================================================ */
 async function initLogin() {
   VIPStore.logAccess("page_view", location.pathname).catch(() => {});
+  const returnAfterLogin = () => {
+    const target = new URLSearchParams(location.search).get("return");
+    // Aceita somente o retorno interno definido pelo popup (evita open redirect).
+    if (target === "/") location.replace("/");
+  };
   try {
     const session = await VIPStore.auth.getSession();
-    if (session && await VIPStore.auth.isAdmin()) return showAdmin();
+    if (session && await VIPStore.auth.isAdmin()) {
+      await showAdmin();
+      returnAfterLogin();
+      return;
+    }
     if (session) await VIPStore.auth.signOut();
   } catch (e) {
     try { await VIPStore.auth.signOut(); } catch (_) {}
@@ -151,6 +160,7 @@ async function initLogin() {
       }
       VIPStore.logAccess("admin_login_success", location.pathname).catch(() => {});
       await showAdmin();
+      returnAfterLogin();
     } catch (err) {
       $("#login-err").textContent = "E-mail ou senha incorretos.";
     } finally {
