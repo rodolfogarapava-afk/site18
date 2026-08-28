@@ -100,8 +100,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "Aliança" },
       { property: "og:locale", content: "pt_BR" },
       { property: "og:url", content: "https://aliancamodels.com/" },
-      { property: "og:image", content: "https://aliancamodels.com/social-preview.png?v=1" },
-      { property: "og:image:secure_url", content: "https://aliancamodels.com/social-preview.png?v=1" },
+      { property: "og:image", content: "https://aliancamodels.com/social-preview-national.png?v=1" },
+      { property: "og:image:secure_url", content: "https://aliancamodels.com/social-preview-national.png?v=1" },
       { property: "og:image:type", content: "image/png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
@@ -116,7 +116,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. +18.",
       },
-      { name: "twitter:image", content: "https://aliancamodels.com/social-preview.png?v=1" },
+      { name: "twitter:image", content: "https://aliancamodels.com/social-preview-national.png?v=1" },
       {
         name: "twitter:image:alt",
         content: "Aliança — Acompanhantes de Luxo no Rio de Janeiro e em Cuiabá",

@@ -45,6 +45,9 @@ export const Route = createFileRoute("/sitemap.xml")({
           sbSelect<CityRow>("cidades", "select=slug"),
           sbSelect<PerfilRow>("perfis", "select=slug,cidade,created_at"),
         ]);
+        const cidadesComPerfis = new Set(
+          perfis.map((p) => p.cidade).filter((cidade): cidade is string => Boolean(cidade)),
+        );
 
         const entries: string[] = [
           urlXml(`${BASE_URL}/`, undefined, "weekly", "1.0"),
@@ -53,7 +56,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         ];
 
         for (const c of cidades) {
-          if (!c.slug) continue;
+          if (!c.slug || !cidadesComPerfis.has(c.slug)) continue;
           entries.push(urlXml(`${BASE_URL}/cidade/${c.slug}`, undefined, "weekly", "0.8"));
         }
         for (const p of perfis) {

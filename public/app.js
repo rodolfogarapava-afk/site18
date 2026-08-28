@@ -407,6 +407,7 @@ function cidadeCard(key) {
   const c = CIDADES[key];
   if (!c) return "";
   const n = PERFIS.filter(p => p.cidade === key).length;
+  if (!n) return "";
   const info = n ? `${c.uf} • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
   return `<a class="city-card${n ? "" : " city-card--soon"}" href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
     <span class="city-card__kicker">Cidade</span>
@@ -495,7 +496,7 @@ function viewHome() {
   updateHead({
     title: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá",
     description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados, total discrição. Somente maiores de 18 anos.",
-    image: SITE_ORIGIN + "/logo.png",
+    image: SITE_ORIGIN + "/social-preview-national.png?v=1",
     path: "/",
     type: "website",
   });
@@ -510,9 +511,9 @@ function viewHome() {
   });
   // Home: apenas Rio de Janeiro e Cuiabá (como era no começo)
   const HOME_CIDADES = ["rio-de-janeiro", "cuiaba"];
-  const cidadesAtivas = HOME_CIDADES.length;
+  const cidadesAtivas = HOME_CIDADES.filter(key => PERFIS.some(p => p.cidade === key)).length;
   const perfisAtivos = PERFIS.filter(p => HOME_CIDADES.includes(p.cidade)).length;
-  const cardsCidades = cidadesOrdenadas()
+  const cardsCidades = cidadesComConteudo()
     .filter(key => HOME_CIDADES.includes(key))
     .map(cidadeCard).join("");
 
@@ -626,6 +627,7 @@ function viewCidade(cidade, filtro) {
   if (!c) return view404();
 
   const cidadeTotal = PERFIS.filter(x => x.cidade === cidade).length;
+  if (!cidadeTotal) return view404();
   const routePathCidade = filtro?.tipo === "bairro"
     ? `/cidade/${cidade}/bairro/${filtro.valor}`
     : filtro?.tipo
@@ -1761,7 +1763,7 @@ function montarMenus() {
   if (!host) return;
 
   // Um único menu "Cidades" com busca e rolagem (27 capitais)
-  const links = cidadesOrdenadas().map(key => {
+  const links = cidadesComConteudo().map(key => {
     const c = CIDADES[key];
     const total = PERFIS.filter(p => p.cidade === key).length;
     return `<a href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
