@@ -494,8 +494,8 @@ function heroCarouselSlides() {
 
 function viewHome() {
   updateHead({
-    title: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá",
-    description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados, total discrição. Somente maiores de 18 anos.",
+    title: "Aliança Models — Acompanhantes de Luxo no Brasil",
+    description: "Aliança Models: encontre acompanhantes de luxo, perfis verificados e contato direto com discrição em todo o Brasil.",
     image: SITE_ORIGIN + "/social-preview-national.png?v=1",
     path: "/",
     type: "website",
@@ -506,7 +506,7 @@ function viewHome() {
     name: "Aliança",
     url: SITE_ORIGIN + "/",
     inLanguage: "pt-BR",
-    description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá.",
+    description: "Acompanhantes de luxo, perfis verificados e contato direto em todo o Brasil.",
     audience: { "@type": "PeopleAudience", suggestedMinAge: 18 },
   });
   // Home: apenas Rio de Janeiro e Cuiabá (como era no começo)
@@ -588,6 +588,27 @@ function viewHome() {
   initStoriesStrip();
   $("#hero-explore-cities")?.addEventListener("click", () => scrollToSection("sec-cidades"));
   if (hasCarousel) initHeroCarousel(slides);
+}
+
+function viewAcompanhantes() {
+  const cidadesAtivas = cidadesComConteudo();
+  updateHead({
+    title: "Acompanhantes de Luxo no Brasil — Aliança Models",
+    description: "Encontre acompanhantes de luxo em cidades atendidas pela Aliança Models. Veja perfis, fotos e informações para contato direto.",
+    image: SITE_ORIGIN + "/social-preview-national.png?v=1",
+    path: "/acompanhantes",
+    type: "website",
+  });
+  setJsonLd({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Acompanhantes de Luxo no Brasil",
+    url: SITE_ORIGIN + "/acompanhantes",
+    description: "Perfis de acompanhantes de luxo em cidades atendidas pela Aliança Models.",
+    numberOfItems: PERFIS.length,
+  });
+  const cityLinks = cidadesAtivas.map(key => `<a class="pill" href="${pathTo('/cidade/' + key)}">Acompanhantes em ${CIDADES[key].nome}</a>`).join("");
+  app.innerHTML = `<section class="page"><div class="container"><div class="section__head"><p class="hero__eyebrow">Aliança Models</p><h1>Acompanhantes de luxo no Brasil</h1><p class="lead">Encontre perfis verificados, fotos e contato direto com discrição. A disponibilidade varia conforme a cidade.</p></div><div class="chips chips--rail">${cityLinks}</div>${gridHtml(ordena(PERFIS))}</div></section>`;
 }
 
 /* Rotaciona slides do hero + preview "a seguir" com temporizador */
@@ -1728,6 +1749,7 @@ function router() {
   window.VIPStore?.logAccess("page_view", location.pathname).catch(() => {});
 
   if (parts.length === 0)                 return viewHome();
+  if (parts[0] === "acompanhantes")      return viewAcompanhantes();
   if (parts[0] === "anuncie")             return viewAnuncie();
   if (parts[0] === "informacoes")         return viewInformacoes();
   if (parts[0] === "termos-de-uso")       return viewTermosDeUso();

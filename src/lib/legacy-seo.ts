@@ -20,16 +20,16 @@ function absoluteImage(value?: string): string {
   return value.startsWith("http") ? value : `${SITE_ORIGIN}${value.startsWith("/") ? "" : "/"}${value}`;
 }
 
-async function select<T>(table: string, query: string): Promise<T[]> {
+async function select<T>(table: string, query: string): Promise<T[] | null> {
   try {
     const response = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, {
       headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}`, Accept: "application/json" },
     });
-    if (!response.ok) return [];
+    if (!response.ok) return null;
     const data = await response.json();
-    return Array.isArray(data) ? data as T[] : [];
+    return Array.isArray(data) ? data as T[] : null;
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -48,12 +48,25 @@ function seoBlock(pathname: string, cities: CityRow[], profiles: PerfilRow[]): S
     const activeCities = cities.filter((city) => (profilesByCity.get(city.slug)?.length ?? 0) > 0);
     return {
       status: 200,
-      title: "Aliança Models — Acompanhantes em Cuiabá e Rio de Janeiro",
-      description: "Encontre acompanhantes verificadas em Cuiabá e no Rio de Janeiro. Perfis, fotos e contato direto com discrição.",
-      content: `<h1>Acompanhantes em Cuiabá e Rio de Janeiro</h1><p>Conheça perfis de acompanhantes disponíveis, com fotos, informações e contato direto.</p><nav aria-label="Cidades">${activeCities.map((city) => `<a href="/cidade/${escapeHtml(city.slug)}">Acompanhantes em ${escapeHtml(city.nome || city.slug)}</a>`).join(" · ")}</nav>`,
+      title: "Aliança Models — Acompanhantes de Luxo no Brasil",
+      description: "Aliança Models: encontre acompanhantes de luxo, perfis verificados e contato direto com discrição em todo o Brasil.",
+      content: `<h1>Acompanhantes de luxo no Brasil</h1><p>Conheça perfis de acompanhantes disponíveis, com fotos, informações e contato direto.</p><nav aria-label="Cidades">${activeCities.map((city) => `<a href="/cidade/${escapeHtml(city.slug)}">Acompanhantes em ${escapeHtml(city.nome || city.slug)}</a>`).join(" · ")}</nav><p><a href="/acompanhantes">Ver todos os perfis de acompanhantes</a></p>`,
       image: `${SITE_ORIGIN}/logo.png`,
       type: "website",
-      jsonLd: { "@context": "https://schema.org", "@type": "WebSite", name: "Aliança Models", url: `${SITE_ORIGIN}/`, inLanguage: "pt-BR", description: "Acompanhantes em Cuiabá e Rio de Janeiro." },
+      jsonLd: { "@context": "https://schema.org", "@type": "WebSite", name: "Aliança Models", url: `${SITE_ORIGIN}/`, inLanguage: "pt-BR", description: "Acompanhantes de luxo e perfis verificados no Brasil." },
+    };
+  }
+
+  if (parts[0] === "acompanhantes") {
+    const activeCities = cities.filter((city) => (profilesByCity.get(city.slug)?.length ?? 0) > 0);
+    return {
+      status: 200,
+      title: "Acompanhantes de Luxo no Brasil — Aliança Models",
+      description: "Encontre acompanhantes de luxo em cidades atendidas pela Aliança Models. Veja perfis, fotos e informações para contato direto.",
+      content: `<h1>Acompanhantes de luxo no Brasil</h1><p>Encontre perfis verificados, fotos e contato direto com discrição. A disponibilidade varia conforme a cidade.</p><nav aria-label="Cidades atendidas">${activeCities.map((city) => `<a href="/cidade/${escapeHtml(city.slug)}">Acompanhantes em ${escapeHtml(city.nome || city.slug)}</a>`).join(" · ")}</nav><ul>${profiles.map((profile) => `<li><a href="/perfil/${escapeHtml(profile.slug)}">${escapeHtml(profile.nome || profile.slug)}${profile.cidade && cityBySlug.get(profile.cidade)?.nome ? ` — acompanhante em ${escapeHtml(cityBySlug.get(profile.cidade)?.nome)}` : ""}</a></li>`).join("")}</ul>`,
+      image: `${SITE_ORIGIN}/social-preview-national.png?v=1`,
+      type: "website",
+      jsonLd: { "@context": "https://schema.org", "@type": "CollectionPage", name: "Acompanhantes de Luxo no Brasil", url: `${SITE_ORIGIN}/acompanhantes`, description: "Perfis de acompanhantes de luxo em cidades atendidas pela Aliança Models.", numberOfItems: profiles.length },
     };
   }
 
@@ -101,6 +114,12 @@ export async function renderLegacySeoShell(shellHtml: string, request: Request):
     select<CityRow>("cidades", "select=slug,nome,uf&order=ordem.asc"),
     select<PerfilRow>("perfis", "select=slug,nome,cidade,descricao,fotos&order=ordem.asc"),
   ]);
+  if (!cities || !profiles) {
+    return new Response(shellHtml, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
   const seo = seoBlock(pathname, cities, profiles);
   let html = shellHtml;
   if (seo.content) html = html.replace('<main id="app"></main>', `<main id="app" data-seo-prerender="true">${seo.content}</main>`);

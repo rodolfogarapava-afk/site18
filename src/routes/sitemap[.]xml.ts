@@ -54,6 +54,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           urlXml(`${BASE_URL}/anuncie`, undefined, "monthly", "0.5"),
           urlXml(`${BASE_URL}/informacoes`, undefined, "yearly", "0.3"),
         ];
+        if (perfis.length) entries.splice(1, 0, urlXml(`${BASE_URL}/acompanhantes`, undefined, "daily", "0.9"));
 
         for (const c of cidades) {
           if (!c.slug || !cidadesComPerfis.has(c.slug)) continue;
