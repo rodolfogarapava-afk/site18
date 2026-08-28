@@ -1876,11 +1876,15 @@ function initLaunchGate() {
   if (ageAccepted) show();
   else document.addEventListener("age-accepted", show, { once: true });
   // A exceção é validada pelo mesmo RPC usado no painel administrativo.
-  window.VIPStore?.auth?.isAdmin?.().then(isAdmin => {
+  const checkAdmin = () => window.VIPStore?.auth?.isAdmin?.().then(isAdmin => {
     if (!isAdmin) return;
     if (ageAccepted) hide();
     else document.addEventListener("age-accepted", hide, { once: true });
   }).catch(() => {});
+  checkAdmin();
+  window.VIPStore?.auth?.onChange?.(() => checkAdmin());
+  window.addEventListener("pageshow", checkAdmin);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkAdmin(); });
 }
 
 function initHeader() {
