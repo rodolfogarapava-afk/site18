@@ -63,6 +63,8 @@ document.addEventListener("click", (ev) => {
   let url;
   try { url = new URL(href, location.href); } catch { return; }
   if (url.origin !== location.origin) return;
+  // O painel administrativo precisa carregar sua própria página e autenticação.
+  if (url.pathname === "/admin") return;
   // ignora arquivos estáticos (admin.html, .png, .xml, etc.)
   if (/\.(html|xml|txt|png|jpg|jpeg|gif|webp|svg|pdf|mp4|mp3)$/i.test(url.pathname)) return;
   ev.preventDefault();
