@@ -60,7 +60,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="styles.css?v=77" />
+  <link rel="stylesheet" href="styles.css?v=78" />
 </head>
 <body>
 
@@ -90,6 +90,12 @@
   <div id="launch-gate" class="launch-gate" hidden aria-modal="true" role="dialog" aria-labelledby="launch-gate-title">
     <div class="launch-gate__backdrop" aria-hidden="true"></div>
     <div class="launch-gate__card">
+      <button
+        class="launch-gate__close"
+        id="launch-gate-close"
+        type="button"
+        aria-label="Fechar aviso de inauguração e acessar o site"
+      >✕</button>
       <img class="launch-gate__logo" src="logo.png" alt="Aliança" />
       <p class="launch-gate__eyebrow">Um novo capítulo começa</p>
       <h1 id="launch-gate-title">Inauguração<br /><span>08/09</span></h1>
@@ -103,8 +109,6 @@
         <i>:</i>
         <div><strong id="launch-seconds">00</strong><span>seg</span></div>
       </div>
-      <a class="launch-gate__admin" href="/admin?return=/" rel="nofollow">Acesso admin</a>
-      <p class="launch-gate__admin-hint">Área restrita para teste e gerenciamento do site</p>
     </div>
   </div>
 
@@ -236,6 +240,6 @@
   <script src="supabase-config.js?v=20"></script>
   <script src="data.js?v=20"></script>
   <script src="store.js?v=25"></script>
-  <script src="app.js?v=47"></script>
+  <script src="app.js?v=48"></script>
 </body>
 </html>

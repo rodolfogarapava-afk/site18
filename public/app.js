@@ -1873,6 +1873,10 @@ function initLaunchGate() {
   const timer = setInterval(renderTimer, 1000);
   const show = () => { gate.hidden = false; document.body.classList.add("launch-gate-open"); };
   const hide = () => { gate.hidden = true; document.body.classList.remove("launch-gate-open"); clearInterval(timer); };
+  $("#launch-gate-close")?.addEventListener("click", hide);
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && !gate.hidden) hide();
+  });
   let ageAccepted = false;
   try { ageAccepted = localStorage.getItem("vip_maior18_v2") === "1"; } catch (e) {}
   if (ageAccepted) show();
