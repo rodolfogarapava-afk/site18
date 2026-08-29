@@ -163,29 +163,64 @@
     return row;
   }
 
-  /* Linhas de `cidades` (banco) -> objeto indexado por slug (JS) */
+  const CITY_ACTIVE_ORDER_OFFSET = 10000;
+
+  /* Linhas de `cidades` (banco) -> objeto indexado por slug (JS).
+     Bancos que ainda não receberam a coluna `ativa` usam temporariamente
+     uma faixa reservada de `ordem`, preservando o controle do painel. */
   function rowsToCidades(rows) {
     const out = {};
     (rows || []).forEach(c => {
+      const rawOrder = Number(c.ordem) || 0;
+      const encoded = rawOrder >= CITY_ACTIVE_ORDER_OFFSET;
+      const encodedOrder = encoded ? rawOrder - CITY_ACTIVE_ORDER_OFFSET : rawOrder;
+      const ordem = encoded ? Math.floor(encodedOrder / 2) : rawOrder;
       out[c.slug] = {
         nome: c.nome,
         uf: c.uf,
         bairros: Array.isArray(c.bairros) ? c.bairros : [],
-        ordem: c.ordem || 0,
+        ordem,
+        ativa: typeof c.ativa === "boolean"
+          ? c.ativa
+          : encoded
+            ? encodedOrder % 2 === 0
+            : c.slug === "rio-de-janeiro",
       };
     });
     return out;
   }
 
   /* objeto `cidades` (JS) -> array de linhas para upsert */
-  function cidadesToRows(cidades) {
-    return Object.keys(cidades || {}).map((slug, i) => ({
-      slug,
-      nome: cidades[slug].nome,
-      uf: cidades[slug].uf,
-      bairros: cidades[slug].bairros || [],
-      ordem: typeof cidades[slug].ordem === "number" ? cidades[slug].ordem : i,
-    }));
+  function cidadesToRows(cidades, includeActive = true) {
+    return Object.keys(cidades || {}).map((slug, i) => {
+      const cidade = cidades[slug];
+      const ativa = cidade.ativa !== false;
+      const ordem = typeof cidade.ordem === "number" ? cidade.ordem : i;
+      const row = {
+        slug,
+        nome: cidade.nome,
+        uf: cidade.uf,
+        bairros: cidade.bairros || [],
+        ordem: includeActive
+          ? ordem
+          : CITY_ACTIVE_ORDER_OFFSET + (ordem * 2) + (ativa ? 0 : 1),
+      };
+      if (includeActive) row.ativa = ativa;
+      return row;
+    });
+  }
+
+  function isMissingCityActiveColumn(error) {
+    if (!error) return false;
+    const text = [error.message, error.details, error.hint]
+      .filter(Boolean).join(" ").toLowerCase();
+    return text.includes("ativa") && (
+      error.code === "PGRST204" ||
+      error.code === "42703" ||
+      text.includes("does not exist") ||
+      text.includes("could not find") ||
+      text.includes("schema cache")
+    );
   }
 
   /* ============================================================
@@ -485,8 +520,12 @@
     /* Upsert das cidades atuais e remoção das que sumiram. */
     async saveCidades(cidades) {
       requireSb();
-      const rows = cidadesToRows(cidades);
-      const { error: upErr } = await sb.from("cidades").upsert(rows, { onConflict: "slug" });
+      let rows = cidadesToRows(cidades);
+      let { error: upErr } = await sb.from("cidades").upsert(rows, { onConflict: "slug" });
+      if (isMissingCityActiveColumn(upErr)) {
+        rows = cidadesToRows(cidades, false);
+        ({ error: upErr } = await sb.from("cidades").upsert(rows, { onConflict: "slug" }));
+      }
       if (upErr) throw upErr;
 
       // remove cidades que não estão mais na lista
@@ -617,7 +656,15 @@
     },
 
     /* Cópia da semente de fábrica (data.js). */
-    seed() { return (typeof SEED !== "undefined") ? clone(SEED) : { adminWhatsapp: "", cidades: {}, perfis: [] }; },
+    seed() {
+      const data = (typeof SEED !== "undefined") ? clone(SEED) : { adminWhatsapp: "", cidades: {}, perfis: [] };
+      Object.keys(data.cidades || {}).forEach(slug => {
+        if (typeof data.cidades[slug].ativa !== "boolean") {
+          data.cidades[slug].ativa = slug === "rio-de-janeiro";
+        }
+      });
+      return data;
+    },
 
     /* Restaura o padrão de fábrica no banco. */
     async resetToSeed() { await this.importAll(this.seed()); },

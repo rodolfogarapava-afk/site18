@@ -2,7 +2,7 @@ const SB_URL = "https://luwgedyzbxokosozhlwf.supabase.co";
 const SB_ANON = "sb_publishable_yKN-Yy2Eu_Y-Bmw24eEpKQ_acLs0QET";
 const SITE_ORIGIN = "https://aliancamodels.com";
 
-interface CityRow { slug: string; nome?: string; uf?: string }
+interface CityRow { slug: string; nome?: string; uf?: string; ativa?: boolean; ordem?: number }
 interface PerfilRow { slug: string; nome?: string; cidade?: string; descricao?: string; fotos?: string[] }
 interface SeoResult { status: number; title?: string; description?: string; content?: string; image?: string; type?: string; jsonLd?: Record<string, unknown> }
 
@@ -35,6 +35,13 @@ async function select<T>(table: string, query: string): Promise<T[] | null> {
 
 function seoBlock(pathname: string, cities: CityRow[], profiles: PerfilRow[]): SeoResult {
   const cityBySlug = new Map(cities.map((city) => [city.slug, city]));
+  const cityIsActive = (city?: CityRow) => !!city && (
+    typeof city.ativa === "boolean"
+      ? city.ativa
+      : typeof city.ordem === "number" && city.ordem >= 10000
+        ? (city.ordem - 10000) % 2 === 0
+        : city.slug === "rio-de-janeiro"
+  );
   const profilesByCity = new Map<string, PerfilRow[]>();
   for (const profile of profiles) {
     if (!profile.cidade) continue;
@@ -45,7 +52,7 @@ function seoBlock(pathname: string, cities: CityRow[], profiles: PerfilRow[]): S
 
   const parts = pathname.split("/").filter(Boolean);
   if (!parts.length) {
-    const activeCities = cities.filter((city) => (profilesByCity.get(city.slug)?.length ?? 0) > 0);
+    const activeCities = cities.filter(cityIsActive);
     return {
       status: 200,
       title: "Aliança Models — Acompanhantes de Luxo no Brasil",
@@ -58,7 +65,7 @@ function seoBlock(pathname: string, cities: CityRow[], profiles: PerfilRow[]): S
   }
 
   if (parts[0] === "acompanhantes") {
-    const activeCities = cities.filter((city) => (profilesByCity.get(city.slug)?.length ?? 0) > 0);
+    const activeCities = cities.filter(cityIsActive);
     return {
       status: 200,
       title: "Acompanhantes de Luxo no Brasil — Aliança Models",
@@ -73,7 +80,7 @@ function seoBlock(pathname: string, cities: CityRow[], profiles: PerfilRow[]): S
   if (parts[0] === "cidade" && parts[1]) {
     const city = cityBySlug.get(parts[1]);
     const cityProfiles = profilesByCity.get(parts[1]) ?? [];
-    if (!city || !cityProfiles.length) return { status: 404, title: "Página não encontrada — Aliança Models", description: "Esta cidade não possui acompanhantes disponíveis ou não está publicada." };
+    if (!cityIsActive(city)) return { status: 404, title: "Página não encontrada — Aliança Models", description: "Esta cidade não possui acompanhantes disponíveis ou não está publicada." };
     const cityName = city.nome || city.slug;
     return {
       status: 200,
@@ -110,10 +117,11 @@ function seoBlock(pathname: string, cities: CityRow[], profiles: PerfilRow[]): S
 
 export async function renderLegacySeoShell(shellHtml: string, request: Request): Promise<Response> {
   const pathname = new URL(request.url).pathname.replace(/\/$/, "") || "/";
-  const [cities, profiles] = await Promise.all([
-    select<CityRow>("cidades", "select=slug,nome,uf&order=ordem.asc"),
+  const [citiesWithActive, profiles] = await Promise.all([
+    select<CityRow>("cidades", "select=slug,nome,uf,ativa&order=ordem.asc"),
     select<PerfilRow>("perfis", "select=slug,nome,cidade,descricao,fotos&order=ordem.asc"),
   ]);
+  const cities = citiesWithActive ?? await select<CityRow>("cidades", "select=slug,nome,uf,ordem&order=ordem.asc");
   if (!cities || !profiles) {
     return new Response(shellHtml, {
       status: 200,

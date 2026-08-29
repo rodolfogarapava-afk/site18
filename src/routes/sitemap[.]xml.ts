@@ -10,7 +10,7 @@ const BASE_URL = "https://aliancamodels.com";
 const SB_URL = "https://luwgedyzbxokosozhlwf.supabase.co";
 const SB_ANON = "sb_publishable_yKN-Yy2Eu_Y-Bmw24eEpKQ_acLs0QET";
 
-interface CityRow { slug: string }
+interface CityRow { slug: string; ativa?: boolean; ordem?: number }
 interface PerfilRow { slug: string; cidade?: string; created_at?: string }
 
 async function sbSelect<T>(table: string, query: string): Promise<T[]> {
@@ -41,13 +41,13 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const [cidades, perfis] = await Promise.all([
-          sbSelect<CityRow>("cidades", "select=slug"),
+        const [cidadesComAtiva, perfis] = await Promise.all([
+          sbSelect<CityRow>("cidades", "select=slug,ativa"),
           sbSelect<PerfilRow>("perfis", "select=slug,cidade,created_at"),
         ]);
-        const cidadesComPerfis = new Set(
-          perfis.map((p) => p.cidade).filter((cidade): cidade is string => Boolean(cidade)),
-        );
+        const cidades = cidadesComAtiva.length
+          ? cidadesComAtiva
+          : await sbSelect<CityRow>("cidades", "select=slug,ordem");
 
         const entries: string[] = [
           urlXml(`${BASE_URL}/`, undefined, "weekly", "1.0"),
@@ -57,7 +57,12 @@ export const Route = createFileRoute("/sitemap.xml")({
         if (perfis.length) entries.splice(1, 0, urlXml(`${BASE_URL}/acompanhantes`, undefined, "daily", "0.9"));
 
         for (const c of cidades) {
-          if (!c.slug || !cidadesComPerfis.has(c.slug)) continue;
+          const ativa = typeof c.ativa === "boolean"
+            ? c.ativa
+            : typeof c.ordem === "number" && c.ordem >= 10000
+              ? (c.ordem - 10000) % 2 === 0
+              : c.slug === "rio-de-janeiro";
+          if (!c.slug || !ativa) continue;
           entries.push(urlXml(`${BASE_URL}/cidade/${c.slug}`, undefined, "weekly", "0.8"));
         }
         for (const p of perfis) {

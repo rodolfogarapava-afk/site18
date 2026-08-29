@@ -229,8 +229,14 @@ function storiesDaCidade(cidade) {
   return (window.STORIES || []).filter(s => storyCidadeSlug(s) === cidade);
 }
 
-function cidadesComConteudo() {
-  return cidadesOrdenadas().filter(key => PERFIS.some(p => p.cidade === key));
+function cidadeAtiva(key) {
+  const cidade = CIDADES[key];
+  if (!cidade) return false;
+  return typeof cidade.ativa === "boolean" ? cidade.ativa : key === "rio-de-janeiro";
+}
+
+function cidadesPublicadas() {
+  return cidadesOrdenadas().filter(cidadeAtiva);
 }
 
 /* ---------- Componentes ---------- */
@@ -409,7 +415,6 @@ function cidadeCard(key) {
   const c = CIDADES[key];
   if (!c) return "";
   const n = PERFIS.filter(p => p.cidade === key).length;
-  if (!n) return "";
   const info = n ? `${c.uf} • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
   return `<a class="city-card${n ? "" : " city-card--soon"}" href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
     <span class="city-card__kicker">Cidade</span>
@@ -511,13 +516,9 @@ function viewHome() {
     description: "Acompanhantes de luxo, perfis verificados e contato direto em todo o Brasil.",
     audience: { "@type": "PeopleAudience", suggestedMinAge: 18 },
   });
-  // Home: apenas Rio de Janeiro e Cuiabá (como era no começo)
-  const HOME_CIDADES = ["rio-de-janeiro", "cuiaba"];
-  const cidadesAtivas = HOME_CIDADES.filter(key => PERFIS.some(p => p.cidade === key)).length;
-  const perfisAtivos = PERFIS.filter(p => HOME_CIDADES.includes(p.cidade)).length;
-  const cardsCidades = cidadesComConteudo()
-    .filter(key => HOME_CIDADES.includes(key))
-    .map(cidadeCard).join("");
+  const cidadesAtivas = cidadesPublicadas();
+  const perfisAtivos = PERFIS.filter(p => cidadesAtivas.includes(p.cidade)).length;
+  const cardsCidades = cidadesAtivas.map(cidadeCard).join("");
 
   const slides = heroCarouselSlides();
   const hasCarousel = slides.length >= 2;
@@ -576,7 +577,7 @@ function viewHome() {
             <p class="lead">Toque na sua cidade para ver as acompanhantes disponíveis</p>
           </div>
           <div class="city-showcase__stats" aria-label="Resumo da seleção">
-            <span>${cidadesAtivas} cidades</span>
+            <span>${cidadesAtivas.length} ${cidadesAtivas.length === 1 ? "cidade" : "cidades"}</span>
             <span>${perfisAtivos} perfis</span>
           </div>
         </div>
@@ -593,7 +594,7 @@ function viewHome() {
 }
 
 function viewAcompanhantes() {
-  const cidadesAtivas = cidadesComConteudo();
+  const cidadesAtivas = cidadesPublicadas();
   updateHead({
     title: "Acompanhantes de Luxo no Brasil — Aliança Models",
     description: "Encontre acompanhantes de luxo em cidades atendidas pela Aliança Models. Veja perfis, fotos e informações para contato direto.",
@@ -647,10 +648,9 @@ function initHeroCarousel(slides) {
 
 function viewCidade(cidade, filtro) {
   const c = CIDADES[cidade];
-  if (!c) return view404();
+  if (!c || !cidadeAtiva(cidade)) return view404();
 
   const cidadeTotal = PERFIS.filter(x => x.cidade === cidade).length;
-  if (!cidadeTotal) return view404();
   const routePathCidade = filtro?.tipo === "bairro"
     ? `/cidade/${cidade}/bairro/${filtro.valor}`
     : filtro?.tipo
@@ -1484,7 +1484,7 @@ const cityPickerLead = $("#city-picker-lead");
 
 function renderCityPicker() {
   if (!cityPickerGrid) return;
-  const cities = cidadesComConteudo();
+  const cities = cidadesPublicadas();
   cityPickerGrid.innerHTML = cities.map(key => {
     const c = CIDADES[key];
     const perfis = PERFIS.filter(p => p.cidade === key).length;
@@ -1787,7 +1787,7 @@ function montarMenus() {
   if (!host) return;
 
   // Um único menu "Cidades" com busca e rolagem (27 capitais)
-  const links = cidadesComConteudo().map(key => {
+  const links = cidadesPublicadas().map(key => {
     const c = CIDADES[key];
     const total = PERFIS.filter(p => p.cidade === key).length;
     return `<a href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">

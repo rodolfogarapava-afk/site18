@@ -198,6 +198,7 @@ input,select,textarea{font-family:var(--sans)}
 .city-input{background:#16151a;border:1px solid var(--line);border-radius:12px;padding:.64rem .78rem;color:#fff;outline:none;min-height:42px}
 .city-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.12)}
 .city-input--uf{width:72px;text-transform:uppercase;text-align:center}
+.city-block__visibility{min-height:42px;padding:.56rem .72rem;white-space:nowrap}
 .bairro-row{display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem}
 .bairro-row input{flex:1;background:#16151a;border:1px solid var(--line);border-radius:12px;padding:.6rem .78rem;color:#fff;outline:none;min-height:42px}
 .bairro-row input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.12)}

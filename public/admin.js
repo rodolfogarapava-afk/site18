@@ -839,6 +839,10 @@ function renderCidades() {
         <input class="cnome city-input" value="${c.nome.replace(/"/g, "&quot;")}" placeholder="Nome da cidade" />
         <input class="cuf city-input city-input--uf" value="${c.uf}" maxlength="2" placeholder="UF" />
         <span class="slug">${key}</span>
+        <label class="check city-block__visibility">
+          <input class="cativa" type="checkbox" ${c.ativa !== false ? "checked" : ""} />
+          Ativa no site
+        </label>
         <div style="flex:1"></div>
         <button class="btn btn--danger btn--sm" data-delcity="${key}">Remover cidade</button>
       </div>
@@ -867,6 +871,7 @@ function syncCidadesFromInputs() {
     if (!DATA.cidades[key]) return;
     DATA.cidades[key].nome = $(".cnome", block).value.trim() || DATA.cidades[key].nome;
     DATA.cidades[key].uf = ($(".cuf", block).value.trim() || DATA.cidades[key].uf).toUpperCase();
+    DATA.cidades[key].ativa = $(".cativa", block).checked;
     $$(".bairro-row", block).forEach(row => {
       const bi = +row.dataset.bi;
       const nome = $(".bnome", row).value.trim();
@@ -885,7 +890,7 @@ $("#add-cidade").addEventListener("click", () => {
   const uf = (prompt("UF (ex.: SP):") || "").toUpperCase().slice(0, 2);
   let key = slugify(nome);
   while (DATA.cidades[key]) key += "-2";
-  DATA.cidades[key] = { nome: nome.trim(), uf, bairros: [] };
+  DATA.cidades[key] = { nome: nome.trim(), uf, bairros: [], ativa: true };
   renderCidades();
 });
 
