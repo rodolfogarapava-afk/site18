@@ -87,7 +87,7 @@ function ensureMeta(selector, create) {
   return el;
 }
 
-function updateHead({ title, description, image, path: routePath, type = "website" }) {
+function updateHead({ title, description, image, path: routePath, type = "website", robots: robotsValue = "index,follow" }) {
   const url = SITE_ORIGIN + (routePath || "/");
   if (title) document.title = title;
 
@@ -120,20 +120,47 @@ function updateHead({ title, description, image, path: routePath, type = "websit
   }
   canonical.href = url;
 
-  // Reseta robots para index,follow em rotas válidas (view404 sobrescreve)
+  // Reseta robots por rota (padrão index,follow; view404 e filtros usam outro valor)
   const robots = document.head.querySelector('meta[name="robots"]');
-  if (robots) robots.setAttribute("content", "index,follow");
+  if (robots) robots.setAttribute("content", robotsValue);
 }
 
+/** Aceita um objeto JSON-LD único ou uma lista deles (ex.: CollectionPage + BreadcrumbList) */
 function setJsonLd(data) {
-  let el = document.getElementById("route-jsonld");
-  if (!el) {
-    el = document.createElement("script");
+  $$('script[data-route-jsonld]').forEach(el => el.remove());
+  const items = Array.isArray(data) ? data.filter(Boolean) : (data ? [data] : []);
+  items.forEach((item, i) => {
+    const el = document.createElement("script");
     el.type = "application/ld+json";
-    el.id = "route-jsonld";
+    el.dataset.routeJsonld = String(i);
+    el.textContent = JSON.stringify(item);
     document.head.appendChild(el);
-  }
-  el.textContent = data ? JSON.stringify(data) : "";
+  });
+}
+
+/** Trilha de navegação (breadcrumb) visível + BreadcrumbList correspondente.
+ * `items`: [{ label, path? }] — o último item não deve ter `path` (página atual). */
+function breadcrumbHtml(items) {
+  const li = items.map((it, i) => {
+    const isLast = i === items.length - 1;
+    return `<li>${!isLast && it.path
+      ? `<a href="${pathTo(it.path)}">${it.label}</a>`
+      : `<span aria-current="page">${it.label}</span>`}</li>`;
+  }).join("");
+  return `<nav class="breadcrumb-nav" aria-label="Breadcrumb"><ol class="breadcrumb">${li}</ol></nav>`;
+}
+
+function breadcrumbJsonLd(items) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.label,
+      item: it.path ? SITE_ORIGIN + pathTo(it.path) : SITE_ORIGIN + currentRoute(),
+    })),
+  };
 }
 
 
@@ -493,8 +520,8 @@ function heroCarouselSlides() {
 
 function viewHome() {
   updateHead({
-    title: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá",
-    description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados, total discrição. Somente maiores de 18 anos.",
+    title: "Aliança Models • Acompanhantes de Luxo no Brasil",
+    description: "Aliança Models: acompanhantes de luxo em todo o Brasil. Perfis verificados, total discrição. Somente maiores de 18 anos.",
     image: SITE_ORIGIN + "/logo.png",
     path: "/",
     type: "website",
@@ -502,19 +529,18 @@ function viewHome() {
   setJsonLd({
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Aliança",
+    name: "Aliança Models",
+    alternateName: "Aliança",
     url: SITE_ORIGIN + "/",
     inLanguage: "pt-BR",
-    description: "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá.",
+    description: "Aliança Models: acompanhantes de luxo em todo o Brasil.",
     audience: { "@type": "PeopleAudience", suggestedMinAge: 18 },
+    areaServed: { "@type": "Country", name: "Brasil" },
   });
-  // Home: apenas Rio de Janeiro e Cuiabá (como era no começo)
-  const HOME_CIDADES = ["rio-de-janeiro", "cuiaba"];
-  const cidadesAtivas = HOME_CIDADES.length;
-  const perfisAtivos = PERFIS.filter(p => HOME_CIDADES.includes(p.cidade)).length;
-  const cardsCidades = cidadesOrdenadas()
-    .filter(key => HOME_CIDADES.includes(key))
-    .map(cidadeCard).join("");
+  // Home: todas as capitais cadastradas (sem perfil ainda aparecem "Em breve")
+  const cidadesAtivas = Object.keys(CIDADES || {}).length;
+  const perfisAtivos = PERFIS.length;
+  const cardsCidades = cidadesOrdenadas().map(cidadeCard).join("");
 
   const slides = heroCarouselSlides();
   const hasCarousel = slides.length >= 2;
@@ -637,25 +663,20 @@ function viewCidade(cidade, filtro) {
     : filtro?.tipo === "exclusivas" ? "Exclusivas"
     : filtro?.tipo === "videos" ? "Vídeos" : "";
   const tituloHead = filtroLabel
-    ? `${filtroLabel} em ${c.nome} — Acompanhantes • Aliança`
-    : `Acompanhantes em ${c.nome} (${c.uf}) — Aliança`;
+    ? `${filtroLabel} em ${c.nome} — Acompanhantes • Aliança Models`
+    : `Acompanhantes em ${c.nome} (${c.uf}) — Aliança Models`;
   updateHead({
     title: tituloHead,
     description: `${cidadeTotal} perfis verificados em ${c.nome} (${c.uf}). Encontre acompanhantes por bairro, novidades e exclusivas com total discrição.`,
     image: SITE_ORIGIN + "/logo.png",
     path: routePathCidade,
     type: "website",
+    // Variações filtradas (bairro/novidades/exclusivas/vídeos) não entram no
+    // sitemap por serem recortes do mesmo conteúdo; ficam noindex,follow para
+    // evitar conteúdo duplicado no índice, mas continuam navegáveis e com
+    // seus links rastreáveis normalmente.
+    robots: filtro ? "noindex,follow" : "index,follow",
   });
-  setJsonLd({
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: tituloHead,
-    url: SITE_ORIGIN + routePathCidade,
-    inLanguage: "pt-BR",
-    about: { "@type": "City", name: c.nome, addressRegion: c.uf, addressCountry: "BR" },
-    numberOfItems: cidadeTotal,
-  });
-
 
   let list = PERFIS.filter(p => p.cidade === cidade);
   let titulo = c.nome, sub = `${list.length} acompanhantes em ${c.nome} (${c.uf})`;
@@ -693,10 +714,36 @@ function viewCidade(cidade, filtro) {
     `<a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/videos')}">${ICON_PLAY}<span>Vídeos</span></a>`,
   ].join("");
 
+  const breadcrumbItems = filtro
+    ? [{ label: "Início", path: "/" }, { label: c.nome, path: `/cidade/${cidade}` }, { label: filtroLabel || titulo }]
+    : [{ label: "Início", path: "/" }, { label: c.nome }];
+
+  setJsonLd([
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: tituloHead,
+      url: SITE_ORIGIN + routePathCidade,
+      inLanguage: "pt-BR",
+      about: { "@type": "City", name: c.nome, addressRegion: c.uf, addressCountry: "BR" },
+      numberOfItems: resultados.length,
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: resultados.map((p, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          url: SITE_ORIGIN + pathTo("/perfil/" + p.slug),
+          name: p.nome,
+        })),
+      },
+    },
+    breadcrumbJsonLd(breadcrumbItems),
+  ]);
+
   app.innerHTML = `
   <section class="page page--cidade">
     <div class="container">
-      <a class="back-link" href="${pathTo('/')}">‹ Início</a>
+      ${breadcrumbHtml(breadcrumbItems)}
       ${storiesStripHtml({ cidade })}
       <div class="page-divider" aria-hidden="true"></div>
       <header class="cidade-hero">
@@ -750,37 +797,52 @@ function viewPerfil(slug) {
   const c = CIDADES[p.cidade];
 
   const perfilFoto = (Array.isArray(p.fotos) && p.fotos[0]) ? p.fotos[0] : (SITE_ORIGIN + "/logo.png");
-  const perfilDesc = (p.descricao || "").trim().replace(/\s+/g, " ").slice(0, 155)
+  const perfilDesc = (p.metaDescricao || "").trim().replace(/\s+/g, " ").slice(0, 300)
+    || (p.descricao || "").trim().replace(/\s+/g, " ").slice(0, 155)
     || `${p.nome}, acompanhante em ${c?.nome || p.cidade}. Total discrição. Contato direto pelo WhatsApp.`;
+  const perfilTitle = (p.metaTitulo || "").trim()
+    || `${p.nome} — Acompanhante em ${c?.nome || p.cidade} • Aliança Models`;
   updateHead({
-    title: `${p.nome} — Acompanhante em ${c?.nome || p.cidade} • Aliança`,
+    title: perfilTitle,
     description: perfilDesc,
     image: perfilFoto.startsWith("http") ? perfilFoto : SITE_ORIGIN + perfilFoto,
     path: `/perfil/${p.slug}`,
     type: "profile",
   });
-  setJsonLd({
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: p.nome,
-    url: SITE_ORIGIN + `/perfil/${p.slug}`,
-    image: perfilFoto.startsWith("http") ? perfilFoto : SITE_ORIGIN + perfilFoto,
-    address: c ? { "@type": "PostalAddress", addressLocality: c.nome, addressRegion: c.uf, addressCountry: "BR" } : undefined,
-    description: perfilDesc,
-  });
+  const breadcrumbItems = c
+    ? [{ label: "Início", path: "/" }, { label: c.nome, path: `/cidade/${p.cidade}` }, { label: p.nome }]
+    : [{ label: "Início", path: "/" }, { label: p.nome }];
+
+  setJsonLd([
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      name: p.nome,
+      url: SITE_ORIGIN + `/perfil/${p.slug}`,
+      inLanguage: "pt-BR",
+      mainEntity: {
+        "@type": "Person",
+        name: p.nome,
+        image: perfilFoto.startsWith("http") ? perfilFoto : SITE_ORIGIN + perfilFoto,
+        address: c ? { "@type": "PostalAddress", addressLocality: c.nome, addressRegion: c.uf, addressCountry: "BR" } : undefined,
+        description: perfilDesc,
+      },
+    },
+    breadcrumbJsonLd(breadcrumbItems),
+  ]);
 
 
   const fotos = [0, 1, 2, 3].map(i => foto(p, i));
   const galeria = `
     <button class="profile__photo profile__photo--hero lb-trigger" type="button" data-i="0" aria-label="Abrir foto principal de ${p.nome}">
-      <img src="${fotos[0]}" alt="${p.nome} foto principal" loading="eager" />
+      <img src="${fotos[0]}" alt="${p.nome}, acompanhante em ${c?.nome || p.cidade} — foto principal" loading="eager" />
       <span class="profile__photo-fade" aria-hidden="true"></span>
       <span class="profile__photo-count" aria-hidden="true">4 fotos</span>
     </button>
     <div class="profile__thumbs" aria-label="Miniaturas do perfil">
       ${fotos.slice(1).map((src, i) => `
         <button class="profile__photo profile__photo--thumb lb-trigger" type="button" data-i="${i + 1}" aria-label="Abrir foto ${i + 2} de ${p.nome}">
-          <img src="${src}" alt="${p.nome} ${i + 2}" loading="lazy" />
+          <img src="${src}" alt="${p.nome}, acompanhante em ${c?.nome || p.cidade} — foto ${i + 2}" loading="lazy" />
         </button>
       `).join("")}
     </div>`;
@@ -804,7 +866,7 @@ function viewPerfil(slug) {
 
   app.innerHTML = `
   <section class="profile container">
-    <a class="back-link" href="${pathTo('/cidade/' + p.cidade)}">‹ Voltar para ${c.nome}</a>
+    ${breadcrumbHtml(breadcrumbItems)}
 
     <div class="profile__top">
       <div class="profile__gallery">${galeria}</div>
@@ -881,8 +943,8 @@ function viewPerfil(slug) {
 
 function viewAnuncie() {
   updateHead({
-    title: "Anuncie na Aliança — Cadastro de Acompanhantes",
-    description: "Cadastre-se para anunciar como acompanhante na Aliança. Sigilo total, análise manual, resposta direta pela central.",
+    title: "Anuncie na Aliança Models — Cadastro de Acompanhantes",
+    description: "Cadastre-se para anunciar como acompanhante na Aliança Models. Sigilo total, análise manual, resposta direta pela central.",
     path: "/anuncie",
     type: "website",
   });
@@ -1019,8 +1081,8 @@ Descrição: ${f.desc.value || "-"}`;
 
 function viewInformacoes() {
   updateHead({
-    title: "Informações & Privacidade — Aliança",
-    description: "Política de privacidade (LGPD), natureza do serviço e informações legais da Aliança. Conteúdo destinado a maiores de 18 anos.",
+    title: "Informações & Privacidade — Aliança Models",
+    description: "Política de privacidade (LGPD), natureza do serviço e informações legais da Aliança Models. Conteúdo destinado a maiores de 18 anos.",
     path: "/informacoes",
     type: "website",
   });
@@ -1060,7 +1122,7 @@ function viewInformacoes() {
 }
 
 function renderLegalPage({ title, eyebrow, description, path, content }) {
-  updateHead({ title: `${title} — Aliança`, description, path, type: "article" });
+  updateHead({ title: `${title} — Aliança Models`, description, path, type: "article" });
   setJsonLd(null);
   app.innerHTML = `
   <section class="page legal-page">
@@ -1321,7 +1383,7 @@ function viewDenunciasSuporte() {
 
 function view404() {
   updateHead({
-    title: "Página não encontrada — Aliança",
+    title: "Página não encontrada — Aliança Models",
     description: "A página que você procura não existe ou foi removida.",
     path: currentRoute(),
     type: "website",

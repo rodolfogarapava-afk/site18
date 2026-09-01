@@ -1176,6 +1176,24 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 }
 .back-link:hover{color:var(--gold-2)}
 
+.breadcrumb-nav{margin-bottom:1.1rem}
+.breadcrumb{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.35rem;
+  margin:0;
+  padding:0;
+  list-style:none;
+  color:#a89b8f;
+  font-size:.85rem;
+}
+.breadcrumb li{display:flex;align-items:center;gap:.35rem}
+.breadcrumb li:not(:last-child)::after{content:"›";margin-left:.35rem;color:#6b6259}
+.breadcrumb a{color:#a89b8f;text-decoration:none;transition:color .15s}
+.breadcrumb a:hover{color:var(--gold-2)}
+.breadcrumb li:last-child span{color:var(--gold-2)}
+
 /* ---------- Anuncie / Informações ---------- */
 .page{padding:100px 0 60px;min-height:70vh}
 .page h1{font-size:clamp(2rem,5vw,2.8rem);margin-bottom:.65rem;letter-spacing:-.01em}
