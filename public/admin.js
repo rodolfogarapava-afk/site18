@@ -50,7 +50,7 @@ function setFieldInvalid(selector, invalid = true) {
 }
 
 function clearCadastroErrors() {
-  ["#f-nome", "#f-whats", "#f-cidade", "#f-idade", "#f-hue"]
+  ["#f-nome", "#f-whats", "#f-cidade", "#f-idade"]
     .forEach(selector => setFieldInvalid(selector, false));
 }
 
@@ -317,7 +317,6 @@ function abrirForm(idx) {
   $("#f-cor-pele").value = p.corPele || "";
   $("#f-cor-cabelo").value = p.corCabelo || "";
   $("#f-valor").value = p.valorHora || "";
-  $("#f-hue").value = p.hue ?? "";
   $("#f-descricao").value = p.descricao || "";
   $("#f-servicos").value = (p.servicos || []).join(", ");
   $("#f-atendimento").value = (p.atendimento || []).join(", ");
@@ -340,7 +339,7 @@ $("#f-cidade").addEventListener("change", () => {
   preencherSelectBairros($("#f-cidade").value);
   setFieldInvalid("#f-cidade", false);
 });
-["#f-nome", "#f-whats", "#f-idade", "#f-hue"].forEach(selector => {
+["#f-nome", "#f-whats", "#f-idade"].forEach(selector => {
   const input = $(selector);
   if (input) input.addEventListener("input", () => setFieldInvalid(selector, false));
 });
@@ -381,15 +380,9 @@ $("#form-salvar").addEventListener("click", async () => {
     $("#f-idade").focus();
     return toast("A idade é opcional, mas deve ser 18 ou mais quando informada.", true);
   }
-  const hueRaw = $("#f-hue").value.trim();
-  const hue = hueRaw ? Number(hueRaw) : 300;
-  if (hueRaw && (!Number.isInteger(hue) || hue < 0 || hue > 360)) {
-    setFieldInvalid("#f-hue", true);
-    $("#f-hue").focus();
-    return toast("A cor é opcional, mas deve ficar entre 0 e 360.", true);
-  }
-
   const editando = editIndex >= 0;
+  const previousHue = editando ? Number(DATA.perfis[editIndex].hue) : NaN;
+  const hue = Number.isFinite(previousHue) ? previousHue : 300;
   const perfil = {
     id:   editando ? DATA.perfis[editIndex].id : undefined,
     slug: editando ? DATA.perfis[editIndex].slug : uniqueSlug(slugify(nome), editIndex),
