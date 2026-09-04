@@ -66,6 +66,8 @@
       fotos:       Array.isArray(r.fotos)       ? r.fotos       : [],
       audioUrl:    r.audio_url || "",
       ordem:       r.ordem || 0,
+      metaTitulo:    r.meta_titulo || "",
+      metaDescricao: r.meta_descricao || "",
     };
   }
 
@@ -98,6 +100,8 @@
       idiomas:      p.idiomas     || [],
       horario:      p.horario || "",
       fotos:        p.fotos       || [],
+      meta_titulo:    p.metaTitulo || null,
+      meta_descricao: p.metaDescricao || null,
     };
     if (includeAudio) row.audio_url = p.audioUrl || null;
     if (p.id) row.id = p.id;
@@ -531,13 +535,16 @@
       if (error) throw error;
     },
 
-    /* ----- Upload de foto no Storage -> retorna URL pública ----- */
-    async uploadFoto(blob, ext) {
+    /* ----- Upload de foto no Storage -> retorna URL pública -----
+       `slugHint` (opcional) prefixa o nome do arquivo com o slug do
+       perfil, dando valor de SEO de imagem sem comprometer unicidade. */
+    async uploadFoto(blob, ext, slugHint) {
       requireSb();
       const bucket = window.SB_BUCKET || "perfis";
       const rand = Math.random().toString(36).slice(2, 10);
       const stamp = (window.performance && performance.now ? Math.floor(performance.now()) : 0);
-      const path = `fotos/${stamp}-${rand}.${ext || "jpg"}`;
+      const safeSlug = (slugHint || "").toString().toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60);
+      const path = `fotos/${safeSlug ? safeSlug + "-" : ""}${stamp}-${rand}.${ext || "jpg"}`;
       const { error } = await sb.storage.from(bucket).upload(path, blob, {
         contentType: blob.type || "image/jpeg",
         upsert: false,

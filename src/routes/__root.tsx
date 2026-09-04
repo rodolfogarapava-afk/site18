@@ -83,21 +83,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "ALIANÇA" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { title: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá" },
+      { title: "Aliança Models • Acompanhantes de Luxo no Brasil" },
       {
         name: "description",
         content:
-          "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. Somente maiores de 18 anos.",
+          "Aliança Models: acompanhantes de luxo em todo o Brasil. Perfis verificados e total discrição. Somente maiores de 18 anos.",
       },
-      { name: "author", content: "Aliança" },
-      { property: "og:title", content: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá" },
+      { name: "author", content: "Aliança Models" },
+      { property: "og:title", content: "Aliança Models • Acompanhantes de Luxo no Brasil" },
       {
         property: "og:description",
         content:
-          "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. Somente maiores de 18 anos.",
+          "Aliança Models: acompanhantes de luxo em todo o Brasil. Perfis verificados e total discrição. Somente maiores de 18 anos.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Aliança" },
+      { property: "og:site_name", content: "Aliança Models" },
       { property: "og:locale", content: "pt_BR" },
       { property: "og:url", content: "https://aliancamodels.com/" },
       { property: "og:image", content: "https://aliancamodels.com/social-preview.png?v=1" },
@@ -107,19 +107,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image:height", content: "630" },
       {
         property: "og:image:alt",
-        content: "Aliança — Acompanhantes de Luxo no Rio de Janeiro e em Cuiabá",
+        content: "Aliança Models — Acompanhantes de Luxo no Brasil",
       },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Aliança • Acompanhantes de Luxo — Rio & Cuiabá" },
+      { name: "twitter:title", content: "Aliança Models • Acompanhantes de Luxo no Brasil" },
       {
         name: "twitter:description",
         content:
-          "Acompanhantes de luxo no Rio de Janeiro e em Cuiabá. Perfis verificados e total discrição. +18.",
+          "Aliança Models: acompanhantes de luxo em todo o Brasil. Perfis verificados e total discrição. +18.",
       },
       { name: "twitter:image", content: "https://aliancamodels.com/social-preview.png?v=1" },
       {
         name: "twitter:image:alt",
-        content: "Aliança — Acompanhantes de Luxo no Rio de Janeiro e em Cuiabá",
+        content: "Aliança Models — Acompanhantes de Luxo no Brasil",
       },
     ],
     links: [

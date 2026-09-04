@@ -35,6 +35,10 @@ function uniqueSlug(base, ignoreIndex) {
   return slug;
 }
 const splitList = v => (v || "").split(",").map(s => s.trim()).filter(Boolean);
+function updateMetaCounters() {
+  $("#f-meta-titulo-count").textContent = `${$("#f-meta-titulo").value.length}/60`;
+  $("#f-meta-descricao-count").textContent = `${$("#f-meta-descricao").value.length}/160`;
+}
 
 function toast(msg, isErr) {
   const t = $("#toast");
@@ -309,6 +313,9 @@ function abrirForm(idx) {
   $("#f-valor").value = p.valorHora || "";
   $("#f-hue").value = p.hue ?? "";
   $("#f-descricao").value = p.descricao || "";
+  $("#f-meta-titulo").value = p.metaTitulo || "";
+  $("#f-meta-descricao").value = p.metaDescricao || "";
+  updateMetaCounters();
   $("#f-servicos").value = (p.servicos || []).join(", ");
   $("#f-atendimento").value = (p.atendimento || []).join(", ");
   $("#f-idiomas").value = (p.idiomas || []).join(", ");
@@ -334,6 +341,8 @@ $("#f-cidade").addEventListener("change", () => {
   const input = $(selector);
   if (input) input.addEventListener("input", () => setFieldInvalid(selector, false));
 });
+$("#f-meta-titulo").addEventListener("input", updateMetaCounters);
+$("#f-meta-descricao").addEventListener("input", updateMetaCounters);
 
 $("#form-cancelar").addEventListener("click", () => showTab("perfis"));
 $("#form-excluir").addEventListener("click", async () => {
@@ -397,6 +406,8 @@ $("#form-salvar").addEventListener("click", async () => {
     valorHora: $("#f-valor").value.trim() || "Sob consulta",
     hue,
     descricao: $("#f-descricao").value.trim(),
+    metaTitulo: $("#f-meta-titulo").value.trim(),
+    metaDescricao: $("#f-meta-descricao").value.trim(),
     servicos: splitList($("#f-servicos").value),
     atendimento: splitList($("#f-atendimento").value),
     idiomas: splitList($("#f-idiomas").value),
@@ -462,6 +473,7 @@ function fileToBlob(file, maxW = 1000, quality = 0.82) {
 async function addFiles(fileList) {
   const files = [...fileList].filter(f => f.type.startsWith("image/"));
   if (!files.length) return;
+  const slugHint = (editIndex >= 0 && DATA.perfis[editIndex]?.slug) || slugify($("#f-nome").value.trim());
   profileUploadsInProgress++;
   toast("Enviando imagens...");
   let ok = 0;
@@ -469,7 +481,7 @@ async function addFiles(fileList) {
     for (const f of files) {
       try {
         const blob = await fileToBlob(f);
-        const url = await VIPStore.uploadFoto(blob, "jpg");
+        const url = await VIPStore.uploadFoto(blob, "jpg", slugHint);
         fotos.push(url);
         ok++;
         renderThumbs();
