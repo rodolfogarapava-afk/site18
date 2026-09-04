@@ -966,7 +966,13 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
   filter:saturate(1.03);
 }
 .profile__photo--hero{
-  aspect-ratio:16/11;
+  aspect-ratio:4/5;
+  background:
+    radial-gradient(circle at 50% 38%,rgba(215,178,77,.08),transparent 62%),
+    #080707;
+}
+.profile__photo--hero img{
+  object-fit:contain;
 }
 .profile__thumbs{
   display:grid;
@@ -1962,7 +1968,7 @@ body.sv-open{overflow:hidden}
   }
   .profile__photo--hero{
     height:auto;
-    aspect-ratio:16/11;
+    aspect-ratio:4/5;
   }
   .profile__thumbs{
     grid-template-columns:repeat(auto-fit,minmax(112px,1fr));
@@ -2098,7 +2104,7 @@ body.sv-open{overflow:hidden}
     border-radius:14px;
   }
   .profile__photo--hero{
-    aspect-ratio:16/10;
+    aspect-ratio:4/5;
   }
   .profile__thumbs{
     grid-template-columns:repeat(3,minmax(0,1fr));
