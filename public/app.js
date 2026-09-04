@@ -187,17 +187,28 @@ const ICON_SEARCH = '<svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none
 const ICON_CROSSHAIR = '<svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>';
 const ICON_TREND = '<svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>';
 
-/* WhatsApp da acompanhante (com mensagem contextual) */
+/* Normaliza um número de WhatsApp pro formato que o wa.me espera (DDI+DDD+número,
+   só dígitos). Perfis antigos às vezes foram cadastrados sem o "55" na frente. */
+function normalizarWhatsapp(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.length <= 11 && !digits.startsWith("55")) return "55" + digits;
+  return digits;
+}
+
+/* WhatsApp da acompanhante (com mensagem contextual). Se o perfil não tem
+   número próprio cadastrado, cai no WhatsApp central da Aliança. */
 function waPerfil(p, contexto) {
   const msg = contexto
     ? `Olá ${p.nome}! Vi seu anúncio na Aliança e tenho interesse em ${contexto}.`
     : `Olá ${p.nome}! Vi seu anúncio na Aliança e gostaria de saber mais.`;
-  return `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(msg)}`;
+  const numero = normalizarWhatsapp(p.whatsapp) || ADMIN_WHATSAPP;
+  return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
 }
 /* WhatsApp do administrador (home / anuncie) */
 function waAdmin(msg) {
   const t = msg || "Olá! Gostaria de informações sobre a Aliança.";
-  return `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(t)}`;
+  return `https://wa.me/${normalizarWhatsapp(ADMIN_WHATSAPP)}?text=${encodeURIComponent(t)}`;
 }
 
 function formatWhatsappNumber(value) {
@@ -246,6 +257,16 @@ function perfilAudioUrl(p) {
   return (p && (p.audioUrl || p.audio || p.audio_url)) || "";
 }
 
+function perfilVideoUrl(p) {
+  return (p && (p.videoUrl || p.video || p.video_url)) || "";
+}
+/* O badge "Vídeo" só aparece se realmente tiver um vídeo enviado — o
+   checkbox "Tem vídeo" do admin sozinho não é mais suficiente (podia
+   ficar marcado sem nenhum arquivo, prometendo vídeo que não existia). */
+function perfilTemVideo(p) {
+  return !!perfilVideoUrl(p);
+}
+
 function storyCidadeSlug(s) {
   if (!s) return null;
   if (s.cidade) return s.cidade;
@@ -266,7 +287,7 @@ function tagsHtml(p) {
   let t = "";
   if (p.nova)      t += `<span class="tag tag--nova">Nova</span>`;
   if (p.exclusiva) t += `<span class="tag tag--excl">Exclusiva</span>`;
-  if (p.temVideo)  t += `<span class="tag tag--video">${ICON_PLAY}<span>Vídeo</span></span>`;
+  if (perfilTemVideo(p))  t += `<span class="tag tag--video">${ICON_PLAY}<span>Vídeo</span></span>`;
   return t;
 }
 
@@ -493,7 +514,7 @@ function distanciaKm(lat1, lon1, lat2, lon2) {
 /* Cidade cadastrada mais próxima de uma coordenada (aproximação por capital) */
 function cidadeMaisProxima(lat, lon) {
   let melhor = null, menorDist = Infinity;
-  for (const key of Object.keys(CIDADES || {})) {
+  for (const key of cidadesComConteudo()) {
     const coords = CAPITAIS_COORDS[key];
     if (!coords) continue;
     const d = distanciaKm(lat, lon, coords[0], coords[1]);
@@ -540,10 +561,11 @@ function viewHome() {
     audience: { "@type": "PeopleAudience", suggestedMinAge: 18 },
     areaServed: { "@type": "Country", name: "Brasil" },
   });
-  // Home: todas as capitais cadastradas (sem perfil ainda aparecem "Em breve")
-  const cidadesAtivas = Object.keys(CIDADES || {}).length;
+  // Home: só cidades com pelo menos 1 perfil cadastrado (sem "Em breve")
+  const cidadesComPerfil = cidadesComConteudo();
+  const cidadesAtivas = cidadesComPerfil.length;
   const perfisAtivos = PERFIS.length;
-  const cardsCidades = cidadesOrdenadas().map(cidadeCard).join("");
+  const cardsCidades = cidadesComPerfil.map(cidadeCard).join("");
 
   const slides = heroCarouselSlides();
   const hasCarousel = slides.length >= 2;
@@ -725,7 +747,7 @@ function viewCidade(cidade, filtro) {
   } else if (filtro?.tipo === "exclusivas") {
     list = list.filter(p => p.exclusiva); titulo = "Exclusivas " + c.uf; sub = "Seleção premium";
   } else if (filtro?.tipo === "videos") {
-    list = list.filter(p => p.temVideo); titulo = "Vídeos " + c.uf; sub = "Perfis com vídeo";
+    list = list.filter(perfilTemVideo); titulo = "Vídeos " + c.uf; sub = "Perfis com vídeo";
   }
 
   const chips = c.bairros.map(b =>
@@ -858,6 +880,14 @@ function viewPerfil(slug) {
 
 
   const fotos = [0, 1, 2, 3].map(i => foto(p, i));
+  const video = perfilVideoUrl(p);
+  // Mídia da galeria/lightbox: fotos + (se tiver) o vídeo como último item —
+  // integrado como miniatura clicável, não mais um player solto empurrando
+  // o resto da página pra baixo.
+  const midias = fotos.map(src => ({ type: "image", src }));
+  if (video) midias.push({ type: "video", src: video });
+  const iVideo = midias.length - 1;
+
   const galeria = `
     <button class="profile__photo profile__photo--hero lb-trigger" type="button" data-i="0" aria-label="Abrir foto principal de ${p.nome}">
       <img src="${fotos[0]}" alt="${p.nome}, acompanhante em ${c?.nome || p.cidade} — foto principal" loading="eager" />
@@ -870,6 +900,12 @@ function viewPerfil(slug) {
           <img src="${src}" alt="${p.nome}, acompanhante em ${c?.nome || p.cidade} — foto ${i + 2}" loading="lazy" />
         </button>
       `).join("")}
+      ${video ? `
+        <button class="profile__photo profile__photo--thumb profile__photo--video lb-trigger" type="button" data-i="${iVideo}" aria-label="Assistir vídeo de ${p.nome}">
+          <img src="${fotos[0]}" alt="Vídeo de ${p.nome}" loading="lazy" />
+          <span class="profile__video-play" aria-hidden="true">${ICON_PLAY}</span>
+        </button>
+      ` : ""}
     </div>`;
 
   const servicos = p.servicos.map(s =>
@@ -902,8 +938,7 @@ function viewPerfil(slug) {
         <div class="profile__badges">${tagsHtml(p) || ""}${p.possuiLocal ? `<span class="tag tag--excl">Possui Local</span>` : ""}</div>
 
         <div class="profile__actions profile__actions--top">
-          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">${WA_ICON} Consultar</a>
-          <a class="btn btn--ghost btn--lg" href="${waPerfil(p, "agendar um horário")}" target="_blank" rel="noopener">Agendar</a>
+          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">${WA_ICON} Quero um encontro</a>
         </div>
 
         ${perfilAudioUrl(p) ? `
@@ -963,7 +998,7 @@ function viewPerfil(slug) {
 
   // Lightbox
   $$(".lb-trigger").forEach(node =>
-    node.addEventListener("click", () => openLightbox(fotos, +node.dataset.i)));
+    node.addEventListener("click", () => openLightbox(midias, +node.dataset.i)));
 }
 
 function viewAnuncie() {
@@ -1433,16 +1468,33 @@ function view404() {
    LIGHTBOX
    ============================================================ */
 let lbList = [], lbIndex = 0;
-const lb = $("#lightbox"), lbImg = $("#lb-img");
-function openLightbox(list, i) { lbList = list; lbIndex = i; lbImg.src = list[i]; lb.hidden = false; }
-function lbMove(d) { lbIndex = (lbIndex + d + lbList.length) % lbList.length; lbImg.src = lbList[lbIndex]; }
-$("#lb-close").addEventListener("click", () => lb.hidden = true);
+const lb = $("#lightbox"), lbImg = $("#lb-img"), lbVideo = $("#lb-video");
+/* Cada item de lbList é {type:"image"|"video", src}. Compatível com o
+   formato antigo (string solta = foto) pra não quebrar nenhum outro uso. */
+function lbShow(item) {
+  const isVideo = item && typeof item === "object" && item.type === "video";
+  lbVideo.pause();
+  if (isVideo) {
+    lbImg.hidden = true;
+    lbVideo.hidden = false;
+    lbVideo.src = item.src;
+  } else {
+    lbVideo.hidden = true;
+    lbVideo.removeAttribute("src");
+    lbImg.hidden = false;
+    lbImg.src = (item && typeof item === "object") ? item.src : item;
+  }
+}
+function openLightbox(list, i) { lbList = list; lbIndex = i; lbShow(list[i]); lb.hidden = false; }
+function lbMove(d) { lbIndex = (lbIndex + d + lbList.length) % lbList.length; lbShow(lbList[lbIndex]); }
+function lbClose() { lb.hidden = true; lbVideo.pause(); }
+$("#lb-close").addEventListener("click", lbClose);
 $("#lb-prev").addEventListener("click", () => lbMove(-1));
 $("#lb-next").addEventListener("click", () => lbMove(1));
-lb.addEventListener("click", e => { if (e.target === lb) lb.hidden = true; });
+lb.addEventListener("click", e => { if (e.target === lb) lbClose(); });
 document.addEventListener("keydown", e => {
   if (lb.hidden) return;
-  if (e.key === "Escape") lb.hidden = true;
+  if (e.key === "Escape") lbClose();
   if (e.key === "ArrowLeft") lbMove(-1);
   if (e.key === "ArrowRight") lbMove(1);
 });
@@ -1535,7 +1587,7 @@ function renderCitySearchBody(filtro = "") {
   const body = $("#city-search-body");
   if (!body) return;
   const q = filtro.trim().toLowerCase();
-  const todas = cidadesOrdenadas();
+  const todas = cidadesComConteudo();
 
   const rowHtml = (key, destaque = false) => {
     const c = CIDADES[key];
@@ -1846,7 +1898,7 @@ function svStartVideoProgress(v) {
 
 function renderSvCta(s) {
   const p = storyPerfil(s);
-  const wa = (s.whatsapp || (p && p.whatsapp) || ADMIN_WHATSAPP || "").replace(/\D/g, "");
+  const wa = normalizarWhatsapp(s.whatsapp || (p && p.whatsapp)) || normalizarWhatsapp(ADMIN_WHATSAPP);
   let html = "";
   if (p) html += `<a class="sv__btn sv__btn--ghost" href="${pathTo('/perfil/' + p.slug)}" data-sv-link>Ver perfil</a>`;
   if (wa) {
@@ -1984,8 +2036,8 @@ function montarMenus() {
   const host = $("#nav-cities");
   if (!host) return;
 
-  // Um único menu "Cidades" com busca e rolagem (27 capitais)
-  const links = cidadesOrdenadas().map(key => {
+  // Um único menu "Cidades" com busca e rolagem — só as que têm perfil cadastrado
+  const links = cidadesComConteudo().map(key => {
     const c = CIDADES[key];
     const total = PERFIS.filter(p => p.cidade === key).length;
     return `<a href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">

@@ -21,9 +21,10 @@
 
   /* ---------- Client Supabase ---------- */
   let sb = null;
-  // O banco antigo pode ainda não ter a migration de áudio. O valor é
+  // O banco antigo pode ainda não ter a migration de áudio/vídeo. O valor é
   // detectado na leitura e também corrigido de forma defensiva no upsert.
   let perfilAudioColumnAvailable = null;
+  let perfilVideoColumnAvailable = null;
   try {
     if (typeof supabase !== "undefined" && window.SB_URL && window.SB_ANON) {
       sb = supabase.createClient(window.SB_URL, window.SB_ANON);
@@ -65,6 +66,7 @@
       horario:     r.horario || "",
       fotos:       Array.isArray(r.fotos)       ? r.fotos       : [],
       audioUrl:    r.audio_url || "",
+      videoUrl:    r.video_url || "",
       ordem:       r.ordem || 0,
       metaTitulo:    r.meta_titulo || "",
       metaDescricao: r.meta_descricao || "",
@@ -72,8 +74,12 @@
   }
 
   /* Converte um perfil (JS) numa linha para upsert no banco.
-     `ordem` é opcional (usado ao reordenar a lista). */
-  function perfilToRow(p, ordem, includeAudio = perfilAudioColumnAvailable !== false) {
+     `ordem` é opcional (usado ao reordenar a lista). `opts.includeAudio` /
+     `opts.includeVideo` controlam se esses campos (opcionais, podem ainda
+     não existir no banco) entram no upsert. */
+  function perfilToRow(p, ordem, opts = {}) {
+    const includeAudio = opts.includeAudio !== undefined ? opts.includeAudio : perfilAudioColumnAvailable !== false;
+    const includeVideo = opts.includeVideo !== undefined ? opts.includeVideo : perfilVideoColumnAvailable !== false;
     const row = {
       slug:         p.slug,
       nome:         p.nome,
@@ -104,16 +110,17 @@
       meta_descricao: p.metaDescricao || null,
     };
     if (includeAudio) row.audio_url = p.audioUrl || null;
+    if (includeVideo) row.video_url = p.videoUrl || null;
     if (p.id) row.id = p.id;
     if (typeof ordem === "number") row.ordem = ordem;
     return row;
   }
 
-  function isMissingPerfilAudioColumn(error) {
+  function isMissingPerfilColumn(error, coluna) {
     if (!error) return false;
     const text = [error.message, error.details, error.hint]
       .filter(Boolean).join(" ").toLowerCase();
-    return text.includes("audio_url") && (
+    return text.includes(coluna) && (
       error.code === "PGRST204" ||
       error.code === "42703" ||
       text.includes("does not exist") ||
@@ -121,20 +128,27 @@
       text.includes("schema cache")
     );
   }
+  const isMissingPerfilAudioColumn = error => isMissingPerfilColumn(error, "audio_url");
+  const isMissingPerfilVideoColumn = error => isMissingPerfilColumn(error, "video_url");
 
-  async function supportsPerfilAudioColumn() {
-    if (perfilAudioColumnAvailable !== null) return perfilAudioColumnAvailable;
+  async function supportsPerfilOptionalColumn(coluna, cacheGetSet) {
+    const [get, set] = cacheGetSet;
+    if (get() !== null) return get();
     if (!sb) throw new Error("Supabase indisponível.");
 
-    const { error } = await sb.from("perfis").select("audio_url").limit(1);
-    if (error && isMissingPerfilAudioColumn(error)) {
-      perfilAudioColumnAvailable = false;
+    const { error } = await sb.from("perfis").select(coluna).limit(1);
+    if (error && isMissingPerfilColumn(error, coluna)) {
+      set(false);
       return false;
     }
     if (error) throw error;
-    perfilAudioColumnAvailable = true;
+    set(true);
     return true;
   }
+  const supportsPerfilAudioColumn = () => supportsPerfilOptionalColumn("audio_url",
+    [() => perfilAudioColumnAvailable, v => { perfilAudioColumnAvailable = v; }]);
+  const supportsPerfilVideoColumn = () => supportsPerfilOptionalColumn("video_url",
+    [() => perfilVideoColumnAvailable, v => { perfilVideoColumnAvailable = v; }]);
 
   /* ----- Stories (destaques) ----- */
   function rowToStory(r) {
@@ -228,6 +242,9 @@
 
     if (perfilAudioColumnAvailable === null && perRes.data?.length) {
       perfilAudioColumnAvailable = Object.prototype.hasOwnProperty.call(perRes.data[0], "audio_url");
+    }
+    if (perfilVideoColumnAvailable === null && perRes.data?.length) {
+      perfilVideoColumnAvailable = Object.prototype.hasOwnProperty.call(perRes.data[0], "video_url");
     }
 
     const stories = (stoRes && !stoRes.error && Array.isArray(stoRes.data))
@@ -426,29 +443,45 @@
       requireSb();
       return supportsPerfilAudioColumn();
     },
+    async supportsPerfilVideo() {
+      requireSb();
+      return supportsPerfilVideoColumn();
+    },
     async savePerfil(perfil, ordem) {
       requireSb();
       let includeAudio = perfilAudioColumnAvailable !== false;
-      let result = await sb.from("perfis")
-        .upsert(perfilToRow(perfil, ordem, includeAudio), { onConflict: "slug" })
-        .select()
-        .single();
-
-      let audioSkipped = false;
-      if (result.error && includeAudio && isMissingPerfilAudioColumn(result.error)) {
-        perfilAudioColumnAvailable = false;
-        includeAudio = false;
-        audioSkipped = !!perfil.audioUrl;
+      let includeVideo = perfilVideoColumnAvailable !== false;
+      let audioSkipped = false, videoSkipped = false;
+      let result;
+      // Até 3 tentativas: uma com tudo, e uma a menos pra cada coluna opcional
+      // que o banco ainda não tiver (áudio e/ou vídeo).
+      for (let tentativa = 0; tentativa < 3; tentativa++) {
         result = await sb.from("perfis")
-          .upsert(perfilToRow(perfil, ordem, false), { onConflict: "slug" })
+          .upsert(perfilToRow(perfil, ordem, { includeAudio, includeVideo }), { onConflict: "slug" })
           .select()
           .single();
+        if (!result.error) break;
+        if (includeAudio && isMissingPerfilAudioColumn(result.error)) {
+          perfilAudioColumnAvailable = false;
+          includeAudio = false;
+          audioSkipped = !!perfil.audioUrl;
+          continue;
+        }
+        if (includeVideo && isMissingPerfilVideoColumn(result.error)) {
+          perfilVideoColumnAvailable = false;
+          includeVideo = false;
+          videoSkipped = !!perfil.videoUrl;
+          continue;
+        }
+        break;
       }
 
       if (result.error) throw result.error;
       if (includeAudio) perfilAudioColumnAvailable = true;
+      if (includeVideo) perfilVideoColumnAvailable = true;
       const saved = rowToPerfil(result.data);
       saved.audioSkipped = audioSkipped;
+      saved.videoSkipped = videoSkipped;
       return saved;
     },
     async deletePerfil(perfil) {
@@ -584,6 +617,10 @@
       if (backupHasAudio && !(await supportsPerfilAudioColumn())) {
         throw new Error("O backup contém áudios, mas o banco ainda não aceita esse campo. Atualize o banco e recarregue a página antes de restaurar.");
       }
+      const backupHasVideo = d.perfis.some(p => p.videoUrl || p.video_url);
+      if (backupHasVideo && !(await supportsPerfilVideoColumn())) {
+        throw new Error("O backup contém vídeos, mas o banco ainda não aceita esse campo. Atualize o banco e recarregue a página antes de restaurar.");
+      }
       await this.saveConfig({
         adminWhatsapp: d.adminWhatsapp,
         modelSupportWhatsapp: d.modelSupportWhatsapp || "5511996425680",
@@ -594,17 +631,30 @@
 
       // perfis: upsert de todos e remoção dos que não vieram no backup
       let includeAudio = perfilAudioColumnAvailable !== false;
-      let rows = d.perfis.map((p, i) => perfilToRow(p, i, includeAudio));
+      let includeVideo = perfilVideoColumnAvailable !== false;
+      let rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo }));
       if (rows.length) {
-        let result = await sb.from("perfis").upsert(rows, { onConflict: "slug" });
-        if (result.error && includeAudio && isMissingPerfilAudioColumn(result.error)) {
-          perfilAudioColumnAvailable = false;
-          includeAudio = false;
-          rows = d.perfis.map((p, i) => perfilToRow(p, i, false));
+        let result;
+        for (let tentativa = 0; tentativa < 3; tentativa++) {
           result = await sb.from("perfis").upsert(rows, { onConflict: "slug" });
+          if (!result.error) break;
+          if (includeAudio && isMissingPerfilAudioColumn(result.error)) {
+            perfilAudioColumnAvailable = false;
+            includeAudio = false;
+            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo }));
+            continue;
+          }
+          if (includeVideo && isMissingPerfilVideoColumn(result.error)) {
+            perfilVideoColumnAvailable = false;
+            includeVideo = false;
+            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo }));
+            continue;
+          }
+          break;
         }
         if (result.error) throw result.error;
         if (includeAudio) perfilAudioColumnAvailable = true;
+        if (includeVideo) perfilVideoColumnAvailable = true;
       }
       const slugs = rows.map(r => r.slug);
       const { data: existentes, error: selErr } = await sb.from("perfis").select("slug");

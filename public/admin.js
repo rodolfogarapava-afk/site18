@@ -12,6 +12,7 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 let DATA = { adminWhatsapp: "5515991906606", modelSupportWhatsapp: "5511996425680", pixel: { metaPixelId: "", metaPixelEnabled: false }, banner: null, cidades: {}, perfis: [], stories: [] };
 let fotos = [];                  // fotos (URLs) do perfil em edição
 let audioUrl = "";               // áudio real da acompanhante (URL pública)
+let videoUrl = "";                // vídeo do perfil (URL pública)
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
 let profileUploadsInProgress = 0; // impede salvar enquanto uma mídia ainda sobe
 
@@ -125,6 +126,9 @@ function adminWhatsLabel(value) {
 
 function perfilAudioUrl(p) {
   return (p && (p.audioUrl || p.audio || p.audio_url)) || "";
+}
+function perfilVideoUrl(p) {
+  return (p && (p.videoUrl || p.video || p.video_url)) || "";
 }
 
 /* ============================================================
@@ -295,6 +299,7 @@ function abrirForm(idx) {
   const p = novo ? {} : DATA.perfis[idx];
   fotos = novo ? [] : [...(p.fotos || [])];
   audioUrl = novo ? "" : perfilAudioUrl(p);
+  videoUrl = novo ? "" : perfilVideoUrl(p);
 
   $("#form-titulo").textContent = novo ? "Novo perfil" : "Editar: " + p.nome;
   $("#form-excluir").hidden = novo;
@@ -328,6 +333,7 @@ function abrirForm(idx) {
 
   renderThumbs();
   renderPerfilAudio();
+  renderPerfilVideo();
   $$(".tabpane").forEach(pane => pane.hidden = true);
   $("#tab-form").hidden = false;
   window.scrollTo(0, 0);
@@ -419,6 +425,7 @@ $("#form-salvar").addEventListener("click", async () => {
     destaque: $("#f-destaque").checked,
     fotos: [...fotos],
     audioUrl,
+    videoUrl,
   };
 
   const btn = $("#form-salvar");
@@ -574,6 +581,58 @@ audioFile.addEventListener("change", () => { uploadPerfilAudio(audioFile.files[0
 ["dragenter", "dragover"].forEach(ev => audioDrop.addEventListener(ev, e => { e.preventDefault(); audioDrop.classList.add("over"); }));
 ["dragleave", "drop"].forEach(ev => audioDrop.addEventListener(ev, e => { e.preventDefault(); audioDrop.classList.remove("over"); }));
 audioDrop.addEventListener("drop", e => uploadPerfilAudio(e.dataTransfer.files[0]));
+
+function renderPerfilVideo() {
+  const box = $("#video-preview");
+  if (!box) return;
+  if (!videoUrl) {
+    box.innerHTML = `<div class="audio-file__empty">Nenhum vídeo enviado para este perfil.</div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="audio-file">
+      <video controls preload="metadata" src="${videoUrl}" style="width:100%;max-width:280px;border-radius:10px"></video>
+      <button class="btn btn--danger btn--sm" id="video-remover" type="button">Remover vídeo</button>
+    </div>`;
+  const remover = $("#video-remover", box);
+  if (remover) remover.addEventListener("click", () => {
+    videoUrl = "";
+    renderPerfilVideo();
+  });
+}
+
+async function uploadPerfilVideo(file) {
+  if (!file || !file.type.startsWith("video/")) return toast("Envie um arquivo de vídeo válido.", true);
+  try {
+    if (!(await VIPStore.supportsPerfilVideo())) {
+      return toast("O vídeo é opcional e ainda não está habilitado no banco. Salve o perfil sem ele.", true);
+    }
+  } catch (e) {
+    console.error(e);
+    return toast("Não foi possível verificar o suporte a vídeo. Tente novamente.", true);
+  }
+  profileUploadsInProgress++;
+  toast("Enviando vídeo...");
+  try {
+    const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+    videoUrl = await VIPStore.uploadArquivo(file, ext, "videos");
+    $("#f-temVideo").checked = true;
+    renderPerfilVideo();
+    toast("Vídeo enviado.");
+  } catch (e) {
+    console.error(e);
+    toast("Falha ao enviar o vídeo: " + (e.message || e), true);
+  } finally {
+    profileUploadsInProgress--;
+  }
+}
+
+const videoDrop = $("#video-drop"), videoFile = $("#video-file");
+videoDrop.addEventListener("click", () => videoFile.click());
+videoFile.addEventListener("change", () => { uploadPerfilVideo(videoFile.files[0]); videoFile.value = ""; });
+["dragenter", "dragover"].forEach(ev => videoDrop.addEventListener(ev, e => { e.preventDefault(); videoDrop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => videoDrop.addEventListener(ev, e => { e.preventDefault(); videoDrop.classList.remove("over"); }));
+videoDrop.addEventListener("drop", e => uploadPerfilVideo(e.dataTransfer.files[0]));
 
 /* ============================================================
    STORIES

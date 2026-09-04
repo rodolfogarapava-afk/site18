@@ -224,6 +224,20 @@
               <label class="check"><input type="checkbox" id="f-destaque" /> Destaque na home</label>
             </div>
 
+            <div class="upload-card">
+              <div class="upload-card__copy">
+                <h4>Vídeo do perfil (opcional)</h4>
+                <p>Se enviado, marca "Tem vídeo" automaticamente e aparece na página do perfil.</p>
+              </div>
+              <div>
+                <div class="drop drop--audio" id="video-drop">
+                  Clique ou arraste um vídeo aqui<br><small>MP4 / WEBM / MOV</small>
+                  <input type="file" id="video-file" accept="video/*" hidden />
+                </div>
+                <div class="audio-preview" id="video-preview"></div>
+              </div>
+            </div>
+
             <div class="upload-card upload-card--photos">
               <div class="upload-card__copy">
                 <h4>Fotos do perfil</h4>
@@ -515,7 +529,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20"></script>
   <script src="data.js?v=20"></script>
-  <script src="store.js?v=26"></script>
-  <script src="admin.js?v=30"></script>
+  <script src="store.js?v=27"></script>
+  <script src="admin.js?v=31"></script>
 </body>
 </html>

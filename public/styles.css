@@ -1091,13 +1091,38 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 .profile__photo--hero{
   aspect-ratio:16/11;
 }
+/* Faixa horizontal com scroll (não grade que quebra linha) — assim o vídeo
+   (quando existe) entra como mais um item na mesma fileira das fotos, em
+   vez de sobrar sozinho numa segunda linha. */
 .profile__thumbs{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  display:flex;
   gap:.55rem;
+  overflow-x:auto;
+  scroll-snap-type:x proximity;
+  padding-bottom:.15rem;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(213,175,84,.4) rgba(255,247,241,.06);
 }
+.profile__thumbs::-webkit-scrollbar{height:5px}
+.profile__thumbs::-webkit-scrollbar-track{background:rgba(255,247,241,.05);border-radius:999px}
+.profile__thumbs::-webkit-scrollbar-thumb{background:linear-gradient(90deg,var(--gold),var(--gold-2));border-radius:999px}
 .profile__photo--thumb{
+  flex:0 0 25%;
+  max-width:112px;
   aspect-ratio:1/1;
+  scroll-snap-align:start;
+}
+.profile__photo--video{position:relative}
+.profile__video-play{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  background:rgba(7,4,5,.38);
+}
+.profile__video-play svg{
+  width:34px;height:34px;
+  color:#fff;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));
 }
 .profile__photo-fade{
   position:absolute;
@@ -1131,15 +1156,18 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 }
 .profile__actions.profile__actions--top{
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:1fr;
+  justify-items:start;
   gap:.72rem;
   margin:0 0 1.05rem;
 }
 .profile__actions.profile__actions--top .btn{
-  width:100%;
-  min-width:0;
-  min-height:56px;
-  border-radius:18px;
+  width:auto;
+  min-width:220px;
+  min-height:44px;
+  padding:.68rem 1.8rem;
+  font-size:.92rem;
+  border-radius:14px;
   letter-spacing:.02em;
   justify-content:center;
 }
@@ -1693,7 +1721,8 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 
 /* ---------- Lightbox ---------- */
 .lightbox{position:fixed;inset:0;z-index:200;background:#000e;display:grid;place-items:center}
-.lightbox img{max-width:90vw;max-height:86vh;border-radius:10px;box-shadow:var(--shadow)}
+.lightbox img,
+.lightbox video{max-width:90vw;max-height:86vh;border-radius:10px;box-shadow:var(--shadow)}
 .lightbox__close{position:absolute;top:18px;right:22px;font-size:1.8rem;background:none;border:none;color:#fff;cursor:pointer}
 .lightbox__nav{position:absolute;top:50%;transform:translateY(-50%);font-size:3rem;background:none;border:none;color:#fff8;cursor:pointer;padding:0 1rem}
 .lightbox__nav:hover{color:#fff}
@@ -2088,14 +2117,15 @@ body.sv-open{overflow:hidden}
      pelo border-radius:999px do pill) */
   .nav__wa-cta{
     position:relative;
-    display:flex;width:calc(100% + 1.6rem);margin:1.3rem -.8rem 0;
-    padding-top:.9rem;padding-bottom:.9rem;font-size:1rem;
+    display:inline-flex;width:auto;align-self:center;
+    margin:2.1rem 0 0;
+    padding:.8rem 1.6rem;font-size:.92rem;
   }
   .nav__wa-cta::before{
-    content:"";position:absolute;top:-.65rem;left:.8rem;right:.8rem;height:1px;
+    content:"";position:absolute;top:-1.05rem;left:0;right:0;height:1px;
     background:rgba(213,175,84,.14);
   }
-  .nav__wa-cta .ico-wa{width:21px;height:21px;flex:0 0 auto}
+  .nav__wa-cta .ico-wa{width:19px;height:19px;flex:0 0 auto}
 
   /* Rodapé do drawer: avisos legais + links, empurrado pro final do menu
      (margin-top:auto, já que .nav é flex-column) — preenche o vazio que
@@ -2265,10 +2295,11 @@ body.sv-open{overflow:hidden}
     aspect-ratio:16/10;
   }
   .profile__thumbs{
-    grid-template-columns:repeat(3,minmax(0,1fr));
     gap:.45rem;
   }
   .profile__photo--thumb{
+    flex-basis:23%;
+    max-width:104px;
     aspect-ratio:1/1;
   }
   .profile__photo-count{
