@@ -808,20 +808,27 @@ function viewPerfil(slug) {
   });
 
 
-  const fotos = [0, 1, 2, 3].map(i => foto(p, i));
+  const fotosPublicadas = Array.isArray(p.fotos)
+    ? p.fotos.filter(src => typeof src === "string" && src.trim())
+    : [];
+  const fotos = fotosPublicadas.length
+    ? fotosPublicadas
+    : [0, 1, 2, 3].map(i => foto(p, i));
+  const totalFotos = fotos.length;
+  const totalFotosLabel = `${totalFotos} ${totalFotos === 1 ? "foto" : "fotos"}`;
   const galeria = `
     <button class="profile__photo profile__photo--hero lb-trigger" type="button" data-i="0" aria-label="Abrir foto principal de ${p.nome}">
       <img src="${fotos[0]}" alt="${p.nome} foto principal" loading="eager" />
       <span class="profile__photo-fade" aria-hidden="true"></span>
-      <span class="profile__photo-count" aria-hidden="true">4 fotos</span>
+      <span class="profile__photo-count" aria-hidden="true">${totalFotosLabel}</span>
     </button>
-    <div class="profile__thumbs" aria-label="Miniaturas do perfil">
+    ${totalFotos > 1 ? `<div class="profile__thumbs" aria-label="${totalFotosLabel} de ${p.nome}">
       ${fotos.slice(1).map((src, i) => `
         <button class="profile__photo profile__photo--thumb lb-trigger" type="button" data-i="${i + 1}" aria-label="Abrir foto ${i + 2} de ${p.nome}">
           <img src="${src}" alt="${p.nome} ${i + 2}" loading="lazy" />
         </button>
       `).join("")}
-    </div>`;
+    </div>` : ""}`;
 
   const servicos = p.servicos.map(s =>
     `<a class="pill" href="${waPerfil(p, s)}" target="_blank" rel="noopener">${s}</a>`
