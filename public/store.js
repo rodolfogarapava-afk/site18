@@ -19,6 +19,24 @@
 
   const clone = o => JSON.parse(JSON.stringify(o));
 
+  const RJ_BAIRROS_PUBLICADOS = [
+    { slug: "leblon", nome: "Leblon" },
+    { slug: "ipanema", nome: "Ipanema" },
+    { slug: "copacabana", nome: "Copacabana" },
+    { slug: "barra-da-tijuca", nome: "Barra da Tijuca" },
+    { slug: "recreio", nome: "Recreio" },
+  ];
+  const RJ_BAIRROS_LEGADOS = {
+    "barra-e-recreio": "barra-da-tijuca",
+    "leblon-ipanema": "leblon",
+  };
+
+  function normalizarBairroPerfil(cidade, bairro) {
+    if (cidade !== "rio-de-janeiro") return bairro || "";
+    const slug = RJ_BAIRROS_LEGADOS[bairro] || bairro || "";
+    return RJ_BAIRROS_PUBLICADOS.some(item => item.slug === slug) ? slug : "";
+  }
+
   /* ---------- Client Supabase ---------- */
   let sb = null;
   // O banco antigo pode ainda não ter a migration de áudio. O valor é
@@ -42,7 +60,7 @@
       slug:        r.slug,
       nome:        r.nome,
       cidade:      r.cidade,
-      bairro:      r.bairro,
+      bairro:      normalizarBairroPerfil(r.cidade, r.bairro),
       whatsapp:    r.whatsapp,
       idade:       r.idade,
       altura:      r.altura,
@@ -76,7 +94,7 @@
       slug:         p.slug,
       nome:         p.nome,
       cidade:       p.cidade || null,
-      bairro:       p.bairro || null,
+      bairro:       normalizarBairroPerfil(p.cidade, p.bairro) || null,
       whatsapp:     p.whatsapp || "",
       idade:        p.idade || null,
       altura:       p.altura || null,
@@ -178,7 +196,9 @@
       out[c.slug] = {
         nome: c.nome,
         uf: c.uf,
-        bairros: Array.isArray(c.bairros) ? c.bairros : [],
+        bairros: c.slug === "rio-de-janeiro"
+          ? clone(RJ_BAIRROS_PUBLICADOS)
+          : (Array.isArray(c.bairros) ? c.bairros : []),
         ordem,
         ativa: typeof c.ativa === "boolean"
           ? c.ativa
@@ -200,7 +220,9 @@
         slug,
         nome: cidade.nome,
         uf: cidade.uf,
-        bairros: cidade.bairros || [],
+        bairros: slug === "rio-de-janeiro"
+          ? clone(RJ_BAIRROS_PUBLICADOS)
+          : (cidade.bairros || []),
         ordem: includeActive
           ? ordem
           : CITY_ACTIVE_ORDER_OFFSET + (ordem * 2) + (ativa ? 0 : 1),

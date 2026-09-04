@@ -35,6 +35,7 @@ function uniqueSlug(base, ignoreIndex) {
   return slug;
 }
 const splitList = v => (v || "").split(",").map(s => s.trim()).filter(Boolean);
+const isMassageService = value => slugify(value).includes("massagem");
 
 function toast(msg, isErr) {
   const t = $("#toast");
@@ -319,6 +320,7 @@ function abrirForm(idx) {
   $("#f-valor").value = p.valorHora || "";
   $("#f-descricao").value = p.descricao || "";
   $("#f-servicos").value = (p.servicos || []).join(", ");
+  $("#f-massagem").checked = (p.servicos || []).some(isMassageService);
   $("#f-atendimento").value = (p.atendimento || []).join(", ");
   $("#f-idiomas").value = (p.idiomas || []).join(", ");
   $("#f-horario").value = p.horario || "";
@@ -338,6 +340,9 @@ function abrirForm(idx) {
 $("#f-cidade").addEventListener("change", () => {
   preencherSelectBairros($("#f-cidade").value);
   setFieldInvalid("#f-cidade", false);
+});
+$("#f-servicos").addEventListener("input", () => {
+  if (splitList($("#f-servicos").value).some(isMassageService)) $("#f-massagem").checked = true;
 });
 ["#f-nome", "#f-whats", "#f-idade"].forEach(selector => {
   const input = $(selector);
@@ -383,6 +388,9 @@ $("#form-salvar").addEventListener("click", async () => {
   const editando = editIndex >= 0;
   const previousHue = editando ? Number(DATA.perfis[editIndex].hue) : NaN;
   const hue = Number.isFinite(previousHue) ? previousHue : 300;
+  let servicos = splitList($("#f-servicos").value);
+  if ($("#f-massagem").checked && !servicos.some(isMassageService)) servicos.push("Massagem");
+  if (!$("#f-massagem").checked) servicos = servicos.filter(servico => !isMassageService(servico));
   const perfil = {
     id:   editando ? DATA.perfis[editIndex].id : undefined,
     slug: editando ? DATA.perfis[editIndex].slug : uniqueSlug(slugify(nome), editIndex),
@@ -400,7 +408,7 @@ $("#form-salvar").addEventListener("click", async () => {
     valorHora: $("#f-valor").value.trim() || "Sob consulta",
     hue,
     descricao: $("#f-descricao").value.trim(),
-    servicos: splitList($("#f-servicos").value),
+    servicos,
     atendimento: splitList($("#f-atendimento").value),
     idiomas: splitList($("#f-idiomas").value),
     horario: $("#f-horario").value.trim(),

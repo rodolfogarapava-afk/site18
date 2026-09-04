@@ -153,6 +153,7 @@ const WA_ICON = '<svg class="ico-wa" viewBox="0 0 24 24" fill="currentColor" ari
 const ICON_SPARKLES = '<svg class="chip__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 14l.8 2.1L22 17l-2.2.9L19 20l-.8-2.1L16 17l2.2-.9L19 14z"/><path d="M5 14l.8 2.1L8 17l-2.2.9L5 20l-.8-2.1L2 17l2.2-.9L5 14z"/></svg>';
 const ICON_DIAMOND = '<svg class="chip__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20"/><path d="M9 3 8 9l4 12 4-12-1-6"/></svg>';
 const ICON_PLAY = '<svg class="chip__icon-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l12-7z"/></svg>';
+const ICON_MASSAGE = '<svg class="chip__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c4.4-2.2 7-5.4 7-9.1 0-2.1-1.2-3.9-3.1-4.9-.4 2-1.8 3.6-3.9 4.5C9.9 10.6 8.5 9 8.1 7 6.2 8 5 9.8 5 11.9 5 15.6 7.6 18.8 12 21Z"/><path d="M12 11.5c1.8-1.7 2.7-3.5 2.7-5.2 0-1.5-.9-2.8-2.7-3.8-1.8 1-2.7 2.3-2.7 3.8 0 1.7.9 3.5 2.7 5.2Z"/></svg>';
 const ICON_PIN = '<svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s5-4.35 5-9a5 5 0 0 0-10 0c0 4.65 5 9 5 9z"/><circle cx="12" cy="12" r="1.8"/></svg>';
 const ICON_ARROW = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"/><path d="m12 5 7 7-7 7"/></svg>';
 const ICON_CHAT = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>';
@@ -216,6 +217,12 @@ function cardResumo(p) {
 
 function perfilAudioUrl(p) {
   return (p && (p.audioUrl || p.audio || p.audio_url)) || "";
+}
+
+function ofereceMassagem(p) {
+  return (p?.servicos || []).some(servico =>
+    String(servico || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes("massagem")
+  );
 }
 
 function storyCidadeSlug(s) {
@@ -660,7 +667,8 @@ function viewCidade(cidade, filtro) {
     ? bairroNome(cidade, filtro.valor)
     : filtro?.tipo === "novidades" ? "Novidades"
     : filtro?.tipo === "exclusivas" ? "Exclusivas"
-    : filtro?.tipo === "videos" ? "Vídeos" : "";
+    : filtro?.tipo === "videos" ? "Vídeos"
+    : filtro?.tipo === "massagem" ? "Massagem" : "";
   const tituloHead = filtroLabel
     ? `${filtroLabel} em ${c.nome} — Acompanhantes • Aliança`
     : `Acompanhantes em ${c.nome} (${c.uf}) — Aliança`;
@@ -693,18 +701,22 @@ function viewCidade(cidade, filtro) {
         ? "Exclusivas"
         : filtro.tipo === "videos"
           ? "Vídeos"
-          : bairroNome(cidade, filtro.valor);
+          : filtro.tipo === "massagem"
+            ? "Massagem"
+            : bairroNome(cidade, filtro.valor);
 
   if (filtro?.tipo === "bairro") {
     list = list.filter(p => p.bairro === filtro.valor);
     titulo = bairroNome(cidade, filtro.valor);
     sub = `Acompanhantes em ${titulo} • ${c.nome}`;
   } else if (filtro?.tipo === "novidades") {
-    list = list.filter(p => p.nova); titulo = "Novidades " + c.uf; sub = "Perfis recém-chegados";
+    list = list.filter(p => p.nova); titulo = "Novidades"; sub = "Perfis recém-chegados";
   } else if (filtro?.tipo === "exclusivas") {
-    list = list.filter(p => p.exclusiva); titulo = "Exclusivas " + c.uf; sub = "Seleção premium";
+    list = list.filter(p => p.exclusiva); titulo = "Exclusivas"; sub = "Seleção premium";
   } else if (filtro?.tipo === "videos") {
-    list = list.filter(p => p.temVideo); titulo = "Vídeos " + c.uf; sub = "Perfis com vídeo";
+    list = list.filter(p => p.temVideo); titulo = "Vídeos"; sub = "Perfis com vídeo";
+  } else if (filtro?.tipo === "massagem") {
+    list = list.filter(ofereceMassagem); titulo = "Massagem"; sub = "Perfis que oferecem massagem";
   }
 
   const chips = c.bairros.map(b =>
@@ -716,6 +728,7 @@ function viewCidade(cidade, filtro) {
     `<a class="chip${filtro?.tipo === "novidades" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/novidades')}">${ICON_SPARKLES}<span>Novidades</span></a>`,
     `<a class="chip${filtro?.tipo === "exclusivas" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/exclusivas')}">${ICON_DIAMOND}<span>Exclusivas</span></a>`,
     `<a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/videos')}">${ICON_PLAY}<span>Vídeos</span></a>`,
+    `<a class="chip${filtro?.tipo === "massagem" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/massagem')}">${ICON_MASSAGE}<span>Massagem</span></a>`,
   ].join("");
 
   app.innerHTML = `
@@ -1778,7 +1791,7 @@ function router() {
   if (parts[0] === "cidade" && parts[1]) {
     const cidade = parts[1];
     if (parts[2] === "bairro" && parts[3]) return viewCidade(cidade, { tipo: "bairro", valor: parts[3] });
-    if (["novidades", "exclusivas", "videos"].includes(parts[2]))
+    if (["novidades", "exclusivas", "videos", "massagem"].includes(parts[2]))
       return viewCidade(cidade, { tipo: parts[2] });
     return viewCidade(cidade);
   }
