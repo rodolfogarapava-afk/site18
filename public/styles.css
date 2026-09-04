@@ -149,30 +149,51 @@ main{padding-top:30px}
 /* ---------- Header ---------- */
 .header{
   position:fixed;top:0;left:0;right:0;z-index:90;
-  transition:background .3s ease,box-shadow .3s ease;
+  transition:background .3s ease,box-shadow .3s ease,border-color .3s ease;
   background:rgba(13,9,10,.98);
+  border-bottom:1px solid rgba(255,247,241,.06);
   backdrop-filter:blur(12px) saturate(140%);
 }
-.header.scrolled{background:rgba(13,9,10,.98);box-shadow:0 4px 20px rgba(0,0,0,.42);border-bottom:1px solid var(--line)}
+.header.scrolled{background:rgba(13,9,10,.98);box-shadow:0 4px 20px rgba(0,0,0,.42);border-bottom-color:var(--line)}
 .header__inner{display:flex;align-items:center;gap:1.4rem;width:min(1180px,94%);margin-inline:auto;height:70px}
-.logo{display:inline-flex;align-items:center;gap:.55em;font-family:var(--serif);font-size:1.25rem;letter-spacing:.04em;color:var(--white)}
+.logo{display:inline-flex;align-items:center;gap:.55em;font-family:var(--serif);font-size:1.25rem;letter-spacing:.055em;color:var(--white)}
 .logo span{color:var(--white)}
 .logo__ring{height:1.8em;width:auto;display:block}
 .logo--sm{font-size:1.05rem}
 .logo--sm .logo__ring{height:1.6em}
 
-.nav{display:flex;align-items:center;gap:.4rem;margin-left:auto}
+.nav{display:flex;align-items:center;gap:.2rem;margin-left:auto}
 .nav__cities{display:contents}
+/* No desktop o agrupamento é só estrutural (Cidades/Anuncie/Informações continuam
+   soltos na mesma linha do header); no mobile ele vira o bloco visual da lista. */
+.nav__list{display:contents}
+.nav__link-ico{display:none}
+.nav__foot{display:none}
 .nav__group{position:relative}
 .nav__btn,.nav__link{
-  display:inline-flex;align-items:center;gap:.3rem;
+  position:relative;
+  display:inline-flex;align-items:center;gap:.35rem;
   background:none;border:none;color:var(--white);font-family:var(--sans);
-  font-size:.9rem;cursor:pointer;padding:.6rem .8rem;border-radius:8px;
-  transition:color .2s;
+  font-size:.9rem;cursor:pointer;padding:.6rem .85rem;border-radius:999px;
+  transition:color .2s ease,background .2s ease,border-color .2s ease;
 }
-.nav__btn:hover,.nav__link:hover{color:var(--red-2)}
-.nav__caret{font-size:.7rem;transition:transform .2s ease;opacity:.8}
-.nav__group:hover .nav__caret,.nav__group.open .nav__caret{transform:rotate(180deg)}
+/* Link simples: sublinhado dourado que cresce no hover, sem pill de fundo */
+.nav__link::after{
+  content:"";position:absolute;left:.85rem;right:.85rem;bottom:.32rem;height:1px;
+  background:var(--gold-2);transform:scaleX(0);transform-origin:left center;
+  transition:transform .22s ease;
+}
+.nav__link:hover::after{transform:scaleX(1)}
+/* Botão "Cidades": borda sutil pra ler como controle (abre um menu), não como link */
+.nav__btn{border:1px solid rgba(213,175,84,.16);background:rgba(255,247,241,.02)}
+.nav__btn:hover{border-color:rgba(213,175,84,.36);background:rgba(213,175,84,.06)}
+.nav__group.open .nav__btn{border-color:rgba(213,175,84,.5);background:rgba(213,175,84,.08)}
+/* Texto sempre branco no hover — trocar pra --red-2 (vinho escuro) sobre o fundo quase
+   preto do header dava um contraste péssimo, quase ilegível. O sublinhado/borda dourada
+   já avisa o hover sem precisar escurecer o texto. */
+.nav__btn:hover,.nav__link:hover{color:var(--white)}
+.nav__caret{font-size:.68rem;transition:transform .2s ease;opacity:.75}
+.nav__group:hover .nav__caret,.nav__group.open .nav__caret{transform:rotate(180deg);opacity:1}
 .nav__menu{
   position:absolute;top:100%;left:0;min-width:210px;background:var(--black-2);
   border:1px solid var(--line);border-radius:10px;padding:.4rem;margin-top:.35rem;
@@ -204,7 +225,7 @@ main{padding-top:30px}
 }
 .nav__menu-search input{flex:1;background:none;border:none;outline:none;color:var(--white);font-family:var(--sans);font-size:.85rem}
 .nav__menu-list{display:flex;flex-direction:column;max-height:min(60vh,340px);overflow-y:auto}
-.nav__menu-list{scrollbar-width:thin;scrollbar-color:rgba(138,10,30,.55) rgba(255,247,241,.06)}
+.nav__menu-list{scrollbar-width:thin;scrollbar-color:rgba(213,175,84,.55) rgba(255,247,241,.06)}
 .nav__menu-list::-webkit-scrollbar{width:6px}
 .nav__menu-list::-webkit-scrollbar-track{background:rgba(255,247,241,.05);border-radius:999px}
 .nav__menu-list::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--gold),var(--gold-2));border-radius:999px}
@@ -216,8 +237,11 @@ main{padding-top:30px}
 
 .header__cta{margin-left:.4rem}
 .nav__mobile-head{display:none}
+/* CTA de WhatsApp dentro do drawer — só existe pro mobile (no desktop o header__cta
+   já cobre isso); sem ela o menu mobile ficava sem nenhum atalho de contato. */
+.nav__wa-cta{display:none}
 .header__burger{
-  display:none;position:relative;width:44px;height:44px;border:1px solid rgba(138,10,30,.3);
+  display:none;position:relative;width:44px;height:44px;border:1px solid rgba(213,175,84,.28);
   border-radius:50%;background:rgba(255,247,241,.04);color:var(--white);cursor:pointer;margin-left:auto;
   place-items:center;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;
   overflow:hidden;
@@ -230,7 +254,7 @@ main{padding-top:30px}
   transition:transform .22s ease,opacity .18s ease;
   transform-origin:center;
 }
-.header__burger:hover{border-color:var(--red);background:rgba(196,30,58,.1);box-shadow:0 0 18px rgba(196,30,58,.14)}
+.header__burger:hover{border-color:var(--gold);background:rgba(213,175,84,.1);box-shadow:0 0 18px rgba(213,175,84,.16)}
 body.nav-open .burger-line--top{transform:translateY(5px) rotate(45deg)}
 body.nav-open .burger-line--mid{opacity:0}
 body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
@@ -251,7 +275,7 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:
   repeating-linear-gradient(135deg,transparent,transparent 38px,rgba(240,217,154,.026) 38px,rgba(240,217,154,.026) 39px)}
 .hero--home{
-  min-height:auto;
+  min-height:min(78vh,640px);
   padding-bottom:12px;
   background:
     linear-gradient(180deg,rgba(7,4,5,.06),rgba(7,4,5,.30)),
@@ -261,6 +285,8 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
     linear-gradient(180deg,#0d0a08,#070606);
 }
 .hero--home::after{background:none}
+.hero--home{align-items:end}
+.hero--home .hero__content{padding-bottom:1.5rem}
 .hero__scrim{
   position:absolute;
   inset:0;
@@ -277,7 +303,7 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 .hero__layout{
   position:relative;
   z-index:2;
-  width:min(1180px,94%);
+  width:min(1180px,92%);
   margin-inline:auto;
   display:grid;
   grid-template-columns:minmax(0,1fr);
@@ -453,7 +479,7 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 .hero__hint{color:var(--red-2)!important;font-size:.85rem;letter-spacing:.02em}
 
 /* ---------- Grade de cidades (busca) ---------- */
-.section--cities{padding:52px 0 72px}
+.section--cities{padding:20px 0 72px}
 .city-showcase{
   padding:1rem;
   border:1px solid rgba(255,247,241,.08);
@@ -487,6 +513,128 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
   letter-spacing:.12em;
   text-transform:uppercase;
 }
+/* ---------- Pesquisar cidade: balão no desktop, tela cheia no mobile ---------- */
+.city-search-wrap{position:relative;width:100%}
+.city-search-trigger{
+  display:flex;align-items:center;gap:.75rem;width:100%;
+  justify-content:space-between;
+  padding:.7rem 1.2rem .7rem .7rem;border:1px solid rgba(213,175,84,.24);border-radius:999px;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+  color:var(--white);font-family:var(--sans);font-size:.94rem;cursor:pointer;
+  box-shadow:0 14px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03);
+  transition:border-color .18s ease,background .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.city-search-trigger:hover{
+  border-color:rgba(213,175,84,.55);
+  background:linear-gradient(180deg,rgba(213,175,84,.14),rgba(213,175,84,.04));
+  box-shadow:0 16px 34px rgba(0,0,0,.34),0 0 0 1px rgba(213,175,84,.1);
+  transform:translateY(-1px);
+}
+.city-search-trigger__ico{
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  width:38px;height:38px;border-radius:999px;
+  background:rgba(213,175,84,.16);color:var(--gold-2);
+}
+/* O path do pin (ICON_PIN) não é geometricamente centrado no próprio viewBox
+   (sobra mais espaço vazio em cima que embaixo) — dentro do chip isso ficava
+   visível, então recentraliza opticamente e aumenta o tamanho */
+.city-search-trigger__ico svg{width:22px;height:22px;color:inherit;opacity:1;transform:translateY(-1.8px)}
+.city-search-trigger__text{flex:1;text-align:left;color:rgba(255,247,241,.85);white-space:nowrap}
+.city-search-trigger__go{display:inline-flex;width:17px;height:17px;flex:0 0 auto;color:var(--muted)}
+/* .inline-icon-svg (compartilhado com outros ícones do site) trava tamanho em 14px
+   e cor em --gold-2 direto no <svg> — sobrescreve aqui pra herdar do wrapper */
+.city-search-trigger__go svg,
+.city-search__input-ico svg,
+.city-search__geo-ico svg,
+.city-search__item-ico svg{
+  width:100%;height:100%;color:inherit;opacity:1;
+}
+
+.city-search{position:fixed;inset:0;z-index:95}
+.city-search__scrim{position:fixed;inset:0;background:rgba(2,1,2,.72);backdrop-filter:blur(4px)}
+.city-search__panel{
+  position:relative;z-index:1;height:100%;width:100%;
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#100c0d,#08060a 55%,#060404);
+  padding:max(1rem,env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.city-search__head{display:flex;align-items:center;gap:.6rem;margin-bottom:1.1rem}
+.city-search__input-wrap{
+  flex:1;display:flex;align-items:center;gap:.6rem;min-width:0;
+  border:1px solid rgba(213,175,84,.22);border-radius:999px;
+  padding:.75rem 1.1rem;background:rgba(255,255,255,.03);
+}
+.city-search__input-ico{display:inline-flex;width:17px;height:17px;flex:0 0 auto;color:var(--gold-2)}
+.city-search__input-wrap input{
+  flex:1;min-width:0;background:none;border:none;outline:none;
+  color:var(--white);font-family:var(--sans);font-size:.94rem;
+}
+.city-search__input-wrap input::placeholder{color:#8a8175}
+.city-search__close{
+  flex:0 0 auto;width:40px;height:40px;border-radius:50%;
+  border:1px solid rgba(213,175,84,.2);background:rgba(255,255,255,.03);
+  color:var(--white);cursor:pointer;
+}
+.city-search__body{display:flex;flex-direction:column}
+
+.city-search__geo{
+  display:flex;align-items:center;gap:.7rem;width:100%;
+  padding:.85rem .9rem;margin-bottom:1rem;
+  border:1px solid rgba(213,175,84,.2);border-radius:14px;
+  background:rgba(213,175,84,.05);color:var(--champagne);
+  font-family:var(--sans);font-size:.88rem;cursor:pointer;text-align:left;
+  transition:border-color .18s ease,background .18s ease;
+}
+.city-search__geo:hover{border-color:rgba(213,175,84,.4);background:rgba(213,175,84,.09)}
+.city-search__geo:disabled{opacity:.6;cursor:default}
+.city-search__geo-ico{display:inline-flex;width:18px;height:18px;flex:0 0 auto;color:var(--gold-2)}
+
+.city-search__section-title{
+  margin:.3rem 0 .5rem;color:var(--gold-2);font-size:.66rem;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;
+}
+.city-search__list{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.7rem}
+.city-search__item{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.75rem .85rem;border-radius:12px;border:1px solid transparent;
+  background:rgba(255,255,255,.015);color:var(--white);
+  transition:border-color .16s ease,background .16s ease;
+}
+.city-search__item:hover{border-color:rgba(213,175,84,.28);background:rgba(213,175,84,.07)}
+.city-search__item--destaque{background:rgba(213,175,84,.04)}
+.city-search__item-ico{display:inline-flex;width:16px;height:16px;flex:0 0 auto;color:var(--gold-2)}
+.city-search__item-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:.1rem}
+.city-search__item-main b{
+  font-family:var(--serif);font-weight:500;font-size:.92rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.city-search__item-main em{font-style:normal;color:var(--muted);font-size:.72rem}
+.city-search__item-uf{flex:0 0 auto;color:var(--gold);font-size:.7rem;letter-spacing:.08em}
+.city-search__empty{padding:1.6rem 0;text-align:center;color:var(--muted);font-size:.88rem}
+
+/* A partir daqui vira balão: popover ancorado no botão, não mais tela cheia */
+@media(min-width:861px){
+  /* position:fixed + top/left calculados via JS (positionCitySearchPopover), pra
+     nunca estourar o rodapé da viewport quando o botão está numa área baixa da
+     página (o hero é alto e o gatilho fica perto do fim dele) */
+  .city-search{position:fixed;inset:auto;top:0;left:0;width:min(420px,88vw);z-index:95}
+  .city-search__scrim{position:fixed;inset:0;background:transparent;backdrop-filter:none}
+  .city-search__panel{
+    position:relative;z-index:1;height:auto;width:100%;
+    background:#100c0d;
+    border:1px solid rgba(213,175,84,.22);border-radius:20px;
+    box-shadow:0 26px 60px rgba(0,0,0,.5);
+    padding:1.1rem;max-height:min(70vh,560px);overflow-y:auto;
+  }
+  .city-search__panel::before{
+    content:"";position:absolute;top:-7px;left:32px;width:14px;height:14px;
+    background:#100c0d;border-left:1px solid rgba(213,175,84,.22);
+    border-top:1px solid rgba(213,175,84,.22);transform:rotate(45deg);
+  }
+  .city-search__close{width:32px;height:32px}
+}
+
 .city-grid,
 .city-showcase__grid{
   display:grid;
@@ -974,13 +1122,39 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 .profile__photo--hero img{
   object-fit:contain;
 }
+/* Faixa horizontal com scroll (não grade que quebra linha) — assim o vídeo
+   (quando existe) entra como mais um item na mesma fileira das fotos, em
+   vez de sobrar sozinho numa segunda linha. */
 .profile__thumbs{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(112px,1fr));
   gap:.55rem;
+  overflow-x:auto;
+  scroll-snap-type:x proximity;
+  padding-bottom:.15rem;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(213,175,84,.4) rgba(255,247,241,.06);
 }
+.profile__thumbs::-webkit-scrollbar{height:5px}
+.profile__thumbs::-webkit-scrollbar-track{background:rgba(255,247,241,.05);border-radius:999px}
+.profile__thumbs::-webkit-scrollbar-thumb{background:linear-gradient(90deg,var(--gold),var(--gold-2));border-radius:999px}
 .profile__photo--thumb{
+  flex:0 0 25%;
+  max-width:112px;
   aspect-ratio:1/1;
+  scroll-snap-align:start;
+}
+.profile__photo--video{position:relative}
+.profile__video-play{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  background:rgba(7,4,5,.38);
+}
+.profile__video-play svg{
+  width:34px;height:34px;
+  color:#fff;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));
 }
 .profile__photo-fade{
   position:absolute;
@@ -1015,15 +1189,18 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 }
 .profile__actions.profile__actions--top{
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:1fr;
+  justify-items:start;
   gap:.72rem;
   margin:0 0 1.05rem;
 }
 .profile__actions.profile__actions--top .btn{
-  width:100%;
-  min-width:0;
-  min-height:56px;
-  border-radius:18px;
+  width:auto;
+  min-width:220px;
+  min-height:44px;
+  padding:.68rem 1.8rem;
+  font-size:.92rem;
+  border-radius:14px;
   letter-spacing:.02em;
   justify-content:center;
 }
@@ -1218,6 +1395,24 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
   transition:color .15s;
 }
 .back-link:hover{color:var(--gold-2)}
+
+.breadcrumb-nav{margin-bottom:1.1rem}
+.breadcrumb{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.35rem;
+  margin:0;
+  padding:0;
+  list-style:none;
+  color:#a89b8f;
+  font-size:.85rem;
+}
+.breadcrumb li{display:flex;align-items:center;gap:.35rem}
+.breadcrumb li:not(:last-child)::after{content:"›";margin-left:.35rem;color:#6b6259}
+.breadcrumb a{color:#a89b8f;text-decoration:none;transition:color .15s}
+.breadcrumb a:hover{color:var(--gold-2)}
+.breadcrumb li:last-child span{color:var(--gold-2)}
 
 /* ---------- Anuncie / Informações ---------- */
 .page{padding:100px 0 60px;min-height:70vh}
@@ -1570,7 +1765,8 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 
 /* ---------- Lightbox ---------- */
 .lightbox{position:fixed;inset:0;z-index:200;background:#000e;display:grid;place-items:center}
-.lightbox img{max-width:90vw;max-height:86vh;border-radius:10px;box-shadow:var(--shadow)}
+.lightbox img,
+.lightbox video{max-width:90vw;max-height:86vh;border-radius:10px;box-shadow:var(--shadow)}
 .lightbox__close{position:absolute;top:18px;right:22px;font-size:1.8rem;background:none;border:none;color:#fff;cursor:pointer}
 .lightbox__nav{position:absolute;top:50%;transform:translateY(-50%);font-size:3rem;background:none;border:none;color:#fff8;cursor:pointer;padding:0 1rem}
 .lightbox__nav:hover{color:#fff}
@@ -1854,7 +2050,7 @@ body.sv-open{overflow:hidden}
     padding:88px 0 16px;
   }
   .hero__layout{width:min(92%,620px)}
-  body.nav-open{overflow:hidden}
+  body.nav-open,body.city-search-open{overflow:hidden}
   body.nav-open::before{
     content:"";position:fixed;inset:0;z-index:88;
     background:rgba(2,1,2,.62);backdrop-filter:blur(6px);
@@ -1865,14 +2061,13 @@ body.sv-open{overflow:hidden}
     width:min(88vw,360px);height:100vh;max-height:100vh;overflow-y:auto;
     overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
     background:
-      radial-gradient(360px 260px at 78% 0%,rgba(196,30,58,.2),transparent 68%),
-      radial-gradient(300px 220px at 5% 95%,rgba(213,175,84,.07),transparent 70%),
-      linear-gradient(180deg,#1a1113,#0a0708 70%);
-    border-left:1px solid rgba(138,10,30,.24);
+      radial-gradient(220px 160px at 96% -4%,rgba(213,175,84,.07),transparent 70%),
+      linear-gradient(180deg,#100c0d,#060404 55%);
+    border-left:1px solid rgba(213,175,84,.16);
     box-shadow:-20px 0 54px rgba(0,0,0,.46);
     flex-direction:column;align-items:stretch;
     padding:max(1rem,env(safe-area-inset-top)) max(1rem,env(safe-area-inset-right)) calc(1rem + env(safe-area-inset-bottom)) 1rem;
-    gap:.55rem;display:flex;
+    gap:.85rem;display:flex;
     transform:translateX(104%);opacity:.98;transition:transform .26s ease;
   }
   @supports(height:100dvh){
@@ -1881,7 +2076,7 @@ body.sv-open{overflow:hidden}
   .nav.open{transform:translateX(0)}
   .nav__mobile-head{
     position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:1rem;
-    padding:.2rem 0 1rem;margin-bottom:.5rem;border-bottom:1px solid rgba(138,10,30,.18);
+    padding:.2rem 0 1rem;margin-bottom:.5rem;border-bottom:1px solid rgba(213,175,84,.16);
   }
   .nav__mobile-brand{
     display:inline-flex;align-items:center;gap:.55rem;font-family:var(--serif);
@@ -1889,7 +2084,7 @@ body.sv-open{overflow:hidden}
   }
   .nav__mobile-brand img{width:26px;height:26px;object-fit:contain}
   .nav__close{
-    width:40px;height:40px;border-radius:50%;border:1px solid rgba(138,10,30,.28);
+    width:40px;height:40px;border-radius:50%;border:1px solid rgba(213,175,84,.26);
     background:rgba(255,247,241,.04);position:relative;cursor:pointer;flex:0 0 auto;
   }
   .nav__close span{
@@ -1899,17 +2094,37 @@ body.sv-open{overflow:hidden}
   .nav__close span:first-child{transform:rotate(45deg)}
   .nav__close span:last-child{transform:rotate(-45deg)}
   .nav__group{width:100%}
+  /* Lista única (cartão) em vez de botões soltos empilhados */
+  .nav__list{
+    display:flex;flex-direction:column;width:100%;
+    border:1px solid rgba(255,247,241,.07);border-radius:16px;
+    overflow:hidden;background:rgba(255,247,241,.015);
+  }
+  .nav__link-ico{
+    display:inline-flex;width:21px;height:21px;flex:0 0 auto;
+    color:#9b8e86;transition:color .18s ease;
+  }
+  .nav__btn-label{display:inline-flex;align-items:center;gap:.85rem;min-width:0}
   .nav__btn,.nav__link{
-    width:100%;justify-content:space-between;border:1px solid transparent;
-    border-radius:14px;padding:.95rem 1rem;background:rgba(255,247,241,.04);
-    color:var(--white);font-size:.95rem;
+    width:100%;border:none;border-radius:0;gap:.85rem;
+    padding:1.15rem 1.1rem;background:transparent;
+    color:var(--white);font-size:.97rem;
+    border-bottom:1px solid rgba(255,247,241,.06);
   }
+  .nav__btn{justify-content:space-between}
+  .nav__link{justify-content:flex-start}
+  .nav__link:last-of-type{border-bottom:none}
   .nav__btn:hover,.nav__link:hover,.nav__group.open>.nav__btn{
-    border-color:rgba(138,10,30,.22);background:rgba(196,30,58,.09);color:var(--champagne);
+    background:rgba(213,175,84,.08);color:var(--champagne);
   }
+  .nav__btn:hover .nav__link-ico,.nav__link:hover .nav__link-ico,
+  .nav__group.open>.nav__btn .nav__link-ico{color:var(--gold-2)}
+  /* no drawer o próprio fundo do row já indica hover/toque — o sublinhado do desktop
+     ficaria sobrando aqui */
+  .nav__link::after{content:none}
   .nav__menu{
     position:static;box-shadow:inset 0 1px 0 rgba(255,247,241,.04),0 18px 36px rgba(0,0,0,.18);
-    border:1px solid rgba(138,10,30,.18);
+    border:1px solid rgba(213,175,84,.16);
     background:
       linear-gradient(180deg,rgba(255,247,241,.035),rgba(255,247,241,.012)),
       rgba(8,6,7,.82);
@@ -1921,7 +2136,7 @@ body.sv-open{overflow:hidden}
   .nav__menu::before{display:none}
   .nav__menu-title{padding:.15rem .45rem .55rem}
   .nav__menu-search{
-    border-radius:14px;background:rgba(255,247,241,.055);border-color:rgba(138,10,30,.18);
+    border-radius:14px;background:rgba(255,247,241,.055);border-color:rgba(213,175,84,.16);
     margin:0 0 .55rem;padding:.6rem .75rem;
   }
   .nav__menu-search:focus-within{border-color:rgba(213,175,84,.5);box-shadow:0 0 0 3px rgba(213,175,84,.08)}
@@ -1931,7 +2146,7 @@ body.sv-open{overflow:hidden}
     background:transparent;
   }
   .nav__menu a:hover{
-    border-color:rgba(138,10,30,.16);background:rgba(196,30,58,.08);color:var(--white);
+    border-color:rgba(213,175,84,.3);background:rgba(213,175,84,.09);color:var(--white);
   }
   .nav__menu-list a small{
     display:grid;place-items:center;min-width:34px;height:24px;border-radius:999px;
@@ -1941,6 +2156,58 @@ body.sv-open{overflow:hidden}
   .header__cta{display:none}
   .header__burger{display:grid}
   .header__inner .logo{gap:.18em}
+  /* WhatsApp fixo embaixo do drawer, separado da lista de links por uma linha fina
+     (a linha é um ::before à parte — um border-top direto no botão ficaria cortado
+     pelo border-radius:999px do pill) */
+  .nav__wa-cta{
+    position:relative;
+    display:inline-flex;width:auto;align-self:center;
+    margin:2.1rem 0 0;
+    padding:.8rem 1.6rem;font-size:.92rem;
+  }
+  .nav__wa-cta::before{
+    content:"";position:absolute;top:-1.05rem;left:0;right:0;height:1px;
+    background:rgba(213,175,84,.14);
+  }
+  .nav__wa-cta .ico-wa{width:19px;height:19px;flex:0 0 auto}
+
+  /* Rodapé do drawer: avisos legais + links, empurrado pro final do menu
+     (margin-top:auto, já que .nav é flex-column) — preenche o vazio que
+     sobrava embaixo do CTA em telas mais altas. */
+  .nav__foot{
+    display:flex;flex-direction:column;width:100%;margin-top:auto;
+    padding-top:1.4rem;border-top:1px solid rgba(255,247,241,.07);
+  }
+  .nav__foot-notice{
+    display:flex;align-items:center;gap:.6rem;
+    margin:0 0 .55rem;font-size:.72rem;line-height:1.4;color:#9b8e86;
+  }
+  .nav__foot-notice:last-of-type{margin-bottom:0}
+  .nav__foot-badge{
+    flex:0 0 auto;display:grid;place-items:center;
+    min-width:30px;height:22px;padding:0 .3rem;
+    border:1px solid rgba(213,175,84,.28);border-radius:7px;
+    background:rgba(213,175,84,.06);
+    color:var(--gold-2);font-size:.62rem;font-weight:800;letter-spacing:.02em;
+  }
+  /* Chips em grid — mesmo padrão já usado no rodapé normal do site em telas
+     pequenas (.footer__legal-links), pra não reinventar um estilo pior aqui */
+  .nav__foot-links{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;
+    margin:1.1rem 0;
+  }
+  .nav__foot-links a{
+    display:flex;align-items:center;min-height:40px;padding:.55rem .65rem;
+    border:1px solid rgba(255,247,241,.07);border-radius:10px;
+    background:rgba(255,255,255,.018);
+    color:#a89d95;font-size:.72rem;line-height:1.25;transition:.15s;
+  }
+  .nav__foot-links a:last-child{grid-column:1/-1}
+  .nav__foot-links a:hover{
+    border-color:rgba(213,175,84,.3);background:rgba(213,175,84,.06);color:var(--gold-2);
+  }
+  .nav__foot-copy{margin:0;font-size:.68rem;color:#6f655f;text-align:center}
+
   .profile__top{grid-template-columns:1fr}
   .footer__inner{grid-template-columns:1fr}
 }
@@ -2020,7 +2287,7 @@ body.sv-open{overflow:hidden}
 }
 @media(max-width:520px){
   .hero{padding:74px 0 10px}
-  .hero__layout{width:min(94%,640px)}
+  .hero__layout{width:min(92%,640px)}
   .hero__eyebrow{
     letter-spacing:.11em;
     font-size:.52rem;
@@ -2107,10 +2374,11 @@ body.sv-open{overflow:hidden}
     aspect-ratio:4/5;
   }
   .profile__thumbs{
-    grid-template-columns:repeat(3,minmax(0,1fr));
     gap:.45rem;
   }
   .profile__photo--thumb{
+    flex-basis:23%;
+    max-width:104px;
     aspect-ratio:1/1;
   }
   .profile__photo-count{
@@ -2156,7 +2424,7 @@ body.sv-open{overflow:hidden}
     padding:.65rem .78rem;
     font-size:.8rem;
   }
-  .section--cities{padding:40px 0 58px}
+  .section--cities{padding:14px 0 58px}
   .city-showcase{
     padding:.78rem;
     border-radius:18px;
@@ -2559,6 +2827,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
   margin-bottom:0;
 }
 .hero__bar-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:.5rem;text-align:left}
+/* Ações do hero: CTA principal + busca de cidade, uma embaixo da outra no mobile */
+.hero__bar-actions{display:flex;flex-direction:column;align-items:flex-start;gap:1.15rem;width:100%}
 .hero__bar h1{
   margin:0;
   font-family:var(--serif);
@@ -2602,19 +2872,21 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
 
 /* Mobile */
 @media(max-width:640px){
+  .hero--home{min-height:min(62vh,500px)}
+  .hero--home .hero__content{padding-bottom:1rem}
   .hero--carousel{min-height:min(72vh,540px);padding:96px 0 18px}
   .hero--carousel .hero__content{gap:.5rem}
   .hero__bar{
     padding:0;
-    gap:.9rem;
+    gap:1.1rem;
     border-radius:0;
     align-items:flex-start;
   }
-  .hero__bar-text{gap:.4rem}
-  .hero__bar h1{font-size:1.18rem;line-height:1.2}
-  .hero__bar p{font-size:.85rem;line-height:1.45}
-  .hero__bar-cta{padding:.55rem .85rem .55rem 1rem;font-size:.82rem;gap:.45rem;align-self:flex-start}
-  .hero__bar-cta-ico{width:26px;height:26px}
+  .hero__bar-text{gap:.55rem}
+  .hero__bar h1{font-size:1.4rem;line-height:1.24}
+  .hero__bar p{font-size:.94rem;line-height:1.5}
+  .hero__bar-cta{padding:.7rem 1.05rem .7rem 1.2rem;font-size:.88rem;gap:.5rem;align-self:flex-start}
+  .hero__bar-cta-ico{width:28px;height:28px}
 }
 
 /* ============================================================
@@ -2631,8 +2903,66 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
   .footer__legal{
     width:min(1240px,92%);
   }
+  .header__inner{height:78px;gap:1.8rem}
 
-  /* Hero home: presença maior, conteúdo em duas colunas */
+  /* Menu "Cidades": mais largo e em 2 colunas — 27 capitais numa lista de uma
+     coluna só forçava muita rolagem; assim dá pra ver quase tudo de uma vez. */
+  .nav__menu--cities{min-width:400px;max-width:440px}
+  .nav__menu-list{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:.05rem .4rem;
+    max-height:min(50vh,320px);
+  }
+  .nav__menu-list a{padding:.5rem .55rem}
+  .nav__city-main b{font-size:.87rem}
+
+  /* Hero home: formato desktop dedicado — grade de duas colunas DENTRO do mesmo container
+     do texto (mesmas margens de 92%/1240px), em vez de uma tira de imagem colada na borda
+     da tela. Mobile continua com o bg full-bleed original, intocado. */
+  .hero--home{
+    min-height:min(82vh,720px);
+    padding:120px 0 40px;
+    background:
+      linear-gradient(180deg,rgba(7,4,5,.06),rgba(7,4,5,.30)),
+      radial-gradient(900px 500px at 75% 20%,rgba(95,42,27,.42) 0%,transparent 62%),
+      radial-gradient(780px 460px at 22% 0%,rgba(93,24,48,.38) 0%,transparent 58%),
+      linear-gradient(180deg,#0d0a08,#070606);
+    align-items:center;
+  }
+  /* Sem foto atrás do texto no desktop: o scrim (que servia para dar contraste sobre a
+     imagem full-bleed do mobile) fica neutro aqui — quem dá o clima é o bg acima.
+     :not(.hero--carousel) evita conflito com o modo carrossel (destaques), que tem seu
+     próprio layout full-bleed já pronto e não deve herdar a grade de duas colunas. */
+  .hero--home:not(.hero--carousel) .hero__scrim{background:none}
+  .hero--home:not(.hero--carousel) .hero__layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(300px,420px);
+    align-items:center;
+    justify-items:stretch;
+    gap:clamp(2rem,5vw,4rem);
+    padding-bottom:0;
+  }
+  /* Coluna da foto: card contido, mesma proporção do retrato original, sem cortar o corpo */
+  .hero--home:not(.hero--carousel) .hero__layout::after{
+    content:"";
+    display:block;
+    align-self:center;
+    width:100%;
+    aspect-ratio:3/4;
+    border-radius:26px;
+    background:
+      linear-gradient(180deg,rgba(7,4,5,.04) 0%,transparent 26%,transparent 74%,rgba(7,4,5,.22) 100%),
+      var(--hero-image) center 14% / cover no-repeat;
+    box-shadow:0 30px 70px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .hero--home:not(.hero--carousel) .hero__content{
+    width:100%;
+    max-width:760px;
+    margin:0;
+    text-align:left;
+    padding-bottom:0;
+  }
   .hero--carousel{
     min-height:min(82vh,720px);
     padding:120px 0 40px;
@@ -2661,15 +2991,20 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
   .hero__bar-text{flex:1 1 auto;max-width:640px}
   .hero__bar h1{font-size:clamp(2rem,3.4vw,2.8rem);line-height:1.12}
   .hero__bar p{font-size:1.02rem;line-height:1.5;max-width:52ch}
+  /* Empilhado (não lado a lado): com o botão de busca largo, colocar os dois na
+     mesma linha espremia o texto do título contra a borda do card de foto */
+  .hero__bar-actions{
+    width:auto;flex:0 0 auto;flex-direction:column;align-items:flex-start;gap:1rem;
+  }
   .hero__bar-cta{
-    align-self:flex-end;
     padding:.85rem 1.4rem .85rem 1.55rem;
     font-size:1rem;
     white-space:nowrap;
     flex:0 0 auto;
-
   }
   .hero__bar-cta-ico{width:30px;height:30px}
+  .city-search-wrap{width:auto}
+  .city-search-trigger{width:auto;min-width:340px;font-size:.9rem;padding:.7rem 1.15rem .7rem .7rem}
 
   /* Página padrão com mais respiro */
   .page{padding:120px 0 90px}
@@ -2768,6 +3103,7 @@ video{
   .footer__legal{
     width:min(1320px,90%);
   }
+  .hero--home{min-height:min(84vh,780px)}
   .hero--carousel{min-height:min(84vh,780px)}
   .hero__bar h1{font-size:clamp(2.2rem,2.8vw,3rem)}
   .grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.8rem}

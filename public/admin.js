@@ -12,6 +12,7 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 let DATA = { adminWhatsapp: "5515991906606", modelSupportWhatsapp: "5511996425680", pixel: { metaPixelId: "", metaPixelEnabled: false }, banner: null, cidades: {}, perfis: [], stories: [] };
 let fotos = [];                  // fotos (URLs) do perfil em edição
 let audioUrl = "";               // áudio real da acompanhante (URL pública)
+let videoUrl = "";                // vídeo do perfil (URL pública)
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
 let profileUploadsInProgress = 0; // impede salvar enquanto uma mídia ainda sobe
 
@@ -36,6 +37,10 @@ function uniqueSlug(base, ignoreIndex) {
 }
 const splitList = v => (v || "").split(",").map(s => s.trim()).filter(Boolean);
 const isMassageService = value => slugify(value).includes("massagem");
+function updateMetaCounters() {
+  $("#f-meta-titulo-count").textContent = `${$("#f-meta-titulo").value.length}/60`;
+  $("#f-meta-descricao-count").textContent = `${$("#f-meta-descricao").value.length}/160`;
+}
 
 function toast(msg, isErr) {
   const t = $("#toast");
@@ -122,6 +127,9 @@ function adminWhatsLabel(value) {
 
 function perfilAudioUrl(p) {
   return (p && (p.audioUrl || p.audio || p.audio_url)) || "";
+}
+function perfilVideoUrl(p) {
+  return (p && (p.videoUrl || p.video || p.video_url)) || "";
 }
 
 /* ============================================================
@@ -302,6 +310,7 @@ function abrirForm(idx) {
   const p = novo ? {} : DATA.perfis[idx];
   fotos = novo ? [] : [...(p.fotos || [])];
   audioUrl = novo ? "" : perfilAudioUrl(p);
+  videoUrl = novo ? "" : perfilVideoUrl(p);
 
   $("#form-titulo").textContent = novo ? "Novo perfil" : "Editar: " + p.nome;
   $("#form-excluir").hidden = novo;
@@ -319,6 +328,9 @@ function abrirForm(idx) {
   $("#f-cor-cabelo").value = p.corCabelo || "";
   $("#f-valor").value = p.valorHora || "";
   $("#f-descricao").value = p.descricao || "";
+  $("#f-meta-titulo").value = p.metaTitulo || "";
+  $("#f-meta-descricao").value = p.metaDescricao || "";
+  updateMetaCounters();
   $("#f-servicos").value = (p.servicos || []).join(", ");
   $("#f-massagem").checked = (p.servicos || []).some(isMassageService);
   $("#f-atendimento").value = (p.atendimento || []).join(", ");
@@ -332,6 +344,7 @@ function abrirForm(idx) {
 
   renderThumbs();
   renderPerfilAudio();
+  renderPerfilVideo();
   $$(".tabpane").forEach(pane => pane.hidden = true);
   $("#tab-form").hidden = false;
   window.scrollTo(0, 0);
@@ -348,6 +361,8 @@ $("#f-servicos").addEventListener("input", () => {
   const input = $(selector);
   if (input) input.addEventListener("input", () => setFieldInvalid(selector, false));
 });
+$("#f-meta-titulo").addEventListener("input", updateMetaCounters);
+$("#f-meta-descricao").addEventListener("input", updateMetaCounters);
 
 $("#form-cancelar").addEventListener("click", () => showTab("perfis"));
 $("#form-excluir").addEventListener("click", async () => {
@@ -408,6 +423,8 @@ $("#form-salvar").addEventListener("click", async () => {
     valorHora: $("#f-valor").value.trim() || "Sob consulta",
     hue,
     descricao: $("#f-descricao").value.trim(),
+    metaTitulo: $("#f-meta-titulo").value.trim(),
+    metaDescricao: $("#f-meta-descricao").value.trim(),
     servicos,
     atendimento: splitList($("#f-atendimento").value),
     idiomas: splitList($("#f-idiomas").value),
@@ -419,6 +436,7 @@ $("#form-salvar").addEventListener("click", async () => {
     destaque: $("#f-destaque").checked,
     fotos: [...fotos],
     audioUrl,
+    videoUrl,
   };
 
   const btn = $("#form-salvar");
@@ -473,6 +491,7 @@ function fileToBlob(file, maxW = 1000, quality = 0.82) {
 async function addFiles(fileList) {
   const files = [...fileList].filter(f => f.type.startsWith("image/"));
   if (!files.length) return;
+  const slugHint = (editIndex >= 0 && DATA.perfis[editIndex]?.slug) || slugify($("#f-nome").value.trim());
   profileUploadsInProgress++;
   toast("Enviando imagens...");
   let ok = 0;
@@ -480,7 +499,7 @@ async function addFiles(fileList) {
     for (const f of files) {
       try {
         const blob = await fileToBlob(f);
-        const url = await VIPStore.uploadFoto(blob, "jpg");
+        const url = await VIPStore.uploadFoto(blob, "jpg", slugHint);
         fotos.push(url);
         ok++;
         renderThumbs();
@@ -573,6 +592,58 @@ audioFile.addEventListener("change", () => { uploadPerfilAudio(audioFile.files[0
 ["dragenter", "dragover"].forEach(ev => audioDrop.addEventListener(ev, e => { e.preventDefault(); audioDrop.classList.add("over"); }));
 ["dragleave", "drop"].forEach(ev => audioDrop.addEventListener(ev, e => { e.preventDefault(); audioDrop.classList.remove("over"); }));
 audioDrop.addEventListener("drop", e => uploadPerfilAudio(e.dataTransfer.files[0]));
+
+function renderPerfilVideo() {
+  const box = $("#video-preview");
+  if (!box) return;
+  if (!videoUrl) {
+    box.innerHTML = `<div class="audio-file__empty">Nenhum vídeo enviado para este perfil.</div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="audio-file">
+      <video controls preload="metadata" src="${videoUrl}" style="width:100%;max-width:280px;border-radius:10px"></video>
+      <button class="btn btn--danger btn--sm" id="video-remover" type="button">Remover vídeo</button>
+    </div>`;
+  const remover = $("#video-remover", box);
+  if (remover) remover.addEventListener("click", () => {
+    videoUrl = "";
+    renderPerfilVideo();
+  });
+}
+
+async function uploadPerfilVideo(file) {
+  if (!file || !file.type.startsWith("video/")) return toast("Envie um arquivo de vídeo válido.", true);
+  try {
+    if (!(await VIPStore.supportsPerfilVideo())) {
+      return toast("O vídeo é opcional e ainda não está habilitado no banco. Salve o perfil sem ele.", true);
+    }
+  } catch (e) {
+    console.error(e);
+    return toast("Não foi possível verificar o suporte a vídeo. Tente novamente.", true);
+  }
+  profileUploadsInProgress++;
+  toast("Enviando vídeo...");
+  try {
+    const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+    videoUrl = await VIPStore.uploadArquivo(file, ext, "videos");
+    $("#f-temVideo").checked = true;
+    renderPerfilVideo();
+    toast("Vídeo enviado.");
+  } catch (e) {
+    console.error(e);
+    toast("Falha ao enviar o vídeo: " + (e.message || e), true);
+  } finally {
+    profileUploadsInProgress--;
+  }
+}
+
+const videoDrop = $("#video-drop"), videoFile = $("#video-file");
+videoDrop.addEventListener("click", () => videoFile.click());
+videoFile.addEventListener("change", () => { uploadPerfilVideo(videoFile.files[0]); videoFile.value = ""; });
+["dragenter", "dragover"].forEach(ev => videoDrop.addEventListener(ev, e => { e.preventDefault(); videoDrop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => videoDrop.addEventListener(ev, e => { e.preventDefault(); videoDrop.classList.remove("over"); }));
+videoDrop.addEventListener("drop", e => uploadPerfilVideo(e.dataTransfer.files[0]));
 
 /* ============================================================
    STORIES

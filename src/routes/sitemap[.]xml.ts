@@ -34,7 +34,9 @@ function urlXml(loc: string, lastmod?: string, changefreq?: string, priority?: s
     changefreq ? `    <changefreq>${changefreq}</changefreq>` : null,
     priority ? `    <priority>${priority}</priority>` : null,
     "  </url>",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export const Route = createFileRoute("/sitemap.xml")({
@@ -53,6 +55,11 @@ export const Route = createFileRoute("/sitemap.xml")({
           urlXml(`${BASE_URL}/`, undefined, "weekly", "1.0"),
           urlXml(`${BASE_URL}/anuncie`, undefined, "monthly", "0.5"),
           urlXml(`${BASE_URL}/informacoes`, undefined, "yearly", "0.3"),
+          urlXml(`${BASE_URL}/termos-de-uso`, undefined, "yearly", "0.2"),
+          urlXml(`${BASE_URL}/politicas-privacidade`, undefined, "yearly", "0.2"),
+          urlXml(`${BASE_URL}/politica-de-cookies`, undefined, "yearly", "0.2"),
+          urlXml(`${BASE_URL}/diretrizes-da-comunidade`, undefined, "yearly", "0.2"),
+          urlXml(`${BASE_URL}/denuncias-e-suporte`, undefined, "yearly", "0.2"),
         ];
         if (perfis.length) entries.splice(1, 0, urlXml(`${BASE_URL}/acompanhantes`, undefined, "daily", "0.9"));
 

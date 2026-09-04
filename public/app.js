@@ -89,7 +89,7 @@ function ensureMeta(selector, create) {
   return el;
 }
 
-function updateHead({ title, description, image, path: routePath, type = "website" }) {
+function updateHead({ title, description, image, path: routePath, type = "website", robots: robotsValue = "index,follow" }) {
   const url = SITE_ORIGIN + (routePath || "/");
   if (title) document.title = title;
 
@@ -122,20 +122,47 @@ function updateHead({ title, description, image, path: routePath, type = "websit
   }
   canonical.href = url;
 
-  // Reseta robots para index,follow em rotas válidas (view404 sobrescreve)
+  // Reseta robots por rota (padrão index,follow; view404 e filtros usam outro valor)
   const robots = document.head.querySelector('meta[name="robots"]');
-  if (robots) robots.setAttribute("content", "index,follow");
+  if (robots) robots.setAttribute("content", robotsValue);
 }
 
+/** Aceita um objeto JSON-LD único ou uma lista deles (ex.: CollectionPage + BreadcrumbList) */
 function setJsonLd(data) {
-  let el = document.getElementById("route-jsonld");
-  if (!el) {
-    el = document.createElement("script");
+  $$('script[data-route-jsonld]').forEach(el => el.remove());
+  const items = Array.isArray(data) ? data.filter(Boolean) : (data ? [data] : []);
+  items.forEach((item, i) => {
+    const el = document.createElement("script");
     el.type = "application/ld+json";
-    el.id = "route-jsonld";
+    el.dataset.routeJsonld = String(i);
+    el.textContent = JSON.stringify(item);
     document.head.appendChild(el);
-  }
-  el.textContent = data ? JSON.stringify(data) : "";
+  });
+}
+
+/** Trilha de navegação (breadcrumb) visível + BreadcrumbList correspondente.
+ * `items`: [{ label, path? }] — o último item não deve ter `path` (página atual). */
+function breadcrumbHtml(items) {
+  const li = items.map((it, i) => {
+    const isLast = i === items.length - 1;
+    return `<li>${!isLast && it.path
+      ? `<a href="${pathTo(it.path)}">${it.label}</a>`
+      : `<span aria-current="page">${it.label}</span>`}</li>`;
+  }).join("");
+  return `<nav class="breadcrumb-nav" aria-label="Breadcrumb"><ol class="breadcrumb">${li}</ol></nav>`;
+}
+
+function breadcrumbJsonLd(items) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.label,
+      item: it.path ? SITE_ORIGIN + pathTo(it.path) : SITE_ORIGIN + currentRoute(),
+    })),
+  };
 }
 
 
@@ -159,18 +186,32 @@ const ICON_ARROW = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="none" s
 const ICON_CHAT = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>';
 const ICON_AUDIO_PLAY = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l12-7z"/></svg>';
 const ICON_AUDIO_PAUSE = '<svg class="btn__icon-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7z"/><path d="M13 5h4v14h-4z"/></svg>';
+const ICON_SEARCH = '<svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>';
+const ICON_CROSSHAIR = '<svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>';
+const ICON_TREND = '<svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>';
 
-/* WhatsApp da acompanhante (com mensagem contextual) */
+/* Normaliza um número de WhatsApp pro formato que o wa.me espera (DDI+DDD+número,
+   só dígitos). Perfis antigos às vezes foram cadastrados sem o "55" na frente. */
+function normalizarWhatsapp(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.length <= 11 && !digits.startsWith("55")) return "55" + digits;
+  return digits;
+}
+
+/* WhatsApp da acompanhante (com mensagem contextual). Se o perfil não tem
+   número próprio cadastrado, cai no WhatsApp central da Aliança. */
 function waPerfil(p, contexto) {
   const msg = contexto
     ? `Olá ${p.nome}! Vi seu anúncio na Aliança e tenho interesse em ${contexto}.`
     : `Olá ${p.nome}! Vi seu anúncio na Aliança e gostaria de saber mais.`;
-  return `https://wa.me/${p.whatsapp}?text=${encodeURIComponent(msg)}`;
+  const numero = normalizarWhatsapp(p.whatsapp) || ADMIN_WHATSAPP;
+  return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
 }
 /* WhatsApp do administrador (home / anuncie) */
 function waAdmin(msg) {
   const t = msg || "Olá! Gostaria de informações sobre a Aliança.";
-  return `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(t)}`;
+  return `https://wa.me/${normalizarWhatsapp(ADMIN_WHATSAPP)}?text=${encodeURIComponent(t)}`;
 }
 
 function formatWhatsappNumber(value) {
@@ -225,6 +266,16 @@ function ofereceMassagem(p) {
   );
 }
 
+function perfilVideoUrl(p) {
+  return (p && (p.videoUrl || p.video || p.video_url)) || "";
+}
+/* O badge "Vídeo" só aparece se realmente tiver um vídeo enviado — o
+   checkbox "Tem vídeo" do admin sozinho não é mais suficiente (podia
+   ficar marcado sem nenhum arquivo, prometendo vídeo que não existia). */
+function perfilTemVideo(p) {
+  return !!perfilVideoUrl(p);
+}
+
 function storyCidadeSlug(s) {
   if (!s) return null;
   if (s.cidade) return s.cidade;
@@ -251,7 +302,7 @@ function tagsHtml(p) {
   let t = "";
   if (p.nova)      t += `<span class="tag tag--nova">Nova</span>`;
   if (p.exclusiva) t += `<span class="tag tag--excl">Exclusiva</span>`;
-  if (p.temVideo)  t += `<span class="tag tag--video">${ICON_PLAY}<span>Vídeo</span></span>`;
+  if (perfilTemVideo(p))  t += `<span class="tag tag--video">${ICON_PLAY}<span>Vídeo</span></span>`;
   return t;
 }
 
@@ -447,44 +498,44 @@ function cidadesOrdenadas() {
     (cont(b) - cont(a)) || CIDADES[a].nome.localeCompare(CIDADES[b].nome, "pt-BR"));
 }
 
-/* Banner "3 garotas em destaque" — configurado no admin (window.BANNER) */
-function bannerDestaqueHtml() {
-  const b = window.BANNER;
-  if (!b || !b.enabled || !Array.isArray(b.slots)) return "";
-  const cards = b.slots.map((s, i) => {
-    const perfil = s.perfilSlug ? perfilBySlug(s.perfilSlug) : null;
-    const nome = s.nome || (perfil && perfil.nome) || "";
-    const foto_ = s.foto || (perfil ? foto(perfil, 0) : "");
-    const wa = (s.whatsapp || (perfil && perfil.whatsapp) || ADMIN_WHATSAPP || "").replace(/\D/g, "");
-    if (!nome && !foto_) return "";
-    const msg = `Olá ${nome || "!"}. Vi seu destaque na Aliança e gostaria de saber mais.`;
-    const waHref = wa ? `https://wa.me/${wa}?text=${encodeURIComponent(msg)}` : "#";
-    const perfilHref = perfil ? pathTo(`/perfil/${perfil.slug}`) : "";
-    const cidade = perfil ? (CIDADES[perfil.cidade]?.nome || "") : "";
-    return `
-      <article class="bnr__card bnr__card--pos${i + 1}">
-        <a class="bnr__media" ${perfilHref ? `href="${perfilHref}"` : ""} aria-label="Ver ${nome}">
-          ${foto_ ? `<img src="${foto_}" alt="${nome}" loading="lazy" />` : `<div class="bnr__media-empty"></div>`}
-          <div class="bnr__scrim"></div>
-          ${s.tag ? `<span class="bnr__tag">${s.tag}</span>` : ""}
-          <div class="bnr__info">
-            <h3>${nome}</h3>
-            ${cidade ? `<p>${cidade}</p>` : ""}
-          </div>
-        </a>
-      </article>`;
-  }).join("");
-  if (!cards.trim()) return "";
-  return `
-    <section class="bnr" aria-label="Garotas em destaque">
-      <div class="container">
-        <div class="bnr__head">
-          ${b.titulo ? `<h2>${b.titulo}</h2>` : ""}
-          ${b.subtitulo ? `<p>${b.subtitulo}</p>` : ""}
-        </div>
-        <div class="bnr__grid">${cards}</div>
-      </div>
-    </section>`;
+/* Coordenadas aproximadas das capitais — usadas só para achar a cidade mais
+   próxima a partir do GPS do navegador (sem depender de API de geocoding). */
+const CAPITAIS_COORDS = {
+  "aracaju": [-10.9472, -37.0731], "belem": [-1.4558, -48.4902],
+  "belo-horizonte": [-19.9167, -43.9345], "boa-vista": [2.8235, -60.6758],
+  "brasilia": [-15.7939, -47.8828], "campo-grande": [-20.4697, -54.6201],
+  "cuiaba": [-15.6014, -56.0979], "curitiba": [-25.4284, -49.2733],
+  "florianopolis": [-27.5954, -48.548], "fortaleza": [-3.7172, -38.5433],
+  "goiania": [-16.6869, -49.2648], "joao-pessoa": [-7.1195, -34.845],
+  "macapa": [0.0389, -51.0664], "maceio": [-9.6498, -35.7089],
+  "manaus": [-3.119, -60.0217], "natal": [-5.7945, -35.211],
+  "palmas": [-10.184, -48.3336], "porto-alegre": [-30.0346, -51.2177],
+  "porto-velho": [-8.7608, -63.9004], "recife": [-8.0476, -34.877],
+  "rio-branco": [-9.9754, -67.8249], "rio-de-janeiro": [-22.9068, -43.1729],
+  "salvador": [-12.9777, -38.5016], "sao-luis": [-2.5307, -44.3068],
+  "sao-paulo": [-23.5505, -46.6333], "teresina": [-5.0892, -42.8019],
+  "vitoria": [-20.3155, -40.3128],
+};
+
+function distanciaKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/* Cidade cadastrada mais próxima de uma coordenada (aproximação por capital) */
+function cidadeMaisProxima(lat, lon) {
+  let melhor = null, menorDist = Infinity;
+  for (const key of cidadesComConteudo()) {
+    const coords = CAPITAIS_COORDS[key];
+    if (!coords) continue;
+    const d = distanciaKm(lat, lon, coords[0], coords[1]);
+    if (d < menorDist) { menorDist = d; melhor = key; }
+  }
+  return melhor;
 }
 
 /* Slides do hero a partir dos destaques (BANNER) */
@@ -517,11 +568,13 @@ function viewHome() {
   setJsonLd({
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Aliança",
+    name: "Aliança Models",
+    alternateName: "Aliança",
     url: SITE_ORIGIN + "/",
     inLanguage: "pt-BR",
     description: "Acompanhantes de luxo, perfis verificados e contato direto em todo o Brasil.",
     audience: { "@type": "PeopleAudience", suggestedMinAge: 18 },
+    areaServed: { "@type": "Country", name: "Brasil" },
   });
   const cidadesAtivas = cidadesPublicadas();
   const perfisAtivos = PERFIS.filter(p => cidadesAtivas.includes(p.cidade)).length;
@@ -529,7 +582,7 @@ function viewHome() {
 
   const slides = heroCarouselSlides();
   const hasCarousel = slides.length >= 2;
-  const firstImg = hasCarousel ? slides[0].foto : "instagram_post.webp?v=2";
+  const firstImg = slides.length ? slides[0].foto : "instagram_post.webp?v=2";
 
   const slidesHtml = hasCarousel ? slides.map((s, i) => `
       <div class="hero__slide${i === 0 ? " is-active" : ""}" data-i="${i}" data-foto="${encodeURIComponent(s.foto)}" aria-hidden="${i === 0 ? "false" : "true"}"></div>
@@ -554,16 +607,36 @@ function viewHome() {
             <h1>Acompanhantes de alto padrão no Brasil</h1>
             <p>Discrição absoluta. Contato direto. Momentos inesquecíveis.</p>
           </div>
-          <button class="hero__bar-cta" type="button" id="hero-explore-cities" aria-label="Explorar cidades">
-            <span>Explorar cidades</span>
-            <span class="hero__bar-cta-ico" aria-hidden="true">${ICON_ARROW}</span>
-          </button>
+          <div class="hero__bar-actions">
+            <button class="hero__bar-cta" type="button" id="hero-explore-cities" aria-label="Explorar cidades">
+              <span>Explorar cidades</span>
+              <span class="hero__bar-cta-ico" aria-hidden="true">${ICON_ARROW}</span>
+            </button>
+            <div class="city-search-wrap">
+              <button type="button" class="city-search-trigger" id="city-search-trigger" aria-haspopup="dialog" aria-expanded="false">
+                <span class="city-search-trigger__ico" aria-hidden="true">${ICON_PIN}</span>
+                <span class="city-search-trigger__text">Pesquisar cidade</span>
+                <span class="city-search-trigger__go" aria-hidden="true">${ICON_SEARCH}</span>
+              </button>
+              <div class="city-search" id="city-search" hidden>
+                <div class="city-search__scrim" data-city-search-close></div>
+                <div class="city-search__panel" role="dialog" aria-modal="true" aria-label="Pesquisar cidade">
+                  <div class="city-search__head">
+                    <div class="city-search__input-wrap">
+                      <span class="city-search__input-ico" aria-hidden="true">${ICON_SEARCH}</span>
+                      <input id="city-search-input" type="text" placeholder="Busque por cidade" autocomplete="off" />
+                    </div>
+                    <button class="city-search__close" id="city-search-close" type="button" aria-label="Fechar busca">✕</button>
+                  </div>
+                  <div class="city-search__body" id="city-search-body"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
-
-  ${hasCarousel ? "" : bannerDestaqueHtml()}
 
   ${storiesStripHtml({
     extraClass: "stories--home",
@@ -588,6 +661,7 @@ function viewHome() {
             <span>${perfisAtivos} perfis</span>
           </div>
         </div>
+
         <div class="city-showcase__grid" id="cidades-grid">${cardsCidades}</div>
       </div>
     </div>
@@ -596,6 +670,7 @@ function viewHome() {
   `;
 
   initStoriesStrip();
+  initCitySearch();
   $("#hero-explore-cities")?.addEventListener("click", () => scrollToSection("sec-cidades"));
   if (hasCarousel) initHeroCarousel(slides);
 }
@@ -670,25 +745,20 @@ function viewCidade(cidade, filtro) {
     : filtro?.tipo === "videos" ? "Vídeos"
     : filtro?.tipo === "massagem" ? "Massagem" : "";
   const tituloHead = filtroLabel
-    ? `${filtroLabel} em ${c.nome} — Acompanhantes • Aliança`
-    : `Acompanhantes em ${c.nome} (${c.uf}) — Aliança`;
+    ? `${filtroLabel} em ${c.nome} — Acompanhantes • Aliança Models`
+    : `Acompanhantes em ${c.nome} (${c.uf}) — Aliança Models`;
   updateHead({
     title: tituloHead,
     description: `${cidadeTotal} perfis verificados em ${c.nome} (${c.uf}). Encontre acompanhantes por bairro, novidades e exclusivas com total discrição.`,
     image: SITE_ORIGIN + "/logo.png",
     path: routePathCidade,
     type: "website",
+    // Variações filtradas (bairro/novidades/exclusivas/vídeos) não entram no
+    // sitemap por serem recortes do mesmo conteúdo; ficam noindex,follow para
+    // evitar conteúdo duplicado no índice, mas continuam navegáveis e com
+    // seus links rastreáveis normalmente.
+    robots: filtro ? "noindex,follow" : "index,follow",
   });
-  setJsonLd({
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: tituloHead,
-    url: SITE_ORIGIN + routePathCidade,
-    inLanguage: "pt-BR",
-    about: { "@type": "City", name: c.nome, addressRegion: c.uf, addressCountry: "BR" },
-    numberOfItems: cidadeTotal,
-  });
-
 
   let list = PERFIS.filter(p => p.cidade === cidade);
   let titulo = c.nome, sub = `${list.length} acompanhantes em ${c.nome} (${c.uf})`;
@@ -714,7 +784,7 @@ function viewCidade(cidade, filtro) {
   } else if (filtro?.tipo === "exclusivas") {
     list = list.filter(p => p.exclusiva); titulo = "Exclusivas"; sub = "Seleção premium";
   } else if (filtro?.tipo === "videos") {
-    list = list.filter(p => p.temVideo); titulo = "Vídeos"; sub = "Perfis com vídeo";
+    list = list.filter(perfilTemVideo); titulo = "Vídeos " + c.uf; sub = "Perfis com vídeo";
   } else if (filtro?.tipo === "massagem") {
     list = list.filter(ofereceMassagem); titulo = "Massagem"; sub = "Perfis que oferecem massagem";
   }
@@ -731,10 +801,36 @@ function viewCidade(cidade, filtro) {
     `<a class="chip${filtro?.tipo === "massagem" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/massagem')}">${ICON_MASSAGE}<span>Massagem</span></a>`,
   ].join("");
 
+  const breadcrumbItems = filtro
+    ? [{ label: "Início", path: "/" }, { label: c.nome, path: `/cidade/${cidade}` }, { label: filtroLabel || titulo }]
+    : [{ label: "Início", path: "/" }, { label: c.nome }];
+
+  setJsonLd([
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: tituloHead,
+      url: SITE_ORIGIN + routePathCidade,
+      inLanguage: "pt-BR",
+      about: { "@type": "City", name: c.nome, addressRegion: c.uf, addressCountry: "BR" },
+      numberOfItems: resultados.length,
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: resultados.map((p, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          url: SITE_ORIGIN + pathTo("/perfil/" + p.slug),
+          name: p.nome,
+        })),
+      },
+    },
+    breadcrumbJsonLd(breadcrumbItems),
+  ]);
+
   app.innerHTML = `
   <section class="page page--cidade">
     <div class="container">
-      <a class="back-link" href="${pathTo('/')}">‹ Início</a>
+      ${breadcrumbHtml(breadcrumbItems)}
       ${storiesStripHtml({ cidade })}
       <div class="page-divider" aria-hidden="true"></div>
       <header class="cidade-hero">
@@ -788,24 +884,39 @@ function viewPerfil(slug) {
   const c = CIDADES[p.cidade];
 
   const perfilFoto = (Array.isArray(p.fotos) && p.fotos[0]) ? p.fotos[0] : (SITE_ORIGIN + "/logo.png");
-  const perfilDesc = (p.descricao || "").trim().replace(/\s+/g, " ").slice(0, 155)
+  const perfilDesc = (p.metaDescricao || "").trim().replace(/\s+/g, " ").slice(0, 300)
+    || (p.descricao || "").trim().replace(/\s+/g, " ").slice(0, 155)
     || `${p.nome}, acompanhante em ${c?.nome || p.cidade}. Total discrição. Contato direto pelo WhatsApp.`;
+  const perfilTitle = (p.metaTitulo || "").trim()
+    || `${p.nome} — Acompanhante em ${c?.nome || p.cidade} • Aliança Models`;
   updateHead({
-    title: `${p.nome} — Acompanhante em ${c?.nome || p.cidade} • Aliança`,
+    title: perfilTitle,
     description: perfilDesc,
     image: perfilFoto.startsWith("http") ? perfilFoto : SITE_ORIGIN + perfilFoto,
     path: `/perfil/${p.slug}`,
     type: "profile",
   });
-  setJsonLd({
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: p.nome,
-    url: SITE_ORIGIN + `/perfil/${p.slug}`,
-    image: perfilFoto.startsWith("http") ? perfilFoto : SITE_ORIGIN + perfilFoto,
-    address: c ? { "@type": "PostalAddress", addressLocality: c.nome, addressRegion: c.uf, addressCountry: "BR" } : undefined,
-    description: perfilDesc,
-  });
+  const breadcrumbItems = c
+    ? [{ label: "Início", path: "/" }, { label: c.nome, path: `/cidade/${p.cidade}` }, { label: p.nome }]
+    : [{ label: "Início", path: "/" }, { label: p.nome }];
+
+  setJsonLd([
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      name: p.nome,
+      url: SITE_ORIGIN + `/perfil/${p.slug}`,
+      inLanguage: "pt-BR",
+      mainEntity: {
+        "@type": "Person",
+        name: p.nome,
+        image: perfilFoto.startsWith("http") ? perfilFoto : SITE_ORIGIN + perfilFoto,
+        address: c ? { "@type": "PostalAddress", addressLocality: c.nome, addressRegion: c.uf, addressCountry: "BR" } : undefined,
+        description: perfilDesc,
+      },
+    },
+    breadcrumbJsonLd(breadcrumbItems),
+  ]);
 
 
   const fotosPublicadas = Array.isArray(p.fotos)
@@ -816,18 +927,31 @@ function viewPerfil(slug) {
     : [0, 1, 2, 3].map(i => foto(p, i));
   const totalFotos = fotos.length;
   const totalFotosLabel = `${totalFotos} ${totalFotos === 1 ? "foto" : "fotos"}`;
+  const video = perfilVideoUrl(p);
+  // Mídia da galeria/lightbox: fotos + (se tiver) o vídeo como último item —
+  // integrado como miniatura clicável, não mais um player solto empurrando
+  // o resto da página pra baixo.
+  const midias = fotos.map(src => ({ type: "image", src }));
+  if (video) midias.push({ type: "video", src: video });
+  const iVideo = midias.length - 1;
   const galeria = `
     <button class="profile__photo profile__photo--hero lb-trigger" type="button" data-i="0" aria-label="Abrir foto principal de ${p.nome}">
-      <img src="${fotos[0]}" alt="${p.nome} foto principal" loading="eager" />
+      <img src="${fotos[0]}" alt="${p.nome}, acompanhante em ${c?.nome || p.cidade} — foto principal" loading="eager" />
       <span class="profile__photo-fade" aria-hidden="true"></span>
       <span class="profile__photo-count" aria-hidden="true">${totalFotosLabel}</span>
     </button>
-    ${totalFotos > 1 ? `<div class="profile__thumbs" aria-label="${totalFotosLabel} de ${p.nome}">
+    ${totalFotos > 1 || video ? `<div class="profile__thumbs" aria-label="${totalFotosLabel} de ${p.nome}">
       ${fotos.slice(1).map((src, i) => `
         <button class="profile__photo profile__photo--thumb lb-trigger" type="button" data-i="${i + 1}" aria-label="Abrir foto ${i + 2} de ${p.nome}">
-          <img src="${src}" alt="${p.nome} ${i + 2}" loading="lazy" />
+          <img src="${src}" alt="${p.nome}, acompanhante em ${c?.nome || p.cidade} — foto ${i + 2}" loading="lazy" />
         </button>
       `).join("")}
+      ${video ? `
+        <button class="profile__photo profile__photo--thumb profile__photo--video lb-trigger" type="button" data-i="${iVideo}" aria-label="Assistir vídeo de ${p.nome}">
+          <img src="${fotos[0]}" alt="Vídeo de ${p.nome}" loading="lazy" />
+          <span class="profile__video-play" aria-hidden="true">${ICON_PLAY}</span>
+        </button>
+      ` : ""}
     </div>` : ""}`;
 
   const servicos = p.servicos.map(s =>
@@ -872,7 +996,7 @@ function viewPerfil(slug) {
 
   app.innerHTML = `
   <section class="profile container">
-    <a class="back-link" href="${pathTo('/cidade/' + p.cidade)}">‹ Voltar para ${c.nome}</a>
+    ${breadcrumbHtml(breadcrumbItems)}
 
     <div class="profile__top">
       <div class="profile__gallery">${galeria}</div>
@@ -935,13 +1059,13 @@ function viewPerfil(slug) {
 
   // Lightbox
   $$(".lb-trigger").forEach(node =>
-    node.addEventListener("click", () => openLightbox(fotos, +node.dataset.i)));
+    node.addEventListener("click", () => openLightbox(midias, +node.dataset.i)));
 }
 
 function viewAnuncie() {
   updateHead({
-    title: "Anuncie na Aliança — Cadastro de Acompanhantes",
-    description: "Cadastre-se para anunciar como acompanhante na Aliança. Sigilo total, análise manual, resposta direta pela central.",
+    title: "Anuncie na Aliança Models — Cadastro de Acompanhantes",
+    description: "Cadastre-se para anunciar como acompanhante na Aliança Models. Sigilo total, análise manual, resposta direta pela central.",
     path: "/anuncie",
     type: "website",
   });
@@ -1078,8 +1202,8 @@ Descrição: ${f.desc.value || "-"}`;
 
 function viewInformacoes() {
   updateHead({
-    title: "Informações & Privacidade — Aliança",
-    description: "Política de privacidade (LGPD), natureza do serviço e informações legais da Aliança. Conteúdo destinado a maiores de 18 anos.",
+    title: "Informações & Privacidade — Aliança Models",
+    description: "Política de privacidade (LGPD), natureza do serviço e informações legais da Aliança Models. Conteúdo destinado a maiores de 18 anos.",
     path: "/informacoes",
     type: "website",
   });
@@ -1119,7 +1243,7 @@ function viewInformacoes() {
 }
 
 function renderLegalPage({ title, eyebrow, description, path, content }) {
-  updateHead({ title: `${title} — Aliança`, description, path, type: "article" });
+  updateHead({ title: `${title} — Aliança Models`, description, path, type: "article" });
   setJsonLd(null);
   app.innerHTML = `
   <section class="page legal-page">
@@ -1380,7 +1504,7 @@ function viewDenunciasSuporte() {
 
 function view404() {
   updateHead({
-    title: "Página não encontrada — Aliança",
+    title: "Página não encontrada — Aliança Models",
     description: "A página que você procura não existe ou foi removida.",
     path: currentRoute(),
     type: "website",
@@ -1405,16 +1529,33 @@ function view404() {
    LIGHTBOX
    ============================================================ */
 let lbList = [], lbIndex = 0;
-const lb = $("#lightbox"), lbImg = $("#lb-img");
-function openLightbox(list, i) { lbList = list; lbIndex = i; lbImg.src = list[i]; lb.hidden = false; }
-function lbMove(d) { lbIndex = (lbIndex + d + lbList.length) % lbList.length; lbImg.src = lbList[lbIndex]; }
-$("#lb-close").addEventListener("click", () => lb.hidden = true);
+const lb = $("#lightbox"), lbImg = $("#lb-img"), lbVideo = $("#lb-video");
+/* Cada item de lbList é {type:"image"|"video", src}. Compatível com o
+   formato antigo (string solta = foto) pra não quebrar nenhum outro uso. */
+function lbShow(item) {
+  const isVideo = item && typeof item === "object" && item.type === "video";
+  lbVideo.pause();
+  if (isVideo) {
+    lbImg.hidden = true;
+    lbVideo.hidden = false;
+    lbVideo.src = item.src;
+  } else {
+    lbVideo.hidden = true;
+    lbVideo.removeAttribute("src");
+    lbImg.hidden = false;
+    lbImg.src = (item && typeof item === "object") ? item.src : item;
+  }
+}
+function openLightbox(list, i) { lbList = list; lbIndex = i; lbShow(list[i]); lb.hidden = false; }
+function lbMove(d) { lbIndex = (lbIndex + d + lbList.length) % lbList.length; lbShow(lbList[lbIndex]); }
+function lbClose() { lb.hidden = true; lbVideo.pause(); }
+$("#lb-close").addEventListener("click", lbClose);
 $("#lb-prev").addEventListener("click", () => lbMove(-1));
 $("#lb-next").addEventListener("click", () => lbMove(1));
-lb.addEventListener("click", e => { if (e.target === lb) lb.hidden = true; });
+lb.addEventListener("click", e => { if (e.target === lb) lbClose(); });
 document.addEventListener("keydown", e => {
   if (lb.hidden) return;
-  if (e.key === "Escape") lb.hidden = true;
+  if (e.key === "Escape") lbClose();
   if (e.key === "ArrowLeft") lbMove(-1);
   if (e.key === "ArrowRight") lbMove(1);
 });
@@ -1500,6 +1641,143 @@ function initStoriesStrip() {
       const list = cidade ? storiesDaCidade(cidade) : (window.STORIES || []);
       openStoryViewer(+btn.dataset.story, list);
     }));
+}
+
+/* ---------- Busca de cidade (balão no desktop / tela cheia no mobile) ---------- */
+function renderCitySearchBody(filtro = "") {
+  const body = $("#city-search-body");
+  if (!body) return;
+  const q = filtro.trim().toLowerCase();
+  const todas = cidadesComConteudo();
+
+  const rowHtml = (key, destaque = false) => {
+    const c = CIDADES[key];
+    if (!c) return "";
+    const n = PERFIS.filter(p => p.cidade === key).length;
+    const meta = n ? `${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : "Em breve";
+    return `<a class="city-search__item${destaque ? " city-search__item--destaque" : ""}" href="${pathTo("/cidade/" + key)}">
+      ${destaque ? `<span class="city-search__item-ico" aria-hidden="true">${ICON_TREND}</span>` : ""}
+      <span class="city-search__item-main"><b>${c.nome}</b><em>${meta}</em></span>
+      <span class="city-search__item-uf">${c.uf}</span>
+    </a>`;
+  };
+
+  if (q) {
+    const filtradas = todas.filter(key => {
+      const c = CIDADES[key];
+      return c && (c.nome + " " + c.uf).toLowerCase().includes(q);
+    });
+    body.innerHTML = filtradas.length
+      ? `<div class="city-search__list">${filtradas.map(k => rowHtml(k)).join("")}</div>`
+      : `<p class="city-search__empty">Nenhuma cidade encontrada para "${filtro.trim()}".</p>`;
+    return;
+  }
+
+  const destaque = todas.slice(0, 3);
+  const resto = todas.slice(3);
+
+  body.innerHTML = `
+    <button type="button" class="city-search__geo" id="city-search-geo">
+      <span class="city-search__geo-ico" aria-hidden="true">${ICON_CROSSHAIR}</span>
+      <span>Usar minha localização aproximada</span>
+    </button>
+    ${destaque.length ? `
+    <p class="city-search__section-title">Cidades em destaque</p>
+    <div class="city-search__list">${destaque.map(k => rowHtml(k, true)).join("")}</div>
+    ` : ""}
+    ${resto.length ? `
+    <p class="city-search__section-title">Todas as cidades</p>
+    <div class="city-search__list">${resto.map(k => rowHtml(k)).join("")}</div>
+    ` : ""}
+  `;
+
+  const geoBtn = $("#city-search-geo");
+  geoBtn?.addEventListener("click", () => {
+    const label = geoBtn.querySelector("span:last-child");
+    if (!navigator.geolocation) {
+      if (label) label.textContent = "Geolocalização não suportada neste navegador";
+      return;
+    }
+    geoBtn.disabled = true;
+    if (label) label.textContent = "Localizando…";
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const key = cidadeMaisProxima(pos.coords.latitude, pos.coords.longitude);
+        closeCitySearch();
+        if (key) navigate(`/cidade/${key}`);
+      },
+      () => {
+        geoBtn.disabled = false;
+        if (label) label.textContent = "Não foi possível obter sua localização";
+      },
+      { timeout: 8000, maximumAge: 300000 }
+    );
+  });
+}
+
+/* No desktop o balão usa position:fixed — calcula aqui pra nunca estourar o
+   rodapé da viewport (o gatilho pode estar numa área baixa da página). */
+function positionCitySearchPopover() {
+  const el = $("#city-search");
+  const panel = el?.querySelector(".city-search__panel");
+  if (window.innerWidth <= 860) {
+    // volta pro CSS de tela cheia do mobile, sem resquício do cálculo do balão
+    if (el) { el.style.left = ""; el.style.top = ""; }
+    if (panel) panel.style.maxHeight = "";
+    return;
+  }
+  const trigger = $("#city-search-trigger");
+  if (!trigger || !el || !panel) return;
+  const rect = trigger.getBoundingClientRect();
+  const margin = 16;
+  const panelWidth = Math.min(420, window.innerWidth * 0.88);
+  let left = rect.left;
+  if (left + panelWidth > window.innerWidth - margin) left = window.innerWidth - margin - panelWidth;
+  if (left < margin) left = margin;
+  el.style.left = left + "px";
+  el.style.top = (rect.bottom + 8) + "px";
+  const availableHeight = window.innerHeight - rect.bottom - 8 - margin;
+  panel.style.maxHeight = Math.max(200, Math.min(560, availableHeight)) + "px";
+}
+
+function openCitySearch() {
+  const el = $("#city-search");
+  if (!el) return;
+  renderCitySearchBody("");
+  el.hidden = false;
+  positionCitySearchPopover();
+  $("#city-search-trigger")?.setAttribute("aria-expanded", "true");
+  document.body.classList.add("city-search-open");
+  window.addEventListener("scroll", closeCitySearch, { passive: true, once: true });
+  requestAnimationFrame(() => $("#city-search-input")?.focus());
+}
+
+function closeCitySearch() {
+  const el = $("#city-search");
+  if (!el) return;
+  el.hidden = true;
+  $("#city-search-trigger")?.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("city-search-open");
+  const input = $("#city-search-input");
+  if (input) input.value = "";
+  window.removeEventListener("scroll", closeCitySearch);
+}
+
+function initCitySearch() {
+  const trigger = $("#city-search-trigger");
+  const el = $("#city-search");
+  if (!trigger || !el) return;
+  trigger.addEventListener("click", openCitySearch);
+  $("#city-search-close")?.addEventListener("click", closeCitySearch);
+  $$("[data-city-search-close]", el).forEach(s => s.addEventListener("click", closeCitySearch));
+  $("#city-search-input")?.addEventListener("input", e => renderCitySearchBody(e.target.value));
+  $("#city-search-body")?.addEventListener("click", e => {
+    if (e.target.closest("a.city-search__item")) closeCitySearch();
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !el.hidden) closeCitySearch();
+  });
+  window.addEventListener("resize", () => { if (!el.hidden) positionCitySearchPopover(); });
 }
 
 /* ---------- Visualizador ---------- */
@@ -1681,7 +1959,7 @@ function svStartVideoProgress(v) {
 
 function renderSvCta(s) {
   const p = storyPerfil(s);
-  const wa = (s.whatsapp || (p && p.whatsapp) || ADMIN_WHATSAPP || "").replace(/\D/g, "");
+  const wa = normalizarWhatsapp(s.whatsapp || (p && p.whatsapp)) || normalizarWhatsapp(ADMIN_WHATSAPP);
   let html = "";
   if (p) html += `<a class="sv__btn sv__btn--ghost" href="${pathTo('/perfil/' + p.slug)}" data-sv-link>Ver perfil</a>`;
   if (wa) {
@@ -1832,7 +2110,11 @@ function montarMenus() {
 
   host.innerHTML = `<div class="nav__group">
       <button class="nav__btn" type="button" aria-haspopup="true" aria-expanded="false">
-        Cidades <span class="nav__caret" aria-hidden="true">▾</span>
+        <span class="nav__btn-label">
+          <svg class="nav__link-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.4A7 7 0 0 1 19 9.6C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.4" r="2.3"/></svg>
+          <span>Cidades</span>
+        </span>
+        <span class="nav__caret" aria-hidden="true">▾</span>
       </button>
       <div class="nav__menu nav__menu--cities">
         <div class="nav__menu-title">Todas as cidades</div>
@@ -1952,6 +2234,7 @@ function initHeader() {
 
   nav?.addEventListener("click", e => e.stopPropagation());
   nav?.querySelectorAll("a").forEach(a => a.addEventListener("click", () => abrirNav(false)));
+  $("#nav-wa")?.addEventListener("click", () => abrirNav(false));
 
   // Clicar fora fecha o drawer mobile e os menus de cidade abertos
   document.addEventListener("click", e => {
@@ -1965,6 +2248,7 @@ function initHeader() {
     if (e.key === "Escape") abrirNav(false);
   });
   $("#header-wa").addEventListener("click", () => window.open(waAdmin(), "_blank", "noopener"));
+  $("#nav-wa")?.addEventListener("click", () => window.open(waAdmin(), "_blank", "noopener"));
 
 }
 
@@ -1977,7 +2261,9 @@ function rewriteStaticHashLinks() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  $("#year").textContent = new Date().getFullYear();
+  const anoAtual = new Date().getFullYear();
+  $("#year").textContent = anoAtual;
+  if ($("#nav-year")) $("#nav-year").textContent = anoAtual;
   rewriteStaticHashLinks();
   initAgeGate();
   initLaunchGate();

@@ -172,6 +172,19 @@
               <textarea id="f-descricao" placeholder="Texto elegante de apresentação..."></textarea>
             </div>
 
+            <div class="grid2">
+              <div class="field">
+                <label>Meta título (SEO) — <span id="f-meta-titulo-count">0/60</span></label>
+                <input id="f-meta-titulo" maxlength="70" placeholder="Ex.: Luna Sophie — Acompanhante na Barra da Tijuca • Aliança" />
+                <small>Se vazio, usamos: "{Nome} — Acompanhante em {Cidade} • Aliança".</small>
+              </div>
+              <div class="field">
+                <label>Meta descrição (SEO) — <span id="f-meta-descricao-count">0/160</span></label>
+                <textarea id="f-meta-descricao" maxlength="200" placeholder="Frase curta e neutra para aparecer no resultado do Google..."></textarea>
+                <small>Se vazio, usamos os primeiros 155 caracteres da descrição/apresentação.</small>
+              </div>
+            </div>
+
             <div class="upload-card">
               <div class="upload-card__copy">
                 <h4>Voz da acompanhante (opcional)</h4>
@@ -211,6 +224,20 @@
               <label class="check"><input type="checkbox" id="f-temVideo" /> Tem vídeo</label>
               <label class="check"><input type="checkbox" id="f-possuiLocal" /> Possui local</label>
               <label class="check"><input type="checkbox" id="f-destaque" /> Destaque na home</label>
+            </div>
+
+            <div class="upload-card">
+              <div class="upload-card__copy">
+                <h4>Vídeo do perfil (opcional)</h4>
+                <p>Se enviado, marca "Tem vídeo" automaticamente e aparece na página do perfil.</p>
+              </div>
+              <div>
+                <div class="drop drop--audio" id="video-drop">
+                  Clique ou arraste um vídeo aqui<br><small>MP4 / WEBM / MOV</small>
+                  <input type="file" id="video-file" accept="video/*" hidden />
+                </div>
+                <div class="audio-preview" id="video-preview"></div>
+              </div>
             </div>
 
             <div class="upload-card upload-card--photos">
@@ -503,8 +530,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20"></script>
-  <script src="data.js?v=21"></script>
-  <script src="store.js?v=27"></script>
-  <script src="admin.js?v=32"></script>
+  <script src="data.js?v=22"></script>
+  <script src="store.js?v=28"></script>
+  <script src="admin.js?v=33"></script>
 </body>
 </html>

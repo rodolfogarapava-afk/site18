@@ -83,20 +83,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "ALIANÇA" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { title: "Aliança Models — Acompanhantes de Luxo no Brasil" },
+      { title: "Aliança Models • Acompanhantes de Luxo no Brasil" },
       {
         name: "description",
         content:
-          "Aliança Models: encontre acompanhantes de luxo, perfis verificados e contato direto com discrição em todo o Brasil.",
+          "Aliança Models: acompanhantes de luxo em todo o Brasil. Perfis verificados e total discrição. Somente maiores de 18 anos.",
       },
-      { name: "author", content: "Aliança" },
-      { property: "og:title", content: "Aliança Models — Acompanhantes de Luxo no Brasil" },
+      { name: "author", content: "Aliança Models" },
+      { property: "og:title", content: "Aliança Models • Acompanhantes de Luxo no Brasil" },
       {
         property: "og:description",
-        content: "Encontre acompanhantes de luxo, perfis verificados e contato direto com discrição em todo o Brasil.",
+        content:
+          "Aliança Models: acompanhantes de luxo em todo o Brasil. Perfis verificados e total discrição. Somente maiores de 18 anos.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Aliança" },
+      { property: "og:site_name", content: "Aliança Models" },
       { property: "og:locale", content: "pt_BR" },
       { property: "og:url", content: "https://aliancamodels.com/" },
       { property: "og:image", content: "https://aliancamodels.com/social-preview-national.png?v=1" },
@@ -106,19 +107,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image:height", content: "630" },
       {
         property: "og:image:alt",
-        content: "Aliança Models — plataforma de acompanhantes",
+        content: "Aliança Models — Acompanhantes de Luxo no Brasil",
       },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Aliança Models — Acompanhantes de Luxo no Brasil" },
+      { name: "twitter:title", content: "Aliança Models • Acompanhantes de Luxo no Brasil" },
       {
         name: "twitter:description",
         content:
-          "Encontre acompanhantes de luxo, perfis verificados e contato direto com discrição em todo o Brasil.",
+          "Aliança Models: acompanhantes de luxo em todo o Brasil. Perfis verificados e total discrição. +18.",
       },
       { name: "twitter:image", content: "https://aliancamodels.com/social-preview-national.png?v=1" },
       {
         name: "twitter:image:alt",
-        content: "Aliança Models — plataforma de acompanhantes",
+        content: "Aliança Models — Acompanhantes de Luxo no Brasil",
       },
     ],
     links: [
