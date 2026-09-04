@@ -137,6 +137,9 @@ export async function renderLegacySeoShell(shellHtml: string, request: Request):
   if (seo.status === 404) html = html.replace('<meta name="robots" content="index,follow" />', '<meta name="robots" content="noindex,follow" />');
   return new Response(html, {
     status: seo.status,
-    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": seo.status === 200 ? "public, max-age=300" : "no-store" },
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": seo.status === 200 ? "public, max-age=0, must-revalidate" : "no-store",
+    },
   });
 }
