@@ -529,7 +529,7 @@ function distanciaKm(lat1, lon1, lat2, lon2) {
 /* Cidade cadastrada mais próxima de uma coordenada (aproximação por capital) */
 function cidadeMaisProxima(lat, lon) {
   let melhor = null, menorDist = Infinity;
-  for (const key of cidadesComConteudo()) {
+  for (const key of cidadesPublicadas()) {
     const coords = CAPITAIS_COORDS[key];
     if (!coords) continue;
     const d = distanciaKm(lat, lon, coords[0], coords[1]);
@@ -1648,7 +1648,7 @@ function renderCitySearchBody(filtro = "") {
   const body = $("#city-search-body");
   if (!body) return;
   const q = filtro.trim().toLowerCase();
-  const todas = cidadesComConteudo();
+  const todas = cidadesPublicadas();
 
   const rowHtml = (key, destaque = false) => {
     const c = CIDADES[key];

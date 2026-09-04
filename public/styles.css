@@ -224,7 +224,15 @@ main{padding-top:30px}
   background:var(--gold-2);transform:rotate(45deg);transform-origin:left center;
 }
 .nav__menu-search input{flex:1;background:none;border:none;outline:none;color:var(--white);font-family:var(--sans);font-size:.85rem}
-.nav__menu-list{display:flex;flex-direction:column;max-height:min(60vh,340px);overflow-y:auto}
+.nav__menu-list{
+  display:flex;
+  flex-direction:column;
+  max-height:min(60vh,340px);
+  overflow-y:scroll;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  -webkit-overflow-scrolling:touch;
+}
 .nav__menu-list{scrollbar-width:thin;scrollbar-color:rgba(213,175,84,.55) rgba(255,247,241,.06)}
 .nav__menu-list::-webkit-scrollbar{width:6px}
 .nav__menu-list::-webkit-scrollbar-track{background:rgba(255,247,241,.05);border-radius:999px}
@@ -2978,33 +2986,44 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
     padding-bottom:1rem;
   }
   .hero--carousel .hero__content{
-    width:min(100%,760px);
+    width:min(100%,1120px);
     margin:0;
     text-align:left;
   }
   .hero__bar{
-    flex-direction:row;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(340px,380px);
     align-items:flex-end;
-    justify-content:space-between;
-    gap:2rem;
+    gap:clamp(2rem,5vw,4.5rem);
   }
-  .hero__bar-text{flex:1 1 auto;max-width:640px}
+  .hero__bar-text{max-width:680px}
   .hero__bar h1{font-size:clamp(2rem,3.4vw,2.8rem);line-height:1.12}
   .hero__bar p{font-size:1.02rem;line-height:1.5;max-width:52ch}
-  /* Empilhado (não lado a lado): com o botão de busca largo, colocar os dois na
-     mesma linha espremia o texto do título contra a borda do card de foto */
+  /* Ações com a mesma largura formam um bloco único e equilibrado no desktop. */
   .hero__bar-actions{
-    width:auto;flex:0 0 auto;flex-direction:column;align-items:flex-start;gap:1rem;
+    width:100%;
+    min-width:0;
+    flex-direction:column;
+    align-items:stretch;
+    gap:.75rem;
   }
   .hero__bar-cta{
-    padding:.85rem 1.4rem .85rem 1.55rem;
+    width:100%;
+    min-height:58px;
+    justify-content:space-between;
+    padding:.75rem .8rem .75rem 1.25rem;
     font-size:1rem;
     white-space:nowrap;
-    flex:0 0 auto;
   }
   .hero__bar-cta-ico{width:30px;height:30px}
-  .city-search-wrap{width:auto}
-  .city-search-trigger{width:auto;min-width:340px;font-size:.9rem;padding:.7rem 1.15rem .7rem .7rem}
+  .city-search-wrap{width:100%;min-width:0}
+  .city-search-trigger{
+    width:100%;
+    min-width:0;
+    min-height:58px;
+    font-size:.92rem;
+    padding:.6rem .95rem .6rem .65rem;
+  }
 
   /* Página padrão com mais respiro */
   .page{padding:120px 0 90px}
