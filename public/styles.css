@@ -941,13 +941,13 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 }
 @media (max-width:699px){
   .profile__gallery{
-    width:min(86vw,360px);
+    width:min(100%,clamp(285px,78vw,320px));
     margin-inline:auto;
   }
 }
 @media (min-width:1101px){
   .profile__top{
-    grid-template-columns:minmax(0,540px) minmax(400px,1fr);
+    grid-template-columns:minmax(0,460px) minmax(400px,1fr);
   }
 }
 .profile__photo{
@@ -1973,7 +1973,7 @@ body.sv-open{overflow:hidden}
 }
 @media (min-width:700px) and (max-width:1100px){
   .profile__gallery{
-    width:min(100%,560px);
+    width:min(100%,480px);
     justify-self:center;
     grid-template-columns:minmax(0,1fr);
     align-items:start;
