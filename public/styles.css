@@ -918,7 +918,12 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 
 /* ---------- Página de Perfil ---------- */
 .profile{padding-top:96px}
-.profile__top{display:grid;grid-template-columns:1.1fr 1fr;gap:2.2rem;margin-bottom:2.4rem}
+.profile__top{
+  display:grid;
+  grid-template-columns:minmax(0,1.1fr) minmax(360px,1fr);
+  gap:clamp(1.25rem,2.6vw,2.2rem);
+  margin-bottom:2.4rem;
+}
 .profile__gallery{
   display:grid;
   grid-template-columns:minmax(0,1fr);
@@ -932,6 +937,7 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
     rgba(255,255,255,.02);
   box-shadow:0 18px 40px rgba(0,0,0,.18);
   overflow:hidden;
+  min-width:0;
 }
 .profile__photo{
   position:relative;
@@ -992,7 +998,8 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
   text-transform:uppercase;
   backdrop-filter:blur(8px);
 }
-.profile__info h1{font-size:clamp(2rem,5vw,2.8rem);margin-bottom:.3rem}
+.profile__info{min-width:0}
+.profile__info h1{font-size:clamp(2rem,5vw,2.8rem);margin-bottom:.3rem;overflow-wrap:anywhere}
 .profile__loc{color:var(--gold-2);letter-spacing:.1em;text-transform:uppercase;font-size:.85rem;margin-bottom:1.2rem}
 .profile__badges{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.3rem}
 .profile__badges .tag{
@@ -1060,6 +1067,7 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
   color:var(--white);
   font-size:.96rem;
   line-height:1.35;
+  overflow-wrap:anywhere;
 }
 .profile__actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem}
 
@@ -1920,6 +1928,43 @@ body.sv-open{overflow:hidden}
   .profile__top{grid-template-columns:1fr}
   .footer__inner{grid-template-columns:1fr}
 }
+
+/* Perfil em notebooks: evita duas colunas comprimidas sem alterar o mobile. */
+@media (min-width:861px) and (max-width:1100px){
+  .profile>.back-link,
+  .profile__top{
+    width:min(100%,820px);
+    margin-inline:auto;
+  }
+  .profile__top{
+    grid-template-columns:minmax(0,1fr);
+    gap:1.5rem;
+  }
+  .profile__info{width:100%}
+  .profile__desc{max-width:70ch}
+  .spec{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (min-width:700px) and (max-width:1100px){
+  .profile__gallery{
+    grid-template-columns:minmax(0,3fr) minmax(150px,1fr);
+    align-items:stretch;
+    aspect-ratio:16/10;
+  }
+  .profile__photo--hero{
+    height:100%;
+    aspect-ratio:auto;
+  }
+  .profile__thumbs{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:repeat(3,minmax(0,1fr));
+    min-height:0;
+  }
+  .profile__photo--thumb{
+    height:100%;
+    min-height:0;
+    aspect-ratio:auto;
+  }
+}
 @media(max-width:430px){
   .nav{
     --nav-menu-max:min(54vh,390px);
@@ -2639,6 +2684,27 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
   .header__inner{gap:1.8rem;height:76px}
   .nav{gap:.6rem}
   .nav__btn,.nav__link{font-size:.94rem;padding:.65rem 1rem}
+}
+
+/* Proteções gerais para conteúdo dinâmico em qualquer largura. */
+.profile__top>* ,
+.footer__inner>* ,
+.footer__cols>* ,
+.city-showcase__head>* ,
+.signup>* ,
+.form .row>*{
+  min-width:0;
+}
+.profile__desc,
+.page p,
+.city-card,
+.card,
+.footer{
+  overflow-wrap:anywhere;
+}
+img,
+video{
+  max-width:100%;
 }
 
 @media (max-width: 600px){

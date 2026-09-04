@@ -827,6 +827,29 @@ function viewPerfil(slug) {
       <a class="btn btn--gold" href="${waPerfil(p, r.t)}" target="_blank" rel="noopener">Reservar</a>
     </div>`).join("");
 
+  const valorVisivel = (valor) => {
+    const texto = Array.isArray(valor)
+      ? valor.map(item => String(item ?? "").trim()).filter(Boolean).join(", ")
+      : String(valor ?? "").trim();
+    return texto && !["null", "undefined"].includes(texto.toLowerCase()) ? texto : "";
+  };
+  const idade = valorVisivel(p.idade);
+  const especificacoes = [
+    ["Idade", idade ? `${idade} anos` : ""],
+    ["Altura", valorVisivel(p.altura)],
+    ["Manequim", valorVisivel(p.manequim)],
+    ["Medidas", valorVisivel(p.medidas)],
+    ["Olhos", valorVisivel(p.corOlhos)],
+    ["Pele", valorVisivel(p.corPele)],
+    ["Cabelo", valorVisivel(p.corCabelo)],
+    ["Idiomas", valorVisivel(p.idiomas) || "Português"],
+    ["Horário", valorVisivel(p.horario)],
+    ["Local p/ atendimento", p.possuiLocal ? "Sim" : "Não"],
+  ]
+    .filter(([, valor]) => valor)
+    .map(([rotulo, valor]) => `<div><span>${rotulo}</span><b>${valor}</b></div>`)
+    .join("");
+
   app.innerHTML = `
   <section class="profile container">
     <a class="back-link" href="${pathTo('/cidade/' + p.cidade)}">‹ Voltar para ${c.nome}</a>
@@ -865,16 +888,7 @@ function viewPerfil(slug) {
         <p class="profile__desc">${p.descricao}</p>
 
         <div class="spec">
-          <div><span>Idade</span><b>${p.idade} anos</b></div>
-          <div><span>Altura</span><b>${p.altura}</b></div>
-          <div><span>Manequim</span><b>${p.manequim}</b></div>
-          <div><span>Medidas</span><b>${p.medidas}</b></div>
-          ${p.corOlhos ? `<div><span>Olhos</span><b>${p.corOlhos}</b></div>` : ""}
-          ${p.corPele ? `<div><span>Pele</span><b>${p.corPele}</b></div>` : ""}
-          ${p.corCabelo ? `<div><span>Cabelo</span><b>${p.corCabelo}</b></div>` : ""}
-          <div><span>Idiomas</span><b>${(p.idiomas || ["Português"]).join(", ")}</b></div>
-          <div><span>Horário</span><b>${p.horario}</b></div>
-          <div><span>Local p/ atendimento</span><b>${p.possuiLocal ? "Sim" : "Não"}</b></div>
+          ${especificacoes}
         </div>
 
       </div>
