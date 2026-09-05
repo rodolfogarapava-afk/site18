@@ -1007,8 +1007,7 @@ function viewPerfil(slug) {
         <div class="profile__badges">${tagsHtml(p) || ""}${p.possuiLocal ? `<span class="tag tag--excl">Possui Local</span>` : ""}</div>
 
         <div class="profile__actions profile__actions--top">
-          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">${WA_ICON} Consultar</a>
-          <a class="btn btn--ghost btn--lg" href="${waPerfil(p, "agendar um horário")}" target="_blank" rel="noopener">Agendar</a>
+          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">${WA_ICON} Quero um encontro</a>
         </div>
 
         ${perfilAudioUrl(p) ? `
