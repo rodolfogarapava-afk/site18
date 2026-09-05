@@ -273,6 +273,26 @@
     </div>
   </div>
 
+  <!-- ===== BUSCA DE CIDADE (balão no desktop, tela cheia no mobile) =====
+       Elemento de nível raiz (fora de #app) de propósito — igual o lightbox
+       e o city-picker acima. Fica dentro de .hero__layout (que tem seu
+       próprio z-index/stacking context) prendia o z-index do popup lá
+       dentro, deixando elementos de fora (ex.: botão "+" de stories)
+       aparecerem por cima mesmo com z-index maior. -->
+  <div class="city-search" id="city-search" hidden>
+    <div class="city-search__scrim" data-city-search-close></div>
+    <div class="city-search__panel" role="dialog" aria-modal="true" aria-label="Pesquisar cidade">
+      <div class="city-search__head">
+        <div class="city-search__input-wrap">
+          <span class="city-search__input-ico" aria-hidden="true"><svg class="inline-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+          <input id="city-search-input" type="text" placeholder="Busque por cidade" autocomplete="off" />
+        </div>
+        <button class="city-search__close" id="city-search-close" type="button" aria-label="Fechar busca">✕</button>
+      </div>
+      <div class="city-search__body" id="city-search-body"></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20"></script>
   <script src="data.js?v=22"></script>

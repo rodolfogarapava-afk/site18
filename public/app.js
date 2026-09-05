@@ -618,19 +618,6 @@ function viewHome() {
                 <span class="city-search-trigger__text">Pesquisar cidade</span>
                 <span class="city-search-trigger__go" aria-hidden="true">${ICON_SEARCH}</span>
               </button>
-              <div class="city-search" id="city-search" hidden>
-                <div class="city-search__scrim" data-city-search-close></div>
-                <div class="city-search__panel" role="dialog" aria-modal="true" aria-label="Pesquisar cidade">
-                  <div class="city-search__head">
-                    <div class="city-search__input-wrap">
-                      <span class="city-search__input-ico" aria-hidden="true">${ICON_SEARCH}</span>
-                      <input id="city-search-input" type="text" placeholder="Busque por cidade" autocomplete="off" />
-                    </div>
-                    <button class="city-search__close" id="city-search-close" type="button" aria-label="Fechar busca">✕</button>
-                  </div>
-                  <div class="city-search__body" id="city-search-body"></div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1762,11 +1749,16 @@ function closeCitySearch() {
   window.removeEventListener("scroll", closeCitySearch);
 }
 
-function initCitySearch() {
-  const trigger = $("#city-search-trigger");
+/* #city-search é um elemento de nível raiz fixo no HTML (não é recriado a
+   cada render da home, ao contrário do botão-gatilho) — então os listeners
+   do próprio popup só podem ser ligados uma vez, senão acumulam a cada
+   visita à home. */
+let citySearchOverlayInited = false;
+function initCitySearchOverlay() {
+  if (citySearchOverlayInited) return;
   const el = $("#city-search");
-  if (!trigger || !el) return;
-  trigger.addEventListener("click", openCitySearch);
+  if (!el) return;
+  citySearchOverlayInited = true;
   $("#city-search-close")?.addEventListener("click", closeCitySearch);
   $$("[data-city-search-close]", el).forEach(s => s.addEventListener("click", closeCitySearch));
   $("#city-search-input")?.addEventListener("input", e => renderCitySearchBody(e.target.value));
@@ -1777,6 +1769,13 @@ function initCitySearch() {
     if (e.key === "Escape" && !el.hidden) closeCitySearch();
   });
   window.addEventListener("resize", () => { if (!el.hidden) positionCitySearchPopover(); });
+}
+
+/* Já o botão-gatilho vive dentro da home e é recriado a cada render dela,
+   então esse precisa religar toda vez. */
+function initCitySearch() {
+  initCitySearchOverlay();
+  $("#city-search-trigger")?.addEventListener("click", openCitySearch);
 }
 
 /* ---------- Visualizador ---------- */
