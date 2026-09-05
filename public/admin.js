@@ -42,7 +42,7 @@ function updateMetaCounters() {
   $("#f-meta-descricao-count").textContent = `${$("#f-meta-descricao").value.length}/160`;
 }
 function updateDescricaoCurtaCounter() {
-  $("#f-descricao-curta-count").textContent = `${$("#f-descricao-curta").value.length}/115`;
+  $("#f-descricao-curta-count").textContent = `${$("#f-descricao-curta").value.length}/60`;
 }
 
 function toast(msg, isErr) {
