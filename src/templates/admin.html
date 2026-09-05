@@ -172,6 +172,12 @@
               <textarea id="f-descricao" placeholder="Texto elegante de apresentação..."></textarea>
             </div>
 
+            <div class="field">
+              <label>Frase de destaque (aparece no card) — <span id="f-descricao-curta-count">0/115</span></label>
+              <textarea id="f-descricao-curta" maxlength="115" placeholder="Ex.: Loira dos olhos verdes, sensual e discreta. Te espero..."></textarea>
+              <small>Some inteira no card, sem cortar no meio. Se vazio, usamos os primeiros 115 caracteres da descrição acima (aí sim pode cortar com "...").</small>
+            </div>
+
             <div class="grid2">
               <div class="field">
                 <label>Meta título (SEO) — <span id="f-meta-titulo-count">0/60</span></label>
@@ -223,7 +229,7 @@
               <label class="check"><input type="checkbox" id="f-exclusiva" /> Exclusiva</label>
               <label class="check"><input type="checkbox" id="f-temVideo" /> Tem vídeo</label>
               <label class="check"><input type="checkbox" id="f-possuiLocal" /> Possui local</label>
-              <label class="check"><input type="checkbox" id="f-destaque" /> Destaque na home</label>
+              <label class="check"><input type="checkbox" id="f-destaque" /> Prioridade nas listagens</label>
             </div>
 
             <div class="upload-card">
@@ -531,7 +537,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20"></script>
   <script src="data.js?v=22"></script>
-  <script src="store.js?v=28"></script>
-  <script src="admin.js?v=33"></script>
+  <script src="store.js?v=29"></script>
+  <script src="admin.js?v=34"></script>
 </body>
 </html>

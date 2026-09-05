@@ -41,6 +41,9 @@ function updateMetaCounters() {
   $("#f-meta-titulo-count").textContent = `${$("#f-meta-titulo").value.length}/60`;
   $("#f-meta-descricao-count").textContent = `${$("#f-meta-descricao").value.length}/160`;
 }
+function updateDescricaoCurtaCounter() {
+  $("#f-descricao-curta-count").textContent = `${$("#f-descricao-curta").value.length}/115`;
+}
 
 function toast(msg, isErr) {
   const t = $("#toast");
@@ -328,6 +331,8 @@ function abrirForm(idx) {
   $("#f-cor-cabelo").value = p.corCabelo || "";
   $("#f-valor").value = p.valorHora || "";
   $("#f-descricao").value = p.descricao || "";
+  $("#f-descricao-curta").value = p.descricaoCurta || "";
+  updateDescricaoCurtaCounter();
   $("#f-meta-titulo").value = p.metaTitulo || "";
   $("#f-meta-descricao").value = p.metaDescricao || "";
   updateMetaCounters();
@@ -361,6 +366,7 @@ $("#f-servicos").addEventListener("input", () => {
   const input = $(selector);
   if (input) input.addEventListener("input", () => setFieldInvalid(selector, false));
 });
+$("#f-descricao-curta").addEventListener("input", updateDescricaoCurtaCounter);
 $("#f-meta-titulo").addEventListener("input", updateMetaCounters);
 $("#f-meta-descricao").addEventListener("input", updateMetaCounters);
 
@@ -423,6 +429,7 @@ $("#form-salvar").addEventListener("click", async () => {
     valorHora: $("#f-valor").value.trim() || "Sob consulta",
     hue,
     descricao: $("#f-descricao").value.trim(),
+    descricaoCurta: $("#f-descricao-curta").value.trim(),
     metaTitulo: $("#f-meta-titulo").value.trim(),
     metaDescricao: $("#f-meta-descricao").value.trim(),
     servicos,

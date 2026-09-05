@@ -251,6 +251,10 @@ function foto(p, i = 0) {
 }
 
 function cardResumo(p) {
+  // Frase de destaque: escrita sob medida pra caber inteira no card (limite
+  // de 115 no admin já bate com o corte abaixo), sem "..." no meio da frase.
+  const curta = (p.descricaoCurta || "").trim().replace(/\s+/g, " ");
+  if (curta) return curta;
   const raw = (p.descricao || p.desc || "").trim().replace(/\s+/g, " ");
   if (!raw) return "Perfil selecionado para quem busca presença, discrição e boa companhia.";
   return raw.length > 118 ? raw.slice(0, 115).trimEnd() + "..." : raw;
