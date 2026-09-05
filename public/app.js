@@ -588,7 +588,8 @@ function viewHome() {
 
   const slides = heroCarouselSlides();
   const hasCarousel = slides.length >= 2;
-  const firstImg = slides.length ? slides[0].foto : "instagram_post.webp?v=2";
+  const heroSlide = slides.length ? slides[0] : null;
+  const firstImg = heroSlide ? heroSlide.foto : "instagram_post.webp?v=2";
 
   const slidesHtml = hasCarousel ? slides.map((s, i) => `
       <div class="hero__slide${i === 0 ? " is-active" : ""}" data-i="${i}" data-foto="${encodeURIComponent(s.foto)}" aria-hidden="${i === 0 ? "false" : "true"}"></div>
@@ -601,10 +602,28 @@ function viewHome() {
     <div class="hero__slides" aria-hidden="true">${slidesHtml}</div>
   ` : "";
 
+  // Selo "Ver perfil" sobre a foto — só existe quando a imagem é de fato de
+  // uma modelo cadastrada no banner de destaques (não faz sentido na foto
+  // genérica de fallback, que não tem perfil nenhum por trás).
+  const heroPhotoBadgeHtml = heroSlide?.href ? `
+    <a class="hero__photo-badge" id="hero-photo-badge" href="${heroSlide.href}" aria-label="Ver perfil de ${heroSlide.nome}">
+      <span>Ver perfil</span>
+      <span class="hero__photo-badge-ico" aria-hidden="true">${ICON_ARROW}</span>
+    </a>` : "";
+
+  // No desktop, sem carrossel, a foto vira um card à parte (grade de duas
+  // colunas) — se tiver perfil vinculado, o card inteiro também é clicável.
+  const heroPhotoCardHtml = !hasCarousel ? (
+    heroSlide?.href
+      ? `<a class="hero__photo" id="hero-photo" href="${heroSlide.href}" aria-label="Ver perfil de ${heroSlide.nome}"></a>`
+      : `<div class="hero__photo"></div>`
+  ) : "";
+
   app.innerHTML = `
   <section class="hero hero--home${hasCarousel ? " hero--carousel" : ""}" style="--hero-image:url('${firstImg}')">
     ${carouselChromeHtml}
     <div class="hero__scrim" aria-hidden="true"></div>
+    ${heroPhotoBadgeHtml}
     <div class="hero__layout">
       <div class="hero__content">
         ${heroMiniRowHtml}
@@ -628,6 +647,7 @@ function viewHome() {
           </div>
         </div>
       </div>
+      ${heroPhotoCardHtml}
     </div>
   </section>
 
@@ -702,11 +722,16 @@ function initHeroCarousel(slides) {
 
 
   let idx = 0, timer = null;
+  const badge = document.getElementById("hero-photo-badge");
 
   function render() {
     const cur = slides[idx];
     slideEls.forEach((el, i) => el.classList.toggle("is-active", i === idx));
     heroEl.style.setProperty("--hero-image", `url('${cur.foto}')`);
+    if (badge && cur.href) {
+      badge.href = cur.href;
+      badge.setAttribute("aria-label", `Ver perfil de ${cur.nome}`);
+    }
   }
   function advance() { idx = (idx + 1) % slides.length; render(); }
   function start() { stop(); timer = setInterval(advance, DUR); }

@@ -282,6 +282,27 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 }
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:
   repeating-linear-gradient(135deg,transparent,transparent 38px,rgba(240,217,154,.026) 38px,rgba(240,217,154,.026) 39px)}
+/* Selo "Ver perfil" sobre a foto do hero — indicativo visual de que a
+   imagem é clicável. Ancorado no .hero (não no .hero__layout, que em
+   alguns formatos só tem a altura do texto, não da seção inteira) pra
+   ficar sempre dentro da área da foto, full-bleed ou card. */
+.hero__photo-badge{
+  position:absolute;top:5.5rem;right:1.25rem;z-index:3;
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.5rem .9rem .5rem 1rem;border-radius:999px;
+  background:rgba(9,7,8,.55);border:1px solid rgba(213,175,84,.4);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  color:var(--white);font-family:var(--sans);font-size:.78rem;font-weight:600;
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+.hero__photo-badge:hover{
+  transform:translateY(-2px);
+  border-color:rgba(213,175,84,.7);
+  background:rgba(9,7,8,.72);
+}
+.hero__photo-badge-ico{display:inline-flex;width:14px;height:14px;color:var(--gold-2)}
+.hero__photo-badge-ico svg{width:100%;height:100%}
 .hero--home{
   min-height:min(78vh,640px);
   padding-bottom:12px;
@@ -2951,9 +2972,11 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
     gap:clamp(2rem,5vw,4rem);
     padding-bottom:0;
   }
-  /* Coluna da foto: card contido, mesma proporção do retrato original, sem cortar o corpo */
-  .hero--home:not(.hero--carousel) .hero__layout::after{
-    content:"";
+  /* Coluna da foto: card contido, mesma proporção do retrato original, sem cortar o corpo.
+     Elemento real (não mais ::after) pra poder ser um <a> clicável quando tem
+     perfil vinculado (banner de destaques). */
+  .hero--home:not(.hero--carousel) .hero__photo{
+    position:relative;
     display:block;
     align-self:center;
     width:100%;
@@ -2963,6 +2986,12 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0 !important; height: 
       linear-gradient(180deg,rgba(7,4,5,.04) 0%,transparent 26%,transparent 74%,rgba(7,4,5,.22) 100%),
       var(--hero-image) center 14% / cover no-repeat;
     box-shadow:0 30px 70px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);
+    transition:transform .25s ease,box-shadow .25s ease;
+  }
+  a.hero__photo{cursor:pointer}
+  a.hero__photo:hover{
+    transform:translateY(-3px);
+    box-shadow:0 36px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
   }
   .hero--home:not(.hero--carousel) .hero__content{
     width:100%;
