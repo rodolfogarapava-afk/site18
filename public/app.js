@@ -1652,7 +1652,13 @@ function lbShow(item) {
     lbImg.src = (item && typeof item === "object") ? item.src : item;
   }
 }
-function openLightbox(list, i) { lbList = list; lbIndex = i; lbShow(list[i]); lb.hidden = false; }
+/* A ordem importa: o vídeo precisa ficar visível ANTES de receber o `src`.
+   Setar `lbVideo.src` enquanto o `#lightbox` ainda está `hidden` (portanto
+   `display:none`) faz o Chrome nunca sair de readyState 0 — a rede até
+   responde (206), mas o elemento nunca extrai os metadados enquanto não
+   está renderizado. Confirmado ao vivo: o mesmo vídeo carrega instantâneo
+   assim que a visibilidade muda antes do src. */
+function openLightbox(list, i) { lbList = list; lbIndex = i; lb.hidden = false; lbShow(list[i]); }
 function lbMove(d) { lbIndex = (lbIndex + d + lbList.length) % lbList.length; lbShow(lbList[lbIndex]); }
 function lbClose() { lb.hidden = true; lbVideo.pause(); }
 $("#lb-close").addEventListener("click", lbClose);
