@@ -441,7 +441,6 @@ function abrirForm(idx) {
   $("#f-exclusiva").checked = !!p.exclusiva;
   $("#f-temVideo").checked = !!p.temVideo;
   $("#f-possuiLocal").checked = !!p.possuiLocal;
-  $("#f-destaque").checked = !!p.destaque;
 
   renderThumbs();
   renderPerfilAudio();
@@ -546,7 +545,11 @@ $("#form-salvar").addEventListener("click", async () => {
     exclusiva: $("#f-exclusiva").checked,
     temVideo: $("#f-temVideo").checked,
     possuiLocal,
-    destaque: $("#f-destaque").checked,
+    // Controle removido do painel (era "Destaque na home", renomeado antes
+    // para "Prioridade nas listagens" — na prática só afeta a ordem dentro
+    // das listagens, nunca a home). Mantém o valor já salvo do perfil em vez
+    // de zerar; sem UI pra alterá-lo, mas sem apagar o que já existia.
+    destaque: editando ? !!DATA.perfis[editIndex].destaque : false,
     fotos: [...fotos],
     audioUrl,
     // videoUrl legado fica sincronizado com o primeiro vídeo da lista, pra
@@ -1336,6 +1339,41 @@ function bannerPerfilOptions(selected) {
   return opts.join("");
 }
 
+/* Ao vincular um perfil, preenche nome/foto/WhatsApp que ainda estiverem
+   vazios — o texto do campo já prometia isso, mas nada fazia de fato, e foi
+   assim que um slot acabou com o nome de uma modelo e o link de outra. Só
+   preenche o que está vazio: não sobrescreve uma foto/nome já personalizados
+   de propósito (ex.: foto horizontal específica pro banner). */
+function aplicarPadraoPerfilBanner(i) {
+  const slot = BANNER_EDIT.slots[i];
+  const perfil = slot.perfilSlug ? DATA.perfis.find(p => p.slug === slot.perfilSlug) : null;
+  if (!perfil) return;
+  if (!slot.nome.trim()) slot.nome = perfil.nome;
+  if (!slot.foto) slot.foto = (perfil.fotos || [])[0] || "";
+  if (!slot.whatsapp) slot.whatsapp = (perfil.whatsapp || "").replace(/\D/g, "");
+}
+
+/* Avisa quando o link vai levar pra alguém diferente do que o slot mostra:
+   perfil vinculado que não existe mais, ou nome digitado que não bate com o
+   nome real do perfil selecionado. Não impede salvar — só torna visível
+   antes de publicar, sem adivinhar qual dos dois valores está certo. */
+function atualizarAvisoBannerSlot(i) {
+  const avisoEl = $(`[data-bn-aviso="${i}"]`);
+  if (!avisoEl) return;
+  const slot = BANNER_EDIT.slots[i];
+  const perfil = slot.perfilSlug ? DATA.perfis.find(p => p.slug === slot.perfilSlug) : null;
+  const nomeDigitado = (slot.nome || "").trim();
+  if (slot.perfilSlug && !perfil) {
+    avisoEl.textContent = `⚠ O perfil vinculado ("${slot.perfilSlug}") não existe mais — o botão "Ver perfil" não vai funcionar. Selecione o perfil correto na lista.`;
+    avisoEl.hidden = false;
+  } else if (perfil && nomeDigitado && slugify(nomeDigitado) !== slugify(perfil.nome)) {
+    avisoEl.textContent = `⚠ O nome exibido ("${nomeDigitado}") não bate com o perfil vinculado ("${perfil.nome}"). Quem tocar em "Ver perfil" vai para o perfil de ${perfil.nome} — confirme se é isso mesmo antes de publicar.`;
+    avisoEl.hidden = false;
+  } else {
+    avisoEl.hidden = true;
+  }
+}
+
 function renderBannerSlots() {
   const box = $("#banner-slots");
   if (!box) return;
@@ -1348,11 +1386,12 @@ function renderBannerSlots() {
           <p>Selecione um perfil ou personalize os campos abaixo.</p>
         </div>
       </div>
+      <p data-bn-aviso="${i}" class="field-warning" hidden></p>
       <div class="grid2">
         <div class="field">
           <label>Perfil vinculado</label>
           <select data-bn-field="perfilSlug">${bannerPerfilOptions(s.perfilSlug)}</select>
-          <small>Se selecionado, a foto/nome/WhatsApp do perfil são usados como padrão.</small>
+          <small>Ao escolher um perfil, nome/foto/WhatsApp vazios abaixo são preenchidos com os dele. Quem tocar em "Ver perfil" no destaque vai para o perfil selecionado aqui — não para o nome digitado.</small>
         </div>
         <div class="field">
           <label>Tag / selo</label>
@@ -1423,8 +1462,15 @@ function renderBannerSlots() {
         let val = inp.value;
         if (field === "whatsapp") val = val.replace(/\D/g, "");
         BANNER_EDIT.slots[i][field] = val;
+        if (field === "perfilSlug") {
+          aplicarPadraoPerfilBanner(i);
+          renderBannerSlots();
+          return;
+        }
+        atualizarAvisoBannerSlot(i);
       });
     });
+    atualizarAvisoBannerSlot(i);
   });
   // upload
   $$("[data-bn-drop]", box).forEach(drop => {

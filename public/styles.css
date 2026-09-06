@@ -303,6 +303,14 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
 }
 .hero__photo-badge-ico{display:inline-flex;width:14px;height:14px;color:var(--gold-2)}
 .hero__photo-badge-ico svg{width:100%;height:100%}
+/* Área inteira da foto de destaque clicável (modo carrossel, 2+ destaques) —
+   fica atrás do texto/botões (.hero__layout tem z-index maior), então tocar
+   fora deles abre o perfil sem bloquear "Explorar cidades" ou a busca de
+   cidade. Some junto com o badge quando o slide ativo não tem perfil. */
+.hero__photo-link{
+  position:absolute;inset:0;z-index:1;
+  display:block;cursor:pointer;
+}
 .hero--home{
   min-height:min(78vh,640px);
   padding-bottom:12px;
@@ -340,6 +348,18 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
   align-items:center;
   justify-items:center;
 }
+/* Único destaque, sem carrossel: no mobile a foto já é o próprio fundo
+   full-bleed do hero (--hero-image, ver .hero--home) — este elemento vira
+   uma camada invisível cobrindo o hero inteiro pra essa mesma foto ficar
+   clicável, atrás do texto/botões (mesmo padrão do .hero__photo-link do
+   carrossel). No desktop (min-width:1024px) ele vira o card visível de
+   verdade — ver regra em "DESKTOP RESPONSIVENESS", que troca position pra
+   relative e sai desse modo overlay. */
+.hero--home:not(.hero--carousel) .hero__photo{
+  position:absolute;inset:0;z-index:1;
+  display:block;
+}
+.hero--home:not(.hero--carousel) a.hero__photo{cursor:pointer}
 .hero__content{
   width:min(100%,664px);
   margin:0;

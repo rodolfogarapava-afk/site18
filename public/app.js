@@ -645,17 +645,31 @@ function viewHome() {
     <div class="hero__slides" aria-hidden="true">${slidesHtml}</div>
   ` : "";
 
-  // Selo "Ver perfil" sobre a foto — só existe quando a imagem é de fato de
-  // uma modelo cadastrada no banner de destaques (não faz sentido na foto
-  // genérica de fallback, que não tem perfil nenhum por trás).
-  const heroPhotoBadgeHtml = heroSlide?.href ? `
-    <a class="hero__photo-badge" id="hero-photo-badge" href="${heroSlide.href}" aria-label="Ver perfil de ${heroSlide.nome}">
+  // Selo "Ver perfil" sobre a foto — só existe quando ALGUM slide do
+  // carrossel tem perfil vinculado. Importante: isso não pode olhar só pro
+  // primeiro slide — se o slide inicial não tivesse link mas o 2º/3º
+  // tivessem, o elemento nunca era criado e o carrossel girava sem o botão
+  // aparecer nunca (initHeroCarousel só ATUALIZA um elemento que já existe,
+  // não cria um novo). No modo sem carrossel há só o slide único mesmo.
+  const algumSlideTemPerfil = hasCarousel ? slides.some(s => s.href) : !!heroSlide?.href;
+  const heroPhotoBadgeHtml = algumSlideTemPerfil ? `
+    <a class="hero__photo-badge" id="hero-photo-badge" href="${heroSlide?.href || ""}" aria-label="Ver perfil de ${heroSlide?.nome || ""}"${heroSlide?.href ? "" : " hidden"}>
       <span>Ver perfil</span>
       <span class="hero__photo-badge-ico" aria-hidden="true">${ICON_ARROW}</span>
     </a>` : "";
 
-  // No desktop, sem carrossel, a foto vira um card à parte (grade de duas
-  // colunas) — se tiver perfil vinculado, o card inteiro também é clicável.
+  // Modo carrossel (3 destaques): a foto de fundo rotativa (.hero__slides)
+  // não é um link em si — este overlay cobre toda a área do hero, atrás do
+  // texto/botões (z-index menor que .hero__layout), pra tocar na foto abrir
+  // o perfil sem bloquear "Explorar cidades" / busca de cidade, que ficam
+  // por cima. O href acompanha o slide ativo (ver initHeroCarousel).
+  const heroPhotoLinkHtml = hasCarousel && algumSlideTemPerfil
+    ? `<a class="hero__photo-link" id="hero-photo-link" href="${heroSlide?.href || ""}" aria-label="Ver perfil de ${heroSlide?.nome || ""}"${heroSlide?.href ? "" : " hidden"}></a>`
+    : "";
+
+  // Sem carrossel (0 ou 1 destaque): no desktop a foto vira um card à parte
+  // (grade de duas colunas); no mobile é a própria imagem de fundo do hero
+  // (--hero-image) — o mesmo elemento cobre as duas situações (ver CSS).
   const heroPhotoCardHtml = !hasCarousel ? (
     heroSlide?.href
       ? `<a class="hero__photo" id="hero-photo" href="${heroSlide.href}" aria-label="Ver perfil de ${heroSlide.nome}"></a>`
@@ -666,6 +680,7 @@ function viewHome() {
   <section class="hero hero--home${hasCarousel ? " hero--carousel" : ""}" style="--hero-image:url('${firstImg}')">
     ${carouselChromeHtml}
     <div class="hero__scrim" aria-hidden="true"></div>
+    ${heroPhotoLinkHtml}
     ${heroPhotoBadgeHtml}
     <div class="hero__layout">
       <div class="hero__content">
@@ -766,14 +781,28 @@ function initHeroCarousel(slides) {
 
   let idx = 0, timer = null;
   const badge = document.getElementById("hero-photo-badge");
+  const photoLink = document.getElementById("hero-photo-link");
 
   function render() {
     const cur = slides[idx];
     slideEls.forEach((el, i) => el.classList.toggle("is-active", i === idx));
     heroEl.style.setProperty("--hero-image", `url('${cur.foto}')`);
-    if (badge && cur.href) {
-      badge.href = cur.href;
-      badge.setAttribute("aria-label", `Ver perfil de ${cur.nome}`);
+    // Se o slide ativo não tem perfil vinculado, nem o botão "Ver perfil" nem
+    // a área clicável da foto podem continuar apontando pro slide anterior —
+    // isso levaria a modelo errada. Os dois somem juntos nesse caso.
+    if (badge) {
+      badge.hidden = !cur.href;
+      if (cur.href) {
+        badge.href = cur.href;
+        badge.setAttribute("aria-label", `Ver perfil de ${cur.nome}`);
+      }
+    }
+    if (photoLink) {
+      photoLink.hidden = !cur.href;
+      if (cur.href) {
+        photoLink.href = cur.href;
+        photoLink.setAttribute("aria-label", `Ver perfil de ${cur.nome}`);
+      }
     }
   }
   function advance() { idx = (idx + 1) % slides.length; render(); }
