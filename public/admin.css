@@ -159,6 +159,8 @@ input,select,textarea{font-family:var(--sans)}
 .field.is-invalid input,.field.is-invalid select,.field.is-invalid textarea{border-color:#7f3737;box-shadow:0 0 0 3px rgba(217,83,79,.12)}
 .field textarea{min-height:100px;resize:vertical}
 .field small{display:block;color:#6c6577;font-size:.72rem;margin-top:.3rem}
+.field-warning{background:rgba(217,158,83,.12);border:1px solid rgba(217,158,83,.4);color:#e6b676;
+  border-radius:8px;padding:.55rem .7rem;font-size:.78rem;margin-top:.6rem;line-height:1.4}
 
 .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem}
 .check{display:flex;align-items:center;gap:.5rem;background:#0e0d11;border:1px solid var(--line);

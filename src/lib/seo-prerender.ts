@@ -24,7 +24,6 @@ interface CidadeRow {
   slug: string;
   nome: string;
   uf: string;
-  ativa?: boolean;
   ordem?: number;
 }
 interface PerfilRow {
@@ -82,27 +81,20 @@ async function sbSelect<T>(table: string, query: string): Promise<T[]> {
   }
 }
 
-function cidadePublicada(cidade?: CidadeRow): boolean {
-  if (!cidade) return false;
-  if (typeof cidade.ativa === "boolean") return cidade.ativa;
-  if (typeof cidade.ordem === "number" && cidade.ordem >= 10000) {
-    return (cidade.ordem - 10000) % 2 === 0;
-  }
-  return cidade.slug === "rio-de-janeiro";
-}
-
+/*
+ * Uma cidade só é publicada quando tem ao menos um perfil cadastrado nela.
+ * Isso substitui o antigo controle manual (`cidades.ativa`), que nunca chegou
+ * a ser aplicado no banco de produção e vivia duplicado (com regras que podiam
+ * divergir) no client (public/app.js), no sitemap e aqui. Fonte única: a
+ * própria tabela `perfis`.
+ */
 async function cidadesPublicadasSeo(): Promise<CidadeRow[]> {
-  let cidades = await sbSelect<CidadeRow>(
-    "cidades",
-    "select=slug,nome,uf,ativa,ordem&order=ordem.asc",
-  );
-  if (!cidades.length) {
-    cidades = await sbSelect<CidadeRow>(
-      "cidades",
-      "select=slug,nome,uf,ordem&order=ordem.asc",
-    );
-  }
-  return cidades.filter(cidadePublicada);
+  const [cidades, perfis] = await Promise.all([
+    sbSelect<CidadeRow>("cidades", "select=slug,nome,uf,ordem&order=ordem.asc"),
+    sbSelect<{ cidade: string | null }>("perfis", "select=cidade"),
+  ]);
+  const cidadesComPerfil = new Set(perfis.map((p) => p.cidade).filter(Boolean));
+  return cidades.filter((c) => cidadesComPerfil.has(c.slug));
 }
 
 function breadcrumbJsonLd(items: { label: string; path?: string }[]): Record<string, unknown> {

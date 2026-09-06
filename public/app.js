@@ -293,14 +293,35 @@ function storiesDaCidade(cidade) {
   return (window.STORIES || []).filter(s => storyCidadeSlug(s) === cidade);
 }
 
+/* Uma cidade só é publicada quando tem ao menos uma modelo cadastrada nela.
+   Isso substitui o antigo controle manual (cidade.ativa) do painel: aquele
+   campo nunca chegou a existir no banco de produção e a mesma regra vivia
+   duplicada (e podia divergir) aqui, no sitemap.xml e no SSR de SEO — fonte
+   única agora é a lista real de PERFIS. Cadastrar/ativar a primeira modelo
+   faz a cidade aparecer; excluir a última faz sumir, sem precisar de nenhum
+   passo manual extra no painel. */
 function cidadeAtiva(key) {
-  const cidade = CIDADES[key];
-  if (!cidade) return false;
-  return typeof cidade.ativa === "boolean" ? cidade.ativa : key === "rio-de-janeiro";
+  if (!CIDADES[key]) return false;
+  return PERFIS.some(p => p.cidade === key);
 }
 
 function cidadesPublicadas() {
   return cidadesOrdenadas().filter(cidadeAtiva);
+}
+
+/* Bloco no final da página do perfil com as demais cidades atendidas
+   (mesma regra de cidadesPublicadas: só cidades com ao menos 1 modelo). */
+function outrasCidadesHtml(cidadeAtualKey) {
+  const outras = cidadesPublicadas().filter(key => key !== cidadeAtualKey);
+  if (!outras.length) return "";
+  const links = outras.map(key =>
+    `<a class="pill" href="${pathTo('/cidade/' + key)}">${CIDADES[key].nome}</a>`
+  ).join("");
+  return `
+    <div class="block">
+      <h3>Outras cidades atendidas</h3>
+      <div class="pill-list">${links}</div>
+    </div>`;
 }
 
 /* ---------- Componentes ---------- */
@@ -478,13 +499,13 @@ const ordena = list => [...list].sort((a, b) =>
 function cidadeCard(key) {
   const c = CIDADES[key];
   if (!c) return "";
+  // cidadesPublicadas() já garante n >= 1 para qualquer cidade renderizada.
   const n = PERFIS.filter(p => p.cidade === key).length;
-  const info = n ? `${c.uf} • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : `${c.uf} • Em breve`;
-  return `<a class="city-card${n ? "" : " city-card--soon"}" href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
+  return `<a class="city-card" href="${pathTo('/cidade/' + key)}" data-nome="${(c.nome + " " + c.uf).toLowerCase()}">
     <span class="city-card__kicker">Cidade</span>
     <b>${c.nome}</b>
-    <span class="city-card__info">${info}</span>
-    <span class="city-card__badge">${n ? "Ativa" : "Em breve"}</span>
+    <span class="city-card__info">${c.uf} • ${n} ${n === 1 ? "acompanhante" : "acompanhantes"}</span>
+    <span class="city-card__badge">Ativa</span>
     <span class="city-card__arrow" aria-hidden="true">→</span>
   </a>`;
 }
@@ -761,7 +782,8 @@ function viewCidade(cidade, filtro) {
     : filtro?.tipo === "novidades" ? "Novidades"
     : filtro?.tipo === "exclusivas" ? "Exclusivas"
     : filtro?.tipo === "videos" ? "Vídeos"
-    : filtro?.tipo === "massagem" ? "Massagem" : "";
+    : filtro?.tipo === "massagem" ? "Massagem"
+    : filtro?.tipo === "comlocal" ? "Com local" : "";
   const tituloHead = filtroLabel
     ? `${filtroLabel} em ${c.nome} — Acompanhantes • Aliança Models`
     : `Acompanhantes em ${c.nome} (${c.uf}) — Aliança Models`;
@@ -791,7 +813,9 @@ function viewCidade(cidade, filtro) {
           ? "Vídeos"
           : filtro.tipo === "massagem"
             ? "Massagem"
-            : bairroNome(cidade, filtro.valor);
+            : filtro.tipo === "comlocal"
+              ? "Com local"
+              : bairroNome(cidade, filtro.valor);
 
   if (filtro?.tipo === "bairro") {
     list = list.filter(p => p.bairro === filtro.valor);
@@ -805,6 +829,8 @@ function viewCidade(cidade, filtro) {
     list = list.filter(perfilTemVideo); titulo = "Vídeos " + c.uf; sub = "Perfis com vídeo";
   } else if (filtro?.tipo === "massagem") {
     list = list.filter(ofereceMassagem); titulo = "Massagem"; sub = "Perfis que oferecem massagem";
+  } else if (filtro?.tipo === "comlocal") {
+    list = list.filter(p => p.possuiLocal); titulo = "Com local"; sub = "Perfis com local próprio para atendimento";
   }
 
   const chips = c.bairros.map(b =>
@@ -817,6 +843,7 @@ function viewCidade(cidade, filtro) {
     `<a class="chip${filtro?.tipo === "exclusivas" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/exclusivas')}">${ICON_DIAMOND}<span>Exclusivas</span></a>`,
     `<a class="chip${filtro?.tipo === "videos" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/videos')}">${ICON_PLAY}<span>Vídeos</span></a>`,
     `<a class="chip${filtro?.tipo === "massagem" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/massagem')}">${ICON_MASSAGE}<span>Massagem</span></a>`,
+    `<a class="chip${filtro?.tipo === "comlocal" ? " active" : ""}" href="${pathTo('/cidade/' + cidade + '/comlocal')}">${ICON_PIN}<span>Com local</span></a>`,
   ].join("");
 
   const breadcrumbItems = filtro
@@ -978,12 +1005,17 @@ function viewPerfil(slug) {
 
   const atendimento = p.atendimento.map(a => `<span class="pill">${a}</span>`).join("");
 
-  const valores = [
+  const valoresLinhas = [
     { t: "1 hora", v: p.valorHora || "Sob consulta" },
     { t: "2 horas", v: "Sob consulta" },
     { t: "Pernoite", v: "Sob consulta" },
     { t: "Viagem / Diária", v: "Sob consulta" },
-  ].map(r => `
+  ];
+  // Só aparece quando a modelo/admin marcou explicitamente que atende casais —
+  // nunca é assumido por padrão, e o valor não é inventado (cai em "Sob
+  // consulta" como as demais linhas quando não informado).
+  if (p.atendeCasais) valoresLinhas.push({ t: "Atendimento de casais", v: (p.valorCasais || "Sob consulta") });
+  const valores = valoresLinhas.map(r => `
     <div class="rate">
       <div><b>${r.t}</b> <small>— ${r.v}</small></div>
       <a class="btn btn--gold" href="${waPerfil(p, r.t)}" target="_blank" rel="noopener">Reservar</a>
@@ -1072,6 +1104,8 @@ function viewPerfil(slug) {
         Valores e disponibilidade confirmados diretamente pelo WhatsApp. Total discrição.
       </p>
     </div>
+
+    ${outrasCidadesHtml(p.cidade)}
   </section>`;
 
   // Lightbox
@@ -1671,7 +1705,7 @@ function renderCitySearchBody(filtro = "") {
     const c = CIDADES[key];
     if (!c) return "";
     const n = PERFIS.filter(p => p.cidade === key).length;
-    const meta = n ? `${n} ${n === 1 ? "acompanhante" : "acompanhantes"}` : "Em breve";
+    const meta = `${n} ${n === 1 ? "acompanhante" : "acompanhantes"}`;
     return `<a class="city-search__item${destaque ? " city-search__item--destaque" : ""}" href="${pathTo("/cidade/" + key)}">
       ${destaque ? `<span class="city-search__item-ico" aria-hidden="true">${ICON_TREND}</span>` : ""}
       <span class="city-search__item-main"><b>${c.nome}</b><em>${meta}</em></span>
@@ -2105,7 +2139,7 @@ function router() {
   if (parts[0] === "cidade" && parts[1]) {
     const cidade = parts[1];
     if (parts[2] === "bairro" && parts[3]) return viewCidade(cidade, { tipo: "bairro", valor: parts[3] });
-    if (["novidades", "exclusivas", "videos", "massagem"].includes(parts[2]))
+    if (["novidades", "exclusivas", "videos", "massagem", "comlocal"].includes(parts[2]))
       return viewCidade(cidade, { tipo: parts[2] });
     return viewCidade(cidade);
   }

@@ -150,7 +150,15 @@
             </div>
             <div class="grid2">
               <div class="field"><label>Medidas</label><input id="f-medidas" placeholder="90-60-90" /></div>
-              <div class="field"><label>Valor (referência)</label><input id="f-valor" placeholder="Sob consulta" /></div>
+              <div class="field"><label>Valor (referência) — 1 hora</label><input id="f-valor" placeholder="Sob consulta" /></div>
+            </div>
+            <div class="checks">
+              <label class="check"><input type="checkbox" id="f-atende-casais" /> Atende casais</label>
+            </div>
+            <div class="field" id="f-valor-casais-wrap" hidden>
+              <label>Valor para casal (opcional)</label>
+              <input id="f-valor-casais" placeholder="Ex.: Sob consulta, ou um valor de referência" />
+              <small>Some na página do perfil, na seção "Valores", só quando "Atende casais" estiver marcado. Deixe vazio se ainda não houver um valor definido — o site mostra "Sob consulta".</small>
             </div>
             <div class="grid3">
               <div class="field"><label>Cor dos olhos</label><input id="f-cor-olhos" placeholder="Ex.: Castanhos" /></div>
@@ -205,14 +213,29 @@
               </div>
             </div>
 
-            <div class="grid3">
-              <div class="field"><label>Serviços (separe por vírgula)</label><input id="f-servicos" placeholder="Jantar, Massagem, Eventos, Viagens" /></div>
-              <div class="field"><label>Atendimento (vírgula)</label><input id="f-atendimento" placeholder="Com local, Hotéis, Motéis" /></div>
+            <div class="grid2">
+              <div class="field"><label>Outros serviços (separe por vírgula)</label><input id="f-servicos" placeholder="Jantar, Eventos, Viagens" /></div>
               <div class="field"><label>Idiomas (vírgula)</label><input id="f-idiomas" placeholder="Português, Inglês" /></div>
             </div>
-            <div class="checks">
-              <label class="check"><input type="checkbox" id="f-massagem" /> Oferece massagem (aparece no filtro do site)</label>
+            <div class="field">
+              <label>Massagem — aparece no perfil e alimenta o filtro geral "Massagem" do site</label>
+              <div class="checks">
+                <label class="check"><input type="checkbox" id="f-massagem-tantrica" /> Massagem tântrica</label>
+                <label class="check"><input type="checkbox" id="f-massagem-relaxante" /> Massagem relaxante</label>
+                <label class="check"><input type="checkbox" id="f-massagem-sensual" /> Massagem sensual</label>
+              </div>
             </div>
+            <div class="field">
+              <label>Locais de atendimento</label>
+              <div class="checks">
+                <label class="check"><input type="checkbox" id="f-atd-hotel" /> Hotel</label>
+                <label class="check"><input type="checkbox" id="f-atd-motel" /> Motel</label>
+                <label class="check"><input type="checkbox" id="f-atd-residencia" /> Residência</label>
+              </div>
+              <small>"Possui local" (mais abaixo, em Destaques e mídia) já controla o "Local próprio" — não precisa repetir aqui.</small>
+              <p id="f-atendimento-aviso" class="field-warning" hidden></p>
+            </div>
+            <div class="field"><label>Outros valores de atendimento (opcional, vírgula)</label><input id="f-atendimento" placeholder="Ex.: Viagens, Diária" /></div>
             <div class="field"><label>Horário</label><input id="f-horario" placeholder="10h às 23h - Segunda a Sábado" /></div>
           </div>
 
@@ -445,6 +468,7 @@
             </div>
             <p>Organize as regiões que alimentam filtros, cards, busca e páginas de cidade.</p>
           </div>
+          <p class="desc">Uma cidade aparece no site automaticamente quando tem ao menos uma modelo cadastrada nela, e some quando a última é excluída — não existe mais um botão manual de "ativar/desativar" cidade.</p>
           <div id="cidades-lista"></div>
           <button class="btn btn--ghost" id="add-cidade">+ Adicionar cidade</button>
         </div>

@@ -36,7 +36,57 @@ function uniqueSlug(base, ignoreIndex) {
   return slug;
 }
 const splitList = v => (v || "").split(",").map(s => s.trim()).filter(Boolean);
-const isMassageService = value => slugify(value).includes("massagem");
+
+/* Opções exatas de massagem pedidas pela cliente — nenhuma outra é
+   inventada aqui. Cada checkbox controla exatamente esse texto dentro do
+   array `servicos`; qualquer outro valor de massagem já cadastrado (ex.:
+   "Massagem" genérica, de antes desta estrutura) é preservado como está no
+   campo de texto livre "Outros serviços", sem ser apagado. */
+const MASSAGEM_OPCOES = [
+  { id: "#f-massagem-tantrica", label: "Massagem tântrica" },
+  { id: "#f-massagem-relaxante", label: "Massagem relaxante" },
+  { id: "#f-massagem-sensual", label: "Massagem sensual" },
+];
+
+/* Locais de atendimento estruturados. "Residência" e "Hotel"/"Motel" são
+   independentes entre si; "Local próprio" não tem checkbox próprio aqui
+   porque é o mesmo campo que "Possui local" (ver #f-possuiLocal) — não faz
+   sentido ter dois controles para a mesma informação podendo divergir. */
+const ATENDIMENTO_OPCOES = [
+  { id: "#f-atd-hotel", label: "Hotel", re: /\bhote(l|is)\b/ },
+  { id: "#f-atd-motel", label: "Motel", re: /\bmote(l|is)\b/ },
+  { id: "#f-atd-residencia", label: "Residência", re: /resid/ },
+];
+/* Frases antigas de status de local (redundantes com #f-possuiLocal) — ao
+   reconhecer uma dessas em `atendimento`, ela é retirada do texto livre
+   (a informação já existe, de forma estruturada, no campo Possui local) e
+   comparada com #f-possuiLocal para acusar divergência, sem presumir qual
+   das duas está certa. */
+const ATENDIMENTO_STATUS_LOCAL_RE = /(?:^|\b)(nao[- ]possui[- ]local|sem[- ]local|possui[- ]local(?:[- ]proprio)?|com[- ]local)\b/;
+const ATENDIMENTO_STATUS_NEGATIVO_RE = /^nao[- ]possui[- ]local|^sem[- ]local/;
+
+/* Classifica um item de `atendimento` (string livre, possivelmente
+   combinando mais de um local, ex.: "Motel e Residências") em: quais das
+   opções estruturadas ele reconhece, se é uma frase de status de local, e
+   preserva como "extra" (texto livre) o que não reconhece. */
+function classificarAtendimento(lista) {
+  const estruturados = new Set();
+  const extras = [];
+  let statusLocalTexto = null;
+  (lista || []).forEach(item => {
+    const s = slugify(item);
+    let reconhecido = false;
+    ATENDIMENTO_OPCOES.forEach(opt => {
+      if (opt.re.test(s)) { estruturados.add(opt.label); reconhecido = true; }
+    });
+    if (ATENDIMENTO_STATUS_LOCAL_RE.test(s)) {
+      reconhecido = true;
+      statusLocalTexto = item;
+    }
+    if (!reconhecido) extras.push(item);
+  });
+  return { estruturados, extras, statusLocalTexto };
+}
 function updateMetaCounters() {
   $("#f-meta-titulo-count").textContent = `${$("#f-meta-titulo").value.length}/60`;
   $("#f-meta-descricao-count").textContent = `${$("#f-meta-descricao").value.length}/160`;
@@ -111,9 +161,13 @@ function fotoCapa(p, i = 0) {
 }
 
 function adminBairroNome(cidadeKey, bairroSlug) {
+  if (!bairroSlug) return "Bairro pendente";
   const cidade = DATA.cidades[cidadeKey];
   const bairro = cidade && (cidade.bairros || []).find(b => b.slug === bairroSlug);
-  return bairro ? bairro.nome : "Bairro";
+  // Valor salvo que não bate com nenhum bairro válido da cidade (ex.: um
+  // agrupamento antigo removido das opções) — mostra o valor bruto em vez de
+  // fingir que está tudo certo, pra ficar visível que precisa de correção.
+  return bairro ? bairro.nome : `${bairroSlug} (bairro não reconhecido)`;
 }
 
 function adminResumo(p) {
@@ -302,7 +356,14 @@ function preencherSelectCidades(selectEl, selecionada) {
 }
 function preencherSelectBairros(cidadeKey, selecionado) {
   const c = DATA.cidades[cidadeKey];
-  $("#f-bairro").innerHTML = `<option value="">Não informado</option>` + (c ? c.bairros : []).map(b =>
+  const bairros = c ? c.bairros : [];
+  // Se o valor salvo não bate com nenhuma opção válida da cidade (ex.: um
+  // agrupamento antigo já removido das opções), mantém o valor visível e
+  // selecionado em vez de deixar o select cair em "Não informado" — isso
+  // evitaria que um simples "Salvar" sem tocar no campo apagasse o dado.
+  const reconhecido = !selecionado || bairros.some(b => b.slug === selecionado);
+  const extra = reconhecido ? "" : `<option value="${selecionado}" selected>${selecionado} (não reconhecido — escolha o bairro correto)</option>`;
+  $("#f-bairro").innerHTML = `<option value="">Não informado</option>` + extra + bairros.map(b =>
     `<option value="${b.slug}" ${b.slug === selecionado ? "selected" : ""}>${b.nome}</option>`
   ).join("");
 }
@@ -330,15 +391,40 @@ function abrirForm(idx) {
   $("#f-cor-pele").value = p.corPele || "";
   $("#f-cor-cabelo").value = p.corCabelo || "";
   $("#f-valor").value = p.valorHora || "";
+  $("#f-atende-casais").checked = !!p.atendeCasais;
+  $("#f-valor-casais").value = p.valorCasais || "";
+  $("#f-valor-casais-wrap").hidden = !p.atendeCasais;
   $("#f-descricao").value = p.descricao || "";
   $("#f-descricao-curta").value = p.descricaoCurta || "";
   updateDescricaoCurtaCounter();
   $("#f-meta-titulo").value = p.metaTitulo || "";
   $("#f-meta-descricao").value = p.metaDescricao || "";
   updateMetaCounters();
-  $("#f-servicos").value = (p.servicos || []).join(", ");
-  $("#f-massagem").checked = (p.servicos || []).some(isMassageService);
-  $("#f-atendimento").value = (p.atendimento || []).join(", ");
+  // Massagem: cada checkbox reflete a presença do texto exato do serviço;
+  // qualquer outro valor (inclusive uma "Massagem" genérica de cadastros
+  // antigos) fica visível e preservado no campo de texto livre.
+  const servicosAtuais = p.servicos || [];
+  MASSAGEM_OPCOES.forEach(opt => { $(opt.id).checked = servicosAtuais.includes(opt.label); });
+  $("#f-servicos").value = servicosAtuais.filter(s => !MASSAGEM_OPCOES.some(opt => opt.label === s)).join(", ");
+
+  // Atendimento: separa em opções estruturadas (Hotel/Motel/Residência),
+  // frase de status de local (comparada com "Possui local") e extras livres.
+  const { estruturados, extras, statusLocalTexto } = classificarAtendimento(p.atendimento || []);
+  ATENDIMENTO_OPCOES.forEach(opt => { $(opt.id).checked = estruturados.has(opt.label); });
+  $("#f-atendimento").value = extras.join(", ");
+  const avisoEl = $("#f-atendimento-aviso");
+  if (statusLocalTexto) {
+    const diz = !ATENDIMENTO_STATUS_NEGATIVO_RE.test(slugify(statusLocalTexto));
+    if (diz !== !!p.possuiLocal) {
+      avisoEl.textContent = `⚠ O atendimento cadastrado tinha "${statusLocalTexto}", mas "Possui local" está marcado como ${p.possuiLocal ? "Sim" : "Não"}. Confirme qual está correto — ao salvar, "Possui local" (abaixo, em Destaques e mídia) passa a ser a única fonte dessa informação.`;
+      avisoEl.hidden = false;
+    } else {
+      avisoEl.hidden = true;
+    }
+  } else {
+    avisoEl.hidden = true;
+  }
+
   $("#f-idiomas").value = (p.idiomas || []).join(", ");
   $("#f-horario").value = p.horario || "";
   $("#f-nova").checked = !!p.nova;
@@ -359,8 +445,8 @@ $("#f-cidade").addEventListener("change", () => {
   preencherSelectBairros($("#f-cidade").value);
   setFieldInvalid("#f-cidade", false);
 });
-$("#f-servicos").addEventListener("input", () => {
-  if (splitList($("#f-servicos").value).some(isMassageService)) $("#f-massagem").checked = true;
+$("#f-atende-casais").addEventListener("change", () => {
+  $("#f-valor-casais-wrap").hidden = !$("#f-atende-casais").checked;
 });
 ["#f-nome", "#f-whats", "#f-idade"].forEach(selector => {
   const input = $(selector);
@@ -409,9 +495,17 @@ $("#form-salvar").addEventListener("click", async () => {
   const editando = editIndex >= 0;
   const previousHue = editando ? Number(DATA.perfis[editIndex].hue) : NaN;
   const hue = Number.isFinite(previousHue) ? previousHue : 300;
-  let servicos = splitList($("#f-servicos").value);
-  if ($("#f-massagem").checked && !servicos.some(isMassageService)) servicos.push("Massagem");
-  if (!$("#f-massagem").checked) servicos = servicos.filter(servico => !isMassageService(servico));
+  const servicos = splitList($("#f-servicos").value);
+  MASSAGEM_OPCOES.forEach(opt => {
+    if ($(opt.id).checked) servicos.push(opt.label);
+  });
+  const possuiLocal = $("#f-possuiLocal").checked;
+  const atendimento = splitList($("#f-atendimento").value);
+  ATENDIMENTO_OPCOES.forEach(opt => {
+    if ($(opt.id).checked) atendimento.push(opt.label);
+  });
+  if (possuiLocal) atendimento.push("Local próprio");
+  const atendeCasais = $("#f-atende-casais").checked;
   const perfil = {
     id:   editando ? DATA.perfis[editIndex].id : undefined,
     slug: editando ? DATA.perfis[editIndex].slug : uniqueSlug(slugify(nome), editIndex),
@@ -427,19 +521,21 @@ $("#form-salvar").addEventListener("click", async () => {
     corPele: $("#f-cor-pele").value.trim(),
     corCabelo: $("#f-cor-cabelo").value.trim(),
     valorHora: $("#f-valor").value.trim() || "Sob consulta",
+    atendeCasais,
+    valorCasais: atendeCasais ? $("#f-valor-casais").value.trim() : "",
     hue,
     descricao: $("#f-descricao").value.trim(),
     descricaoCurta: $("#f-descricao-curta").value.trim(),
     metaTitulo: $("#f-meta-titulo").value.trim(),
     metaDescricao: $("#f-meta-descricao").value.trim(),
     servicos,
-    atendimento: splitList($("#f-atendimento").value),
+    atendimento,
     idiomas: splitList($("#f-idiomas").value),
     horario: $("#f-horario").value.trim(),
     nova: $("#f-nova").checked,
     exclusiva: $("#f-exclusiva").checked,
     temVideo: $("#f-temVideo").checked,
-    possuiLocal: $("#f-possuiLocal").checked,
+    possuiLocal,
     destaque: $("#f-destaque").checked,
     fotos: [...fotos],
     audioUrl,
@@ -459,6 +555,8 @@ $("#form-salvar").addEventListener("click", async () => {
     }
     if (saved.audioSkipped) {
       toast("Perfil salvo sem o áudio. Atualize o banco e envie o áudio novamente.", true);
+    } else if (saved.casaisSkipped) {
+      toast("Perfil salvo, mas \"Atende casais\" ainda não pôde ser gravado: aplique a migration que adiciona atende_casais/valor_casais no Supabase e salve de novo.", true);
     } else {
       toast("Perfil salvo com sucesso!");
     }
@@ -902,15 +1000,21 @@ sDropMidia.addEventListener("drop", e => addStoryMidias(e.dataTransfer.files));
 /* ============================================================
    CIDADES & BAIRROS
    ============================================================ */
+// Bairros travados no código (public/store.js normaliza qualquer edição de
+// volta pra esta lista ao ler/gravar) — o painel não pode oferecer uma edição
+// que seria silenciosamente descartada.
+const CIDADES_COM_BAIRROS_TRAVADOS = new Set(["rio-de-janeiro"]);
+
 function renderCidades() {
   const box = $("#cidades-lista");
   box.innerHTML = Object.keys(DATA.cidades).map(key => {
     const c = DATA.cidades[key];
+    const travada = CIDADES_COM_BAIRROS_TRAVADOS.has(key);
     const bairros = c.bairros.map((b, bi) => `
       <div class="bairro-row" data-city="${key}" data-bi="${bi}">
-        <input class="bnome" value="${b.nome.replace(/"/g, "&quot;")}" placeholder="Nome do bairro" />
+        <input class="bnome" value="${b.nome.replace(/"/g, "&quot;")}" placeholder="Nome do bairro" ${travada ? "disabled" : ""} />
         <span class="slug">${b.slug}</span>
-        <button class="btn btn--danger btn--sm" data-delbairro="${key}:${bi}">✕</button>
+        ${travada ? "" : `<button class="btn btn--danger btn--sm" data-delbairro="${key}:${bi}">✕</button>`}
       </div>`).join("");
     return `
     <div class="city-block" data-citykey="${key}">
@@ -918,15 +1022,12 @@ function renderCidades() {
         <input class="cnome city-input" value="${c.nome.replace(/"/g, "&quot;")}" placeholder="Nome da cidade" />
         <input class="cuf city-input city-input--uf" value="${c.uf}" maxlength="2" placeholder="UF" />
         <span class="slug">${key}</span>
-        <label class="check city-block__visibility">
-          <input class="cativa" type="checkbox" ${c.ativa !== false ? "checked" : ""} />
-          Ativa no site
-        </label>
         <div style="flex:1"></div>
         <button class="btn btn--danger btn--sm" data-delcity="${key}">Remover cidade</button>
       </div>
+      ${travada ? `<p class="desc" style="margin:.2rem 0 .6rem">Bairros fixos desta cidade: Leblon, Ipanema, Copacabana, Barra da Tijuca e Recreio. Não são editáveis aqui — os filtros públicos e o cadastro de perfil usam sempre esta lista.</p>` : ""}
       <div class="bairros">${bairros}</div>
-      <button class="btn btn--ghost btn--sm" data-addbairro="${key}">+ Bairro</button>
+      ${travada ? "" : `<button class="btn btn--ghost btn--sm" data-addbairro="${key}">+ Bairro</button>`}
     </div>`;
   }).join("");
 
@@ -950,7 +1051,7 @@ function syncCidadesFromInputs() {
     if (!DATA.cidades[key]) return;
     DATA.cidades[key].nome = $(".cnome", block).value.trim() || DATA.cidades[key].nome;
     DATA.cidades[key].uf = ($(".cuf", block).value.trim() || DATA.cidades[key].uf).toUpperCase();
-    DATA.cidades[key].ativa = $(".cativa", block).checked;
+    if (CIDADES_COM_BAIRROS_TRAVADOS.has(key)) return;
     $$(".bairro-row", block).forEach(row => {
       const bi = +row.dataset.bi;
       const nome = $(".bnome", row).value.trim();

@@ -10,7 +10,7 @@ const BASE_URL = "https://aliancamodels.com";
 const SB_URL = "https://luwgedyzbxokosozhlwf.supabase.co";
 const SB_ANON = "sb_publishable_yKN-Yy2Eu_Y-Bmw24eEpKQ_acLs0QET";
 
-interface CityRow { slug: string; ativa?: boolean; ordem?: number }
+interface CityRow { slug: string }
 interface PerfilRow { slug: string; cidade?: string; created_at?: string }
 
 async function sbSelect<T>(table: string, query: string): Promise<T[]> {
@@ -43,13 +43,14 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const [cidadesComAtiva, perfis] = await Promise.all([
-          sbSelect<CityRow>("cidades", "select=slug,ativa"),
+        const [cidades, perfis] = await Promise.all([
+          sbSelect<CityRow>("cidades", "select=slug"),
           sbSelect<PerfilRow>("perfis", "select=slug,cidade,created_at"),
         ]);
-        const cidades = cidadesComAtiva.length
-          ? cidadesComAtiva
-          : await sbSelect<CityRow>("cidades", "select=slug,ordem");
+        // Uma cidade só entra no sitemap quando tem ao menos um perfil
+        // cadastrado nela — mesma fonte única usada pelo site público e pelo
+        // SSR de SEO (ver src/lib/seo-prerender.ts).
+        const cidadesComPerfil = new Set(perfis.map((p) => p.cidade).filter(Boolean));
 
         const entries: string[] = [
           urlXml(`${BASE_URL}/`, undefined, "weekly", "1.0"),
@@ -64,12 +65,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         if (perfis.length) entries.splice(1, 0, urlXml(`${BASE_URL}/acompanhantes`, undefined, "daily", "0.9"));
 
         for (const c of cidades) {
-          const ativa = typeof c.ativa === "boolean"
-            ? c.ativa
-            : typeof c.ordem === "number" && c.ordem >= 10000
-              ? (c.ordem - 10000) % 2 === 0
-              : c.slug === "rio-de-janeiro";
-          if (!c.slug || !ativa) continue;
+          if (!c.slug || !cidadesComPerfil.has(c.slug)) continue;
           entries.push(urlXml(`${BASE_URL}/cidade/${c.slug}`, undefined, "weekly", "0.8"));
         }
         for (const p of perfis) {
