@@ -12,7 +12,7 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 let DATA = { adminWhatsapp: "5515991906606", modelSupportWhatsapp: "5511996425680", pixel: { metaPixelId: "", metaPixelEnabled: false }, banner: null, cidades: {}, perfis: [], stories: [] };
 let fotos = [];                  // fotos (URLs) do perfil em edição
 let audioUrl = "";               // áudio real da acompanhante (URL pública)
-let videoUrl = "";                // vídeo do perfil (URL pública)
+let videos = [];                 // vídeos do perfil em edição: [{url, titulo}]
 let editIndex = -1;              // índice do perfil em edição (-1 = novo)
 let profileUploadsInProgress = 0; // impede salvar enquanto uma mídia ainda sobe
 
@@ -187,6 +187,16 @@ function perfilAudioUrl(p) {
 }
 function perfilVideoUrl(p) {
   return (p && (p.videoUrl || p.video || p.video_url)) || "";
+}
+/* Lista de vídeos do perfil. Perfis salvos antes de existir a lista (ou
+   carregados de um banco ainda sem a coluna `videos`) caem no vídeo único
+   legado — sem isso, o vídeo já cadastrado sumiria do painel. */
+function perfilVideosList(p) {
+  if (p && Array.isArray(p.videos) && p.videos.length) {
+    return p.videos.map(v => ({ url: (v && v.url) || "", titulo: (v && v.titulo) || "" }));
+  }
+  const legado = perfilVideoUrl(p);
+  return legado ? [{ url: legado, titulo: "" }] : [];
 }
 
 /* ============================================================
@@ -374,7 +384,7 @@ function abrirForm(idx) {
   const p = novo ? {} : DATA.perfis[idx];
   fotos = novo ? [] : [...(p.fotos || [])];
   audioUrl = novo ? "" : perfilAudioUrl(p);
-  videoUrl = novo ? "" : perfilVideoUrl(p);
+  videos = novo ? [] : perfilVideosList(p);
 
   $("#form-titulo").textContent = novo ? "Novo perfil" : "Editar: " + p.nome;
   $("#form-excluir").hidden = novo;
@@ -435,7 +445,7 @@ function abrirForm(idx) {
 
   renderThumbs();
   renderPerfilAudio();
-  renderPerfilVideo();
+  renderVideos();
   $$(".tabpane").forEach(pane => pane.hidden = true);
   $("#tab-form").hidden = false;
   window.scrollTo(0, 0);
@@ -539,7 +549,10 @@ $("#form-salvar").addEventListener("click", async () => {
     destaque: $("#f-destaque").checked,
     fotos: [...fotos],
     audioUrl,
-    videoUrl,
+    // videoUrl legado fica sincronizado com o primeiro vídeo da lista, pra
+    // qualquer código antigo que ainda leia esse campo continuar funcionando.
+    videoUrl: videos[0]?.url || "",
+    videos,
   };
 
   const btn = $("#form-salvar");
@@ -557,6 +570,8 @@ $("#form-salvar").addEventListener("click", async () => {
       toast("Perfil salvo sem o áudio. Atualize o banco e envie o áudio novamente.", true);
     } else if (saved.casaisSkipped) {
       toast("Perfil salvo, mas \"Atende casais\" ainda não pôde ser gravado: aplique a migration que adiciona atende_casais/valor_casais no Supabase e salve de novo.", true);
+    } else if (saved.videosSkipped) {
+      toast("Perfil salvo, mas só o 1º vídeo foi gravado: aplique a migration que adiciona a coluna videos no Supabase para guardar todos.", true);
     } else {
       toast("Perfil salvo com sucesso!");
     }
@@ -698,46 +713,69 @@ audioFile.addEventListener("change", () => { uploadPerfilAudio(audioFile.files[0
 ["dragleave", "drop"].forEach(ev => audioDrop.addEventListener(ev, e => { e.preventDefault(); audioDrop.classList.remove("over"); }));
 audioDrop.addEventListener("drop", e => uploadPerfilAudio(e.dataTransfer.files[0]));
 
-function renderPerfilVideo() {
-  const box = $("#video-preview");
+/* Extensões de vídeo aceitas além do que o navegador já reconhece por
+   `file.type` — em alguns SOs/navegadores um .mov chega com type vazio, e aí
+   a validação por MIME sozinha rejeitaria um arquivo válido. */
+const VIDEO_EXTENSOES_VALIDAS = ["mp4", "mov", "webm", "m4v", "mkv", "avi"];
+const VIDEO_MIME_POR_EXTENSAO = {
+  mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm",
+  m4v: "video/x-m4v", mkv: "video/x-matroska", avi: "video/x-msvideo",
+};
+function isArquivoDeVideo(file) {
+  if (!file) return false;
+  if (file.type && file.type.startsWith("video/")) return true;
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  return VIDEO_EXTENSOES_VALIDAS.includes(ext);
+}
+
+function renderVideos() {
+  const box = $("#videos-lista");
   if (!box) return;
-  if (!videoUrl) {
+  if (!videos.length) {
     box.innerHTML = `<div class="audio-file__empty">Nenhum vídeo enviado para este perfil.</div>`;
     return;
   }
-  box.innerHTML = `
-    <div class="audio-file">
-      <video controls preload="metadata" src="${videoUrl}" style="width:100%;max-width:280px;border-radius:10px"></video>
-      <button class="btn btn--danger btn--sm" id="video-remover" type="button">Remover vídeo</button>
-    </div>`;
-  const remover = $("#video-remover", box);
-  if (remover) remover.addEventListener("click", () => {
-    videoUrl = "";
-    renderPerfilVideo();
-  });
+  box.innerHTML = videos.map((v, i) => `
+    <div class="video-item">
+      <video controls preload="metadata" src="${v.url}"></video>
+      <div class="video-item__row">
+        <input class="video-item__titulo" data-i="${i}" placeholder="Título (opcional, ex.: Pérola ${i + 1})" value="${(v.titulo || "").replace(/"/g, "&quot;")}" />
+        <button class="btn btn--danger btn--sm" data-delvideo="${i}" type="button">Remover</button>
+      </div>
+    </div>`).join("");
+  $$("[data-delvideo]", box).forEach(b => b.addEventListener("click", () => {
+    videos.splice(+b.dataset.delvideo, 1);
+    renderVideos();
+  }));
+  $$(".video-item__titulo", box).forEach(input => input.addEventListener("input", () => {
+    const i = +input.dataset.i;
+    if (videos[i]) videos[i].titulo = input.value;
+  }));
 }
 
-async function uploadPerfilVideo(file) {
-  if (!file || !file.type.startsWith("video/")) return toast("Envie um arquivo de vídeo válido.", true);
-  try {
-    if (!(await VIPStore.supportsPerfilVideo())) {
-      return toast("O vídeo é opcional e ainda não está habilitado no banco. Salve o perfil sem ele.", true);
-    }
-  } catch (e) {
-    console.error(e);
-    return toast("Não foi possível verificar o suporte a vídeo. Tente novamente.", true);
-  }
+async function uploadPerfilVideos(fileList) {
+  const arquivos = Array.from(fileList || []).filter(isArquivoDeVideo);
+  if (!arquivos.length) return toast("Envie um ou mais arquivos de vídeo válidos (MP4, MOV, WEBM...).", true);
   profileUploadsInProgress++;
-  toast("Enviando vídeo...");
+  toast(arquivos.length > 1 ? "Enviando vídeos..." : "Enviando vídeo...");
+  let ok = 0;
   try {
-    const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
-    videoUrl = await VIPStore.uploadArquivo(file, ext, "videos");
-    $("#f-temVideo").checked = true;
-    renderPerfilVideo();
-    toast("Vídeo enviado.");
-  } catch (e) {
-    console.error(e);
-    toast("Falha ao enviar o vídeo: " + (e.message || e), true);
+    for (const file of arquivos) {
+      try {
+        const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+        const url = await VIPStore.uploadArquivo(file, ext, "videos", VIDEO_MIME_POR_EXTENSAO[ext]);
+        videos.push({ url, titulo: "" });
+        ok++;
+        renderVideos();
+      } catch (e) {
+        console.error(e);
+        toast("Falha ao enviar um vídeo.", true);
+      }
+    }
+    if (ok) {
+      $("#f-temVideo").checked = true;
+      toast(ok + (ok === 1 ? " vídeo enviado." : " vídeos enviados."));
+    }
   } finally {
     profileUploadsInProgress--;
   }
@@ -745,10 +783,10 @@ async function uploadPerfilVideo(file) {
 
 const videoDrop = $("#video-drop"), videoFile = $("#video-file");
 videoDrop.addEventListener("click", () => videoFile.click());
-videoFile.addEventListener("change", () => { uploadPerfilVideo(videoFile.files[0]); videoFile.value = ""; });
+videoFile.addEventListener("change", () => { uploadPerfilVideos(videoFile.files); videoFile.value = ""; });
 ["dragenter", "dragover"].forEach(ev => videoDrop.addEventListener(ev, e => { e.preventDefault(); videoDrop.classList.add("over"); }));
 ["dragleave", "drop"].forEach(ev => videoDrop.addEventListener(ev, e => { e.preventDefault(); videoDrop.classList.remove("over"); }));
-videoDrop.addEventListener("drop", e => uploadPerfilVideo(e.dataTransfer.files[0]));
+videoDrop.addEventListener("drop", e => uploadPerfilVideos(e.dataTransfer.files));
 
 /* ============================================================
    STORIES

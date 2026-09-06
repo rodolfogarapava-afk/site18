@@ -214,6 +214,18 @@ function waAdmin(msg) {
   return `https://wa.me/${normalizarWhatsapp(ADMIN_WHATSAPP)}?text=${encodeURIComponent(t)}`;
 }
 
+/* CTA principal do perfil ("Quero um encontro"): sempre fala com a central
+   da Aliança, nunca com o WhatsApp direto da modelo — a equipe recebe o
+   contato e encaminha o link do perfil. Nunca inventa um número: se o
+   WhatsApp central não estiver configurado, não existe link para gerar. */
+function alianceContatoDisponivel() {
+  return !!normalizarWhatsapp(ADMIN_WHATSAPP);
+}
+function waPerfilCentral(p) {
+  const link = `${SITE_ORIGIN}${pathTo("/perfil/" + p.slug)}`;
+  return waAdmin(`Olá! Vi o perfil de ${p.nome} na Aliança (${link}) e tenho interesse. Pode me passar mais informações?`);
+}
+
 function formatWhatsappNumber(value) {
   const digits = String(value || "").replace(/\D/g, "");
   if (/^55\d{11}$/.test(digits)) {
@@ -275,11 +287,21 @@ function ofereceMassagem(p) {
 function perfilVideoUrl(p) {
   return (p && (p.videoUrl || p.video || p.video_url)) || "";
 }
+/* Lista de vídeos do perfil (pode ter mais de um). Perfis salvos antes da
+   lista existir caem no vídeo único legado, pra nenhum vídeo já publicado
+   sumir do site. */
+function perfilVideos(p) {
+  if (p && Array.isArray(p.videos) && p.videos.length) {
+    return p.videos.filter(v => v && typeof v.url === "string" && v.url.trim());
+  }
+  const legado = perfilVideoUrl(p);
+  return legado ? [{ url: legado, titulo: "" }] : [];
+}
 /* O badge "Vídeo" só aparece se realmente tiver um vídeo enviado — o
    checkbox "Tem vídeo" do admin sozinho não é mais suficiente (podia
    ficar marcado sem nenhum arquivo, prometendo vídeo que não existia). */
 function perfilTemVideo(p) {
-  return !!perfilVideoUrl(p);
+  return perfilVideos(p).length > 0;
 }
 
 function storyCidadeSlug(s) {
@@ -972,31 +994,32 @@ function viewPerfil(slug) {
     : [0, 1, 2, 3].map(i => foto(p, i));
   const totalFotos = fotos.length;
   const totalFotosLabel = `${totalFotos} ${totalFotos === 1 ? "foto" : "fotos"}`;
-  const video = perfilVideoUrl(p);
-  // Mídia da galeria/lightbox: fotos + (se tiver) o vídeo como último item —
-  // integrado como miniatura clicável, não mais um player solto empurrando
-  // o resto da página pra baixo.
+  const videos = perfilVideos(p);
+  // Mídia da galeria/lightbox: fotos + (se tiver) os vídeos por último, cada
+  // um como sua própria miniatura clicável — não mais um player solto
+  // empurrando o resto da página pra baixo, e sem limite de 1 vídeo.
   const midias = fotos.map(src => ({ type: "image", src }));
-  if (video) midias.push({ type: "video", src: video });
-  const iVideo = midias.length - 1;
+  const iVideoInicial = midias.length;
+  videos.forEach(v => midias.push({ type: "video", src: v.url }));
   const galeria = `
     <button class="profile__photo profile__photo--hero lb-trigger" type="button" data-i="0" aria-label="Abrir foto principal de ${p.nome}">
       <img src="${fotos[0]}" alt="${p.nome}, acompanhante em ${c?.nome || p.cidade} — foto principal" loading="eager" />
       <span class="profile__photo-fade" aria-hidden="true"></span>
       <span class="profile__photo-count" aria-hidden="true">${totalFotosLabel}</span>
     </button>
-    ${totalFotos > 1 || video ? `<div class="profile__thumbs" aria-label="${totalFotosLabel} de ${p.nome}">
+    ${totalFotos > 1 || videos.length ? `<div class="profile__thumbs" aria-label="${totalFotosLabel} de ${p.nome}">
       ${fotos.slice(1).map((src, i) => `
         <button class="profile__photo profile__photo--thumb lb-trigger" type="button" data-i="${i + 1}" aria-label="Abrir foto ${i + 2} de ${p.nome}">
           <img src="${src}" alt="${p.nome}, acompanhante em ${c?.nome || p.cidade} — foto ${i + 2}" loading="lazy" />
         </button>
       `).join("")}
-      ${video ? `
-        <button class="profile__photo profile__photo--thumb profile__photo--video lb-trigger" type="button" data-i="${iVideo}" aria-label="Assistir vídeo de ${p.nome}">
-          <img src="${fotos[0]}" alt="Vídeo de ${p.nome}" loading="lazy" />
+      ${videos.map((v, i) => `
+        <button class="profile__photo profile__photo--thumb profile__photo--video lb-trigger" type="button" data-i="${iVideoInicial + i}" aria-label="Assistir ${v.titulo || `vídeo ${i + 1}`} de ${p.nome}">
+          <img src="${fotos[0]}" alt="${v.titulo || `Vídeo ${i + 1}`} de ${p.nome}" loading="lazy" />
           <span class="profile__video-play" aria-hidden="true">${ICON_PLAY}</span>
+          ${v.titulo ? `<span class="profile__video-titulo">${v.titulo}</span>` : ""}
         </button>
-      ` : ""}
+      `).join("")}
     </div>` : ""}`;
 
   const servicos = p.servicos.map(s =>
@@ -1053,11 +1076,14 @@ function viewPerfil(slug) {
 
       <div class="profile__info">
         <h1>${p.nome}</h1>
+        ${(p.descricaoCurta || "").trim() ? `<p class="profile__tagline">${(p.descricaoCurta || "").trim()}</p>` : ""}
         <div class="profile__loc">${[bairroNome(p.cidade, p.bairro), `${c.nome} ${c.uf}`].filter(Boolean).join(" • ")}</div>
         <div class="profile__badges">${tagsHtml(p) || ""}${p.possuiLocal ? `<span class="tag tag--excl">Possui Local</span>` : ""}</div>
 
         <div class="profile__actions profile__actions--top">
-          <a class="btn btn--wa btn--lg" href="${waPerfil(p)}" target="_blank" rel="noopener">${WA_ICON} Quero um encontro</a>
+          ${alianceContatoDisponivel()
+            ? `<a class="btn btn--wa" href="${waPerfilCentral(p)}" target="_blank" rel="noopener">${WA_ICON}<span>Quero um encontro</span></a>`
+            : `<p class="profile__cta-blocked" role="alert">Contato indisponível: configure o WhatsApp central da Aliança no painel (Configurações) para habilitar este botão.</p>`}
         </div>
 
         ${perfilAudioUrl(p) ? `

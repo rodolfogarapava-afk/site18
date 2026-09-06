@@ -255,17 +255,17 @@
               <label class="check"><input type="checkbox" id="f-destaque" /> Prioridade nas listagens</label>
             </div>
 
-            <div class="upload-card">
+            <div class="upload-card upload-card--photos">
               <div class="upload-card__copy">
-                <h4>Vídeo do perfil (opcional)</h4>
-                <p>Se enviado, marca "Tem vídeo" automaticamente e aparece na página do perfil.</p>
+                <h4>Vídeos do perfil (opcional, pode ter mais de um)</h4>
+                <p>Aceita MP4, MOV e WEBM. Cada vídeo enviado aparece na página do perfil — dá pra dar um título curto pra cada um (ex.: "Pérola 1").</p>
               </div>
               <div>
                 <div class="drop drop--audio" id="video-drop">
-                  Clique ou arraste um vídeo aqui<br><small>MP4 / WEBM / MOV</small>
-                  <input type="file" id="video-file" accept="video/*" hidden />
+                  Clique ou arraste um ou mais vídeos aqui<br><small>MP4 / MOV / WEBM — vários de uma vez</small>
+                  <input type="file" id="video-file" accept="video/*,.mov,.mp4,.webm,.m4v,.mkv" multiple hidden />
                 </div>
-                <div class="audio-preview" id="video-preview"></div>
+                <div id="videos-lista" class="videos-lista"></div>
               </div>
             </div>
 

@@ -44,6 +44,7 @@
   let perfilAudioColumnAvailable = null;
   let perfilVideoColumnAvailable = null;
   let perfilCasaisColumnAvailable = null;
+  let perfilVideosColumnAvailable = null;
   try {
     if (typeof supabase !== "undefined" && window.SB_URL && window.SB_ANON) {
       sb = supabase.createClient(window.SB_URL, window.SB_ANON);
@@ -87,6 +88,10 @@
       fotos:       Array.isArray(r.fotos)       ? r.fotos       : [],
       audioUrl:    r.audio_url || "",
       videoUrl:    r.video_url || "",
+      // Lista de vídeos (novo). Perfis salvos antes desta lista existir (ou
+      // com o banco ainda sem a coluna) caem no vídeo único legado acima —
+      // ver perfilVideos() em app.js/admin.js.
+      videos:      Array.isArray(r.videos) ? r.videos : [],
       ordem:       r.ordem || 0,
       metaTitulo:    r.meta_titulo || "",
       metaDescricao: r.meta_descricao || "",
@@ -104,6 +109,7 @@
     const includeAudio = opts.includeAudio !== undefined ? opts.includeAudio : perfilAudioColumnAvailable !== false;
     const includeVideo = opts.includeVideo !== undefined ? opts.includeVideo : perfilVideoColumnAvailable !== false;
     const includeCasais = opts.includeCasais !== undefined ? opts.includeCasais : perfilCasaisColumnAvailable !== false;
+    const includeVideos = opts.includeVideos !== undefined ? opts.includeVideos : perfilVideosColumnAvailable !== false;
     const row = {
       slug:         p.slug,
       nome:         p.nome,
@@ -140,6 +146,7 @@
       row.atende_casais = !!p.atendeCasais;
       row.valor_casais = p.valorCasais || null;
     }
+    if (includeVideos) row.videos = Array.isArray(p.videos) ? p.videos : [];
     if (p.id) row.id = p.id;
     if (typeof ordem === "number") row.ordem = ordem;
     return row;
@@ -160,6 +167,7 @@
   const isMissingPerfilAudioColumn = error => isMissingPerfilColumn(error, "audio_url");
   const isMissingPerfilVideoColumn = error => isMissingPerfilColumn(error, "video_url");
   const isMissingPerfilCasaisColumn = error => isMissingPerfilColumn(error, "atende_casais");
+  const isMissingPerfilVideosColumn = error => isMissingPerfilColumn(error, "videos");
 
   async function supportsPerfilOptionalColumn(coluna, cacheGetSet) {
     const [get, set] = cacheGetSet;
@@ -181,6 +189,8 @@
     [() => perfilVideoColumnAvailable, v => { perfilVideoColumnAvailable = v; }]);
   const supportsPerfilCasaisColumn = () => supportsPerfilOptionalColumn("atende_casais",
     [() => perfilCasaisColumnAvailable, v => { perfilCasaisColumnAvailable = v; }]);
+  const supportsPerfilVideosColumn = () => supportsPerfilOptionalColumn("videos",
+    [() => perfilVideosColumnAvailable, v => { perfilVideosColumnAvailable = v; }]);
 
   /* ----- Stories (destaques) ----- */
   function rowToStory(r) {
@@ -319,6 +329,9 @@
     }
     if (perfilCasaisColumnAvailable === null && perRes.data?.length) {
       perfilCasaisColumnAvailable = Object.prototype.hasOwnProperty.call(perRes.data[0], "atende_casais");
+    }
+    if (perfilVideosColumnAvailable === null && perRes.data?.length) {
+      perfilVideosColumnAvailable = Object.prototype.hasOwnProperty.call(perRes.data[0], "videos");
     }
 
     const stories = (stoRes && !stoRes.error && Array.isArray(stoRes.data))
@@ -525,18 +538,24 @@
       requireSb();
       return supportsPerfilCasaisColumn();
     },
+    async supportsPerfilVideos() {
+      requireSb();
+      return supportsPerfilVideosColumn();
+    },
     async savePerfil(perfil, ordem) {
       requireSb();
       let includeAudio = perfilAudioColumnAvailable !== false;
       let includeVideo = perfilVideoColumnAvailable !== false;
       let includeCasais = perfilCasaisColumnAvailable !== false;
-      let audioSkipped = false, videoSkipped = false, casaisSkipped = false;
+      let includeVideos = perfilVideosColumnAvailable !== false;
+      let audioSkipped = false, videoSkipped = false, casaisSkipped = false, videosSkipped = false;
       let result;
-      // Até 4 tentativas: uma com tudo, e uma a menos pra cada coluna opcional
-      // que o banco ainda não tiver (áudio, vídeo e/ou atendimento de casais).
-      for (let tentativa = 0; tentativa < 4; tentativa++) {
+      // Até 5 tentativas: uma com tudo, e uma a menos pra cada coluna opcional
+      // que o banco ainda não tiver (áudio, vídeo único legado, atendimento
+      // de casais e/ou a lista de vídeos).
+      for (let tentativa = 0; tentativa < 5; tentativa++) {
         result = await sb.from("perfis")
-          .upsert(perfilToRow(perfil, ordem, { includeAudio, includeVideo, includeCasais }), { onConflict: "slug" })
+          .upsert(perfilToRow(perfil, ordem, { includeAudio, includeVideo, includeCasais, includeVideos }), { onConflict: "slug" })
           .select()
           .single();
         if (!result.error) break;
@@ -558,6 +577,12 @@
           casaisSkipped = !!perfil.atendeCasais;
           continue;
         }
+        if (includeVideos && isMissingPerfilVideosColumn(result.error)) {
+          perfilVideosColumnAvailable = false;
+          includeVideos = false;
+          videosSkipped = Array.isArray(perfil.videos) && perfil.videos.length > 1;
+          continue;
+        }
         break;
       }
 
@@ -565,8 +590,10 @@
       if (includeAudio) perfilAudioColumnAvailable = true;
       if (includeVideo) perfilVideoColumnAvailable = true;
       if (includeCasais) perfilCasaisColumnAvailable = true;
+      if (includeVideos) perfilVideosColumnAvailable = true;
       const saved = rowToPerfil(result.data);
       saved.audioSkipped = audioSkipped;
+      saved.videosSkipped = videosSkipped;
       saved.videoSkipped = videoSkipped;
       saved.casaisSkipped = casaisSkipped;
       return saved;
@@ -678,10 +705,14 @@
       return data.publicUrl;
     },
 
-    /* ----- Upload genérico (ex.: vídeos de story) -> retorna URL pública -----
+    /* ----- Upload genérico (ex.: vídeos de story/perfil) -> retorna URL pública -----
        Envia o arquivo/blob "como está" (sem reprocessar no canvas).
-       `pasta` define o prefixo no bucket (padrão "stories"). */
-    async uploadArquivo(fileOrBlob, ext, pasta) {
+       `pasta` define o prefixo no bucket (padrão "stories"). `contentTypeHint`
+       é usado quando `fileOrBlob.type` vem vazio — comum em .mov exportado de
+       iPhone em alguns navegadores/SOs — pra não gravar como
+       application/octet-stream, o que impede a reprodução real do vídeo
+       (o arquivo até existe, mas o navegador não sabe que é vídeo). */
+    async uploadArquivo(fileOrBlob, ext, pasta, contentTypeHint) {
       requireSb();
       const bucket = window.SB_BUCKET || "perfis";
       const rand = Math.random().toString(36).slice(2, 10);
@@ -689,7 +720,7 @@
       const safeExt = (ext || "bin").replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
       const path = `${pasta || "stories"}/${stamp}-${rand}.${safeExt}`;
       const { error } = await sb.storage.from(bucket).upload(path, fileOrBlob, {
-        contentType: fileOrBlob.type || "application/octet-stream",
+        contentType: fileOrBlob.type || contentTypeHint || "application/octet-stream",
         upsert: false,
       });
       if (error) throw error;
@@ -724,28 +755,35 @@
       let includeAudio = perfilAudioColumnAvailable !== false;
       let includeVideo = perfilVideoColumnAvailable !== false;
       let includeCasais = perfilCasaisColumnAvailable !== false;
-      let rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais }));
+      let includeVideos = perfilVideosColumnAvailable !== false;
+      let rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais, includeVideos }));
       if (rows.length) {
         let result;
-        for (let tentativa = 0; tentativa < 4; tentativa++) {
+        for (let tentativa = 0; tentativa < 5; tentativa++) {
           result = await sb.from("perfis").upsert(rows, { onConflict: "slug" });
           if (!result.error) break;
           if (includeAudio && isMissingPerfilAudioColumn(result.error)) {
             perfilAudioColumnAvailable = false;
             includeAudio = false;
-            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais }));
+            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais, includeVideos }));
             continue;
           }
           if (includeVideo && isMissingPerfilVideoColumn(result.error)) {
             perfilVideoColumnAvailable = false;
             includeVideo = false;
-            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais }));
+            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais, includeVideos }));
             continue;
           }
           if (includeCasais && isMissingPerfilCasaisColumn(result.error)) {
             perfilCasaisColumnAvailable = false;
             includeCasais = false;
-            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais }));
+            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais, includeVideos }));
+            continue;
+          }
+          if (includeVideos && isMissingPerfilVideosColumn(result.error)) {
+            perfilVideosColumnAvailable = false;
+            includeVideos = false;
+            rows = d.perfis.map((p, i) => perfilToRow(p, i, { includeAudio, includeVideo, includeCasais, includeVideos }));
             continue;
           }
           break;
@@ -754,6 +792,7 @@
         if (includeAudio) perfilAudioColumnAvailable = true;
         if (includeVideo) perfilVideoColumnAvailable = true;
         if (includeCasais) perfilCasaisColumnAvailable = true;
+        if (includeVideos) perfilVideosColumnAvailable = true;
       }
       const slugs = rows.map(r => r.slug);
       const { data: existentes, error: selErr } = await sb.from("perfis").select("slug");
