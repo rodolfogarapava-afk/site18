@@ -196,6 +196,57 @@ async function seoForHome(): Promise<SeoResult> {
   };
 }
 
+async function seoForAcompanhantes(): Promise<SeoResult> {
+  const [cidades, perfis] = await Promise.all([
+    cidadesPublicadasSeo(),
+    sbSelect<PerfilRow>("perfis", "select=slug,nome,cidade&order=nome.asc"),
+  ]);
+  const path = "/acompanhantes";
+  const title = "Acompanhantes de Luxo no Brasil — Aliança Models";
+  const description =
+    "Encontre acompanhantes de luxo em cidades atendidas pela Aliança Models. Veja perfis, fotos e informações para contato direto.";
+  const cityLinks = cidades
+    .map(
+      (c) =>
+        `<li><a href="/cidade/${escapeHtml(c.slug)}">Acompanhantes em ${escapeHtml(c.nome)} (${escapeHtml(c.uf)})</a></li>`,
+    )
+    .join("");
+  const perfilLinks = perfis
+    .map((p) => `<li><a href="/perfil/${escapeHtml(p.slug)}">${escapeHtml(p.nome)}</a></li>`)
+    .join("");
+
+  return {
+    status: 200,
+    title,
+    description,
+    path,
+    type: "website",
+    image: `${SITE_ORIGIN}/social-preview-national.png?v=1`,
+    content: `<h1>Acompanhantes de luxo no Brasil</h1><p>Encontre perfis verificados, fotos e contato direto com discrição. A disponibilidade varia conforme a cidade.</p><nav aria-label="Cidades atendidas"><ul>${cityLinks}</ul></nav><ul>${perfilLinks}</ul>`,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Acompanhantes de Luxo no Brasil",
+        url: `${SITE_ORIGIN}${path}`,
+        inLanguage: "pt-BR",
+        description: "Perfis de acompanhantes de luxo em cidades atendidas pela Aliança Models.",
+        numberOfItems: perfis.length,
+        mainEntity: {
+          "@type": "ItemList",
+          itemListElement: perfis.map((p, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            url: `${SITE_ORIGIN}/perfil/${p.slug}`,
+            name: p.nome,
+          })),
+        },
+      },
+      breadcrumbJsonLd([{ label: "Início", path: "/" }, { label: "Acompanhantes" }]),
+    ],
+  };
+}
+
 async function seoForCidade(slug: string): Promise<SeoResult> {
   const cidade = (await cidadesPublicadasSeo()).find((item) => item.slug === slug);
   if (!cidade) return { ...NOT_FOUND, path: `/cidade/${slug}` };
@@ -334,6 +385,7 @@ async function resolveSeo(pathname: string): Promise<SeoResult> {
   const parts = clean.split("/").filter(Boolean);
 
   if (parts.length === 0) return seoForHome();
+  if (parts.length === 1 && parts[0] === "acompanhantes") return seoForAcompanhantes();
   if (parts.length === 1 && STATIC_PAGES[parts[0]]) return seoForStaticPage(parts[0]);
   if (parts[0] === "cidade" && parts[1] && parts.length === 2) return seoForCidade(parts[1]);
   if (parts[0] === "perfil" && parts[1] && parts.length === 2) return seoForPerfil(parts[1]);
