@@ -2293,46 +2293,6 @@ function initAgeGate() {
   $("#age-no").addEventListener("click", () => { location.href = "https://www.google.com"; });
 }
 
-function initLaunchGate() {
-  const gate = $("#launch-gate");
-  if (!gate) return;
-  const target = new Date("2026-09-08T00:00:00-03:00").getTime();
-  const els = {
-    days: $("#launch-days"), hours: $("#launch-hours"), minutes: $("#launch-minutes"), seconds: $("#launch-seconds"),
-  };
-  const pad = n => String(Math.max(0, n)).padStart(2, "0");
-  const renderTimer = () => {
-    const diff = Math.max(0, target - Date.now());
-    const total = Math.floor(diff / 1000);
-    els.days.textContent = pad(Math.floor(total / 86400));
-    els.hours.textContent = pad(Math.floor((total % 86400) / 3600));
-    els.minutes.textContent = pad(Math.floor((total % 3600) / 60));
-    els.seconds.textContent = pad(total % 60);
-  };
-  renderTimer();
-  const timer = setInterval(renderTimer, 1000);
-  const show = () => { gate.hidden = false; document.body.classList.add("launch-gate-open"); };
-  const hide = () => { gate.hidden = true; document.body.classList.remove("launch-gate-open"); clearInterval(timer); };
-  $("#launch-gate-close")?.addEventListener("click", hide);
-  document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && !gate.hidden) hide();
-  });
-  let ageAccepted = false;
-  try { ageAccepted = localStorage.getItem("vip_maior18_v2") === "1"; } catch (e) {}
-  if (ageAccepted) show();
-  else document.addEventListener("age-accepted", show, { once: true });
-  // A exceção é validada pelo mesmo RPC usado no painel administrativo.
-  const checkAdmin = () => window.VIPStore?.auth?.isAdmin?.().then(isAdmin => {
-    if (!isAdmin) return;
-    if (ageAccepted) hide();
-    else document.addEventListener("age-accepted", hide, { once: true });
-  }).catch(() => {});
-  checkAdmin();
-  window.VIPStore?.auth?.onChange?.(() => checkAdmin());
-  window.addEventListener("pageshow", checkAdmin);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkAdmin(); });
-}
-
 function initHeader() {
   const header = $("#header");
   const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 30);
@@ -2390,7 +2350,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if ($("#nav-year")) $("#nav-year").textContent = anoAtual;
   rewriteStaticHashLinks();
   initAgeGate();
-  initLaunchGate();
   initHeader();
 
   // Estado de carregamento enquanto buscamos os dados no Supabase
