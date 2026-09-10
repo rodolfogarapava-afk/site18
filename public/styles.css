@@ -1734,6 +1734,15 @@ body.nav-open .burger-line--bot{transform:translateY(-5px) rotate(-45deg)}
   line-height:1.55;
   max-width:34rem;
 }
+.footer__social{
+  align-self:flex-start;
+  color:var(--gold-2);
+  font-size:.82rem;
+  letter-spacing:.02em;
+  text-decoration:none;
+  transition:color .15s ease;
+}
+.footer__social:hover{color:var(--gold)}
 .footer__chips{
   display:flex;
   flex-wrap:wrap;
