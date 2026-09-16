@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ApiContatoModeloRouteImport } from './routes/api/contato-modelo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiContatoModeloRoute = ApiContatoModeloRouteImport.update({
+  id: '/api/contato-modelo',
+  path: '/api/contato-modelo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/contato-modelo': typeof ApiContatoModeloRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/contato-modelo': typeof ApiContatoModeloRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,15 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/admin': typeof AdminRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/contato-modelo': typeof ApiContatoModeloRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$' | '/admin' | '/sitemap.xml'
+  fullPaths: '/' | '/$' | '/admin' | '/sitemap.xml' | '/api/contato-modelo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$' | '/admin' | '/sitemap.xml'
-  id: '__root__' | '/' | '/$' | '/admin' | '/sitemap.xml'
+  to: '/' | '/$' | '/admin' | '/sitemap.xml' | '/api/contato-modelo'
+  id:
+    '__root__' | '/' | '/$' | '/admin' | '/sitemap.xml' | '/api/contato-modelo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +77,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   AdminRoute: typeof AdminRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiContatoModeloRoute: typeof ApiContatoModeloRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +110,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/contato-modelo': {
+      id: '/api/contato-modelo'
+      path: '/api/contato-modelo'
+      fullPath: '/api/contato-modelo'
+      preLoaderRoute: typeof ApiContatoModeloRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +125,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AdminRoute: AdminRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiContatoModeloRoute: ApiContatoModeloRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
