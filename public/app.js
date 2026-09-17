@@ -199,30 +199,6 @@ function normalizarWhatsapp(raw) {
   return digits;
 }
 
-/* WhatsApp da acompanhante (com mensagem contextual). Se o perfil não tem
-   número próprio cadastrado, cai no WhatsApp central da Aliança. */
-function waPerfil(p, contexto) {
-  const msg = contexto
-    ? `Olá ${p.nome}! Vi seu anúncio na Aliança e tenho interesse em ${contexto}.`
-    : `Olá ${p.nome}! Vi seu anúncio na Aliança e gostaria de saber mais.`;
-  const numero = normalizarWhatsapp(p.whatsapp) || ADMIN_WHATSAPP;
-  return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
-}
-/* Busca o WhatsApp de UM perfil por vez, sob demanda (nunca em massa) —
-   função no banco criada especificamente pra isso, protegida contra
-   varredura em lote. Usada só onde o número pessoal é realmente exibido
-   (página do perfil, story), nunca na listagem/grade. */
-async function fetchWhatsappPerfil(slug) {
-  try {
-    if (!window.sb) return "";
-    const { data, error } = await window.sb.rpc("get_whatsapp_perfil", { p_slug: slug });
-    if (error) return "";
-    return data || "";
-  } catch (e) {
-    return "";
-  }
-}
-
 /* WhatsApp do administrador (home / anuncie) */
 function waAdmin(msg) {
   const t = msg || "Olá! Gostaria de informações sobre a Aliança.";
@@ -236,9 +212,12 @@ function waAdmin(msg) {
 function alianceContatoDisponivel() {
   return !!normalizarWhatsapp(ADMIN_WHATSAPP);
 }
-function waPerfilCentral(p) {
+function waPerfilCentral(p, contexto) {
   const link = `${SITE_ORIGIN}${pathTo("/perfil/" + p.slug)}`;
-  return waAdmin(`Olá! Vi o perfil de ${p.nome} na Aliança (${link}) e tenho interesse. Pode me passar mais informações?`);
+  const msg = contexto
+    ? `Olá! Vi o perfil de ${p.nome} na Aliança (${link}) e tenho interesse em ${contexto}.`
+    : `Olá! Vi o perfil de ${p.nome} na Aliança (${link}) e tenho interesse. Pode me passar mais informações?`;
+  return waAdmin(msg);
 }
 
 function formatWhatsappNumber(value) {
@@ -995,14 +974,6 @@ function viewPerfil(slug) {
   if (!p) return view404();
   const c = CIDADES[p.cidade];
 
-  // O WhatsApp pessoal não vem mais na carga em massa dos perfis (fica só
-  // no banco, protegido). Busca sob demanda aqui e atualiza os links que já
-  // foram renderizados assim que a resposta chegar — a página não espera
-  // por essa rede pra aparecer.
-  const whatsappPerfilPromise = (typeof p.whatsapp === "undefined")
-    ? fetchWhatsappPerfil(p.slug)
-    : Promise.resolve(p.whatsapp);
-
   const perfilFoto = (Array.isArray(p.fotos) && p.fotos[0]) ? p.fotos[0] : (SITE_ORIGIN + "/logo.png");
   const perfilDesc = (p.metaDescricao || "").trim().replace(/\s+/g, " ").slice(0, 300)
     || (p.descricao || "").trim().replace(/\s+/g, " ").slice(0, 155)
@@ -1076,7 +1047,7 @@ function viewPerfil(slug) {
     </div>` : ""}`;
 
   const servicos = p.servicos.map(s =>
-    `<a class="pill" href="${waPerfil(p, s)}" target="_blank" rel="noopener" data-wa-contexto="${s}">${s}</a>`
+    `<a class="pill" href="${waPerfilCentral(p, s)}" target="_blank" rel="noopener">${s}</a>`
   ).join("");
 
   const atendimento = p.atendimento.map(a => `<span class="pill">${a}</span>`).join("");
@@ -1094,7 +1065,7 @@ function viewPerfil(slug) {
   const valores = valoresLinhas.map(r => `
     <div class="rate">
       <div><b>${r.t}</b> <small>— ${r.v}</small></div>
-      <a class="btn btn--gold" href="${waPerfil(p, r.t)}" target="_blank" rel="noopener" data-wa-contexto="${r.t}">Reservar</a>
+      <a class="btn btn--gold" href="${waPerfilCentral(p, r.t)}" target="_blank" rel="noopener">Reservar</a>
     </div>`).join("");
 
   const valorVisivel = (valor) => {
@@ -1190,17 +1161,6 @@ function viewPerfil(slug) {
   // Lightbox
   $$(".lb-trigger").forEach(node =>
     node.addEventListener("click", () => openLightbox(midias, +node.dataset.i)));
-
-  // Assim que o WhatsApp pessoal chegar, atualiza os links já renderizados
-  // (pills de serviço, botões "Reservar") pra apontar pro número certo em
-  // vez do fallback central.
-  whatsappPerfilPromise.then(numero => {
-    if (!numero) return;
-    p.whatsapp = numero;
-    $$("[data-wa-contexto]").forEach(node => {
-      node.href = waPerfil(p, node.dataset.waContexto);
-    });
-  });
 }
 
 function viewAnuncie() {
@@ -2116,33 +2076,23 @@ function svStartVideoProgress(v) {
   svRAF = requestAnimationFrame(tick);
 }
 
+/* `s.whatsapp` é uma escolha explícita do admin pra esse story (só entra
+   nisso quando preenchido de propósito no painel) — nunca sobrescrita.
+   Sem ela, cai na central (nunca no WhatsApp pessoal da modelo vinculada,
+   que também não vem mais na carga pública). */
 function renderSvCta(s) {
   const p = storyPerfil(s);
-  const wa = normalizarWhatsapp(s.whatsapp || (p && p.whatsapp)) || normalizarWhatsapp(ADMIN_WHATSAPP);
+  const waExplicito = normalizarWhatsapp(s.whatsapp);
+  const wa = waExplicito || normalizarWhatsapp(ADMIN_WHATSAPP);
   let html = "";
   if (p) html += `<a class="sv__btn sv__btn--ghost" href="${pathTo('/perfil/' + p.slug)}" data-sv-link>Ver perfil</a>`;
   if (wa) {
     const msg = p
-      ? `Olá ${p.nome}! Vi seu story na Aliança.`
+      ? `Olá! Vi o story de ${p.nome} na Aliança e tenho interesse. Pode me passar mais informações?`
       : "Olá! Vi os stories na Aliança e gostaria de saber mais.";
-    html += `<a class="sv__btn sv__btn--wa" data-sv-wa href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${WA_ICON} WhatsApp</a>`;
+    html += `<a class="sv__btn sv__btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${WA_ICON} WhatsApp</a>`;
   }
   svCta.innerHTML = html;
-
-  // Story sem WhatsApp próprio: usa o da acompanhante vinculada, que não
-  // vem mais na carga em massa. Busca sob demanda e atualiza o botão já
-  // renderizado (que por ora aponta pro central, um fallback seguro).
-  if (p && !s.whatsapp && typeof p.whatsapp === "undefined") {
-    const storySlugNoMomento = s;
-    fetchWhatsappPerfil(p.slug).then(numero => {
-      if (!numero || svStories[svSI] !== storySlugNoMomento) return;
-      p.whatsapp = numero;
-      const btn = svCta.querySelector("[data-sv-wa]");
-      if (!btn) return;
-      const msg = `Olá ${p.nome}! Vi seu story na Aliança.`;
-      btn.href = `https://wa.me/${normalizarWhatsapp(numero)}?text=${encodeURIComponent(msg)}`;
-    });
-  }
 }
 
 /* Navegação */
