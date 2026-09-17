@@ -302,13 +302,17 @@
     });
   }
 
-  async function fetchAll() {
+  /* `isPublic` usa a visão `perfis_publico` (sem a coluna whatsapp — o
+     número pessoal é buscado sob demanda, um perfil por vez, só onde é
+     exibido). O admin (autenticado) continua lendo a tabela real, porque
+     precisa do whatsapp pra exibir/editar. */
+  async function fetchAll(isPublic = false) {
     if (!sb) throw new Error("Supabase indisponível.");
 
     const [cfgRes, cidRes, perRes, stoRes] = await Promise.all([
       sb.from("config").select("*").eq("id", 1).maybeSingle(),
       sb.from("cidades").select("*").order("ordem", { ascending: true }),
-      sb.from("perfis").select("*")
+      sb.from(isPublic ? "perfis_publico" : "perfis").select("*")
         .order("ordem", { ascending: true })
         .order("created_at", { ascending: true }),
       // Stories são opcionais: se a tabela ainda não existir, não quebramos o site.
@@ -401,7 +405,7 @@
 
   async function bootPublic() {
     try {
-      const d = await withTimeout(fetchAll(), 7000);
+      const d = await withTimeout(fetchAll(true), 7000);
       window.ADMIN_WHATSAPP = d.adminWhatsapp || (typeof SEED !== "undefined" ? SEED.adminWhatsapp : "");
       window.MODEL_SUPPORT_WHATSAPP = d.modelSupportWhatsapp || "5511996425680";
       window.META_PIXEL_ID = d.pixel?.metaPixelId || "";

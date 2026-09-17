@@ -81,6 +81,16 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const url = new URL(request.url);
+      if (url.hostname === "www.aliancamodels.com") {
+        url.hostname = "aliancamodels.com";
+        return withSecurityHeaders(new Response(null, {
+          status: 308,
+          headers: {
+            location: url.toString(),
+            "cache-control": "no-store",
+          },
+        }));
+      }
       const cleanRoute = url.pathname === "/admin.html"
         ? "/admin"
         : url.pathname === "/index.html"

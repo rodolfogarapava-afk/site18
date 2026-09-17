@@ -208,6 +208,21 @@ function waPerfil(p, contexto) {
   const numero = normalizarWhatsapp(p.whatsapp) || ADMIN_WHATSAPP;
   return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
 }
+/* Busca o WhatsApp de UM perfil por vez, sob demanda (nunca em massa) —
+   função no banco criada especificamente pra isso, protegida contra
+   varredura em lote. Usada só onde o número pessoal é realmente exibido
+   (página do perfil, story), nunca na listagem/grade. */
+async function fetchWhatsappPerfil(slug) {
+  try {
+    if (!window.sb) return "";
+    const { data, error } = await window.sb.rpc("get_whatsapp_perfil", { p_slug: slug });
+    if (error) return "";
+    return data || "";
+  } catch (e) {
+    return "";
+  }
+}
+
 /* WhatsApp do administrador (home / anuncie) */
 function waAdmin(msg) {
   const t = msg || "Olá! Gostaria de informações sobre a Aliança.";
@@ -395,9 +410,10 @@ function cardHtml(p, opts = {}) {
         <a class="btn btn--ghost btn--card" href="${pathTo('/perfil/' + p.slug)}">
           ${ICON_ARROW}<span>Abrir perfil</span>
         </a>
-        <a class="btn btn--gold btn--card" href="${waPerfil(p)}" target="_blank" rel="noopener">
+        ${alianceContatoDisponivel() ? `
+        <a class="btn btn--gold btn--card" href="${waPerfilCentral(p)}" target="_blank" rel="noopener">
           ${ICON_CHAT}<span>Conversar</span>
-        </a>
+        </a>` : ""}
       </div>` : ""}
     </div>
   </article>`;
@@ -979,6 +995,14 @@ function viewPerfil(slug) {
   if (!p) return view404();
   const c = CIDADES[p.cidade];
 
+  // O WhatsApp pessoal não vem mais na carga em massa dos perfis (fica só
+  // no banco, protegido). Busca sob demanda aqui e atualiza os links que já
+  // foram renderizados assim que a resposta chegar — a página não espera
+  // por essa rede pra aparecer.
+  const whatsappPerfilPromise = (typeof p.whatsapp === "undefined")
+    ? fetchWhatsappPerfil(p.slug)
+    : Promise.resolve(p.whatsapp);
+
   const perfilFoto = (Array.isArray(p.fotos) && p.fotos[0]) ? p.fotos[0] : (SITE_ORIGIN + "/logo.png");
   const perfilDesc = (p.metaDescricao || "").trim().replace(/\s+/g, " ").slice(0, 300)
     || (p.descricao || "").trim().replace(/\s+/g, " ").slice(0, 155)
@@ -1052,7 +1076,7 @@ function viewPerfil(slug) {
     </div>` : ""}`;
 
   const servicos = p.servicos.map(s =>
-    `<a class="pill" href="${waPerfil(p, s)}" target="_blank" rel="noopener">${s}</a>`
+    `<a class="pill" href="${waPerfil(p, s)}" target="_blank" rel="noopener" data-wa-contexto="${s}">${s}</a>`
   ).join("");
 
   const atendimento = p.atendimento.map(a => `<span class="pill">${a}</span>`).join("");
@@ -1070,7 +1094,7 @@ function viewPerfil(slug) {
   const valores = valoresLinhas.map(r => `
     <div class="rate">
       <div><b>${r.t}</b> <small>— ${r.v}</small></div>
-      <a class="btn btn--gold" href="${waPerfil(p, r.t)}" target="_blank" rel="noopener">Reservar</a>
+      <a class="btn btn--gold" href="${waPerfil(p, r.t)}" target="_blank" rel="noopener" data-wa-contexto="${r.t}">Reservar</a>
     </div>`).join("");
 
   const valorVisivel = (valor) => {
@@ -1166,6 +1190,17 @@ function viewPerfil(slug) {
   // Lightbox
   $$(".lb-trigger").forEach(node =>
     node.addEventListener("click", () => openLightbox(midias, +node.dataset.i)));
+
+  // Assim que o WhatsApp pessoal chegar, atualiza os links já renderizados
+  // (pills de serviço, botões "Reservar") pra apontar pro número certo em
+  // vez do fallback central.
+  whatsappPerfilPromise.then(numero => {
+    if (!numero) return;
+    p.whatsapp = numero;
+    $$("[data-wa-contexto]").forEach(node => {
+      node.href = waPerfil(p, node.dataset.waContexto);
+    });
+  });
 }
 
 function viewAnuncie() {
@@ -2090,9 +2125,24 @@ function renderSvCta(s) {
     const msg = p
       ? `Olá ${p.nome}! Vi seu story na Aliança.`
       : "Olá! Vi os stories na Aliança e gostaria de saber mais.";
-    html += `<a class="sv__btn sv__btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${WA_ICON} WhatsApp</a>`;
+    html += `<a class="sv__btn sv__btn--wa" data-sv-wa href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${WA_ICON} WhatsApp</a>`;
   }
   svCta.innerHTML = html;
+
+  // Story sem WhatsApp próprio: usa o da acompanhante vinculada, que não
+  // vem mais na carga em massa. Busca sob demanda e atualiza o botão já
+  // renderizado (que por ora aponta pro central, um fallback seguro).
+  if (p && !s.whatsapp && typeof p.whatsapp === "undefined") {
+    const storySlugNoMomento = s;
+    fetchWhatsappPerfil(p.slug).then(numero => {
+      if (!numero || svStories[svSI] !== storySlugNoMomento) return;
+      p.whatsapp = numero;
+      const btn = svCta.querySelector("[data-sv-wa]");
+      if (!btn) return;
+      const msg = `Olá ${p.nome}! Vi seu story na Aliança.`;
+      btn.href = `https://wa.me/${normalizarWhatsapp(numero)}?text=${encodeURIComponent(msg)}`;
+    });
+  }
 }
 
 /* Navegação */
